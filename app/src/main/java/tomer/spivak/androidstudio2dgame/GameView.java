@@ -15,18 +15,16 @@ game manages all objects in the game and responsible for updating
 all states and render all objects to the screen
  */
 
-public class Game extends SurfaceView implements SurfaceHolder.Callback {
+public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private GameLoop gameLoop;
-    private Context context;
 
-    public Game(Context context) {
+    public GameView(Context context) {
         super(context);
 
         //get the surface holder and add a callback
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
 
-        this.context = context;
         gameLoop = new GameLoop(this, surfaceHolder);
         setFocusable(true);
     }
@@ -55,7 +53,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     public void drawUPS(Canvas canvas) {
         String averageUPS = Double.toString(gameLoop.getAverageUPS());
         Paint paint = new Paint();
-        int color = ContextCompat.getColor(context, R.color.yellow);
+        int color = ContextCompat.getColor(getContext(), R.color.yellow);
         paint.setColor(color);
         paint.setTextSize(30);
         canvas.drawText("UPS: " + averageUPS, 100, 100, paint);
@@ -63,7 +61,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     public void drawFPS(Canvas canvas) {
         String averageFPS = Double.toString(gameLoop.getAverageFPS());
         Paint paint = new Paint();
-        int color = ContextCompat.getColor(context, R.color.red);
+        int color = ContextCompat.getColor(getContext(), R.color.red);
         paint.setColor(color);
         paint.setTextSize(30);
         canvas.drawText("FPS: " + averageFPS, 100,  200, paint);

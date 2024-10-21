@@ -4,17 +4,17 @@ import android.graphics.Canvas;
 import android.view.SurfaceHolder;
 
 public class GameLoop extends Thread{
-    private static final double MAX_UPS = 60.0;
+    private static final double MAX_UPS = 120.0;
     private static final double UPS_PERIOD = 1E+3/MAX_UPS;
     private boolean isRunning = false;
     private SurfaceHolder surfaceHolder;
-    private Game game;
+    private GameView gameView;
     private double averageUPS;
     private double averageFPS;
 
-    public GameLoop(Game game, SurfaceHolder surfaceHolder) {
+    public GameLoop(GameView gameView, SurfaceHolder surfaceHolder) {
         this.surfaceHolder = surfaceHolder;
-        this.game = game;
+        this.gameView = gameView;
     }
 
     public double getAverageFPS() {
@@ -51,8 +51,8 @@ public class GameLoop extends Thread{
             try {
                 canvas = surfaceHolder.lockCanvas();
                 synchronized (surfaceHolder){
-                    game.update();
-                    game.draw(canvas);
+                    gameView.update();
+                    gameView.draw(canvas);
                     updateCount++;
 
 
@@ -83,7 +83,7 @@ public class GameLoop extends Thread{
             }
             //skip frames to keep up with target UPS
             while (sleepTime < 0 && updateCount < MAX_UPS-1){
-                game.update();
+                gameView.update();
                 updateCount++;
                 elapsedTime = System.currentTimeMillis() - startTime;
                 sleepTime = (long) (updateCount*UPS_PERIOD-elapsedTime);
