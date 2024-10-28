@@ -14,7 +14,7 @@
         android:theme="@style/Theme.AndroidStudio2DGame"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".Activities.MainActivity"
             android:theme="@style/Base.Theme.AndroidStudio2DGame"
 
             android:screenOrientation="sensorLandscape"

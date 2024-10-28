@@ -1,9 +1,10 @@
 package tomer.spivak.androidstudio2dgame;
 
+
 import android.graphics.Canvas;
 import android.view.SurfaceHolder;
 
-public class GameLoop extends Thread{
+public class GameLoop implements Runnable {
     private static final double MAX_UPS = 120.0;
     private static final double UPS_PERIOD = 1E+3/MAX_UPS;
     private boolean isRunning = false;
@@ -11,6 +12,8 @@ public class GameLoop extends Thread{
     private GameView gameView;
     private double averageUPS;
     private double averageFPS;
+    private Thread gameThread;
+
 
     public GameLoop(GameView gameView, SurfaceHolder surfaceHolder) {
         this.surfaceHolder = surfaceHolder;
@@ -27,12 +30,12 @@ public class GameLoop extends Thread{
 
     public void startLoop() {
         isRunning = true;
-        start();
+        gameThread = new Thread(this);
+        gameThread.start();
     }
 
     @Override
     public void run() {
-        super.run();
 
 
         //declare time and cycle count variables
@@ -75,7 +78,7 @@ public class GameLoop extends Thread{
             sleepTime = (long) (updateCount*UPS_PERIOD-elapsedTime);
             if (sleepTime > 0){
                 try {
-                    sleep(sleepTime);
+                    Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }

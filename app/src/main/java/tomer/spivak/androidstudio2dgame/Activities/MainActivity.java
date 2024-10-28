@@ -1,17 +1,16 @@
-package tomer.spivak.androidstudio2dgame;
+package tomer.spivak.androidstudio2dgame.Activities;
 
 import android.os.Bundle;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+
+import tomer.spivak.androidstudio2dgame.GameView;
+import tomer.spivak.androidstudio2dgame.R;
 
 /*
 main activity is the entry point to the app.
@@ -20,6 +19,7 @@ It is the first activity that is launched when the app is started.
 
 public class MainActivity extends AppCompatActivity {
     GameView gameView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,7 +34,11 @@ public class MainActivity extends AppCompatActivity {
         gameView = new GameView(this);
         gameLayout.addView(gameView);
 
+
+        // Set touch listener to handle zoom gestures
+
     }
+
     private void hideSystemUI() {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
