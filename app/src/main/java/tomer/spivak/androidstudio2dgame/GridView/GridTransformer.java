@@ -1,24 +1,20 @@
 package  tomer.spivak.androidstudio2dgame.GridView;
 
-import android.util.Log;
-
 public class GridTransformer {
     private TransformState state;
     private final float minScale;
     private final float maxScale;
-    private final float minCellHeight;
-    private final float maxCellHeight;
+    private final float baseCellHeight;
     private final float angle;
     private final float BaseCellHeight = 150f;// For isometric grid calculations
 
     // Constructor with all necessary constraints
     public GridTransformer(float initialX, float initialY, float minScale, float maxScale,
-                         float minCellHeight, float maxCellHeight) {
+                         float baseCellHeight) {
         this.state = new TransformState(initialX, initialY, 1.0f);
         this.minScale = minScale;
         this.maxScale = maxScale;
-        this.minCellHeight = minCellHeight;
-        this.maxCellHeight = maxCellHeight;
+        this.baseCellHeight = baseCellHeight;
         this.angle = (float)(Math.PI * 0.18); // Approximately 32.4 degrees for isometric view
     }
 
@@ -28,16 +24,13 @@ public class GridTransformer {
 
     public TransformState translate(float deltaX, float deltaY) {
         // Create new state with updated position
-        Log.d("zoom", "translating");
         TransformState newState = state.translate(deltaX, deltaY);
-
         // Update internal state
         state = newState;
         return state;
     }
 
     public TransformState scale(float scaleFactor, float pivotX, float pivotY) {
-        Log.d("zoom", "scaling");
         float currentScale = state.getScale();
         float newScale = currentScale * scaleFactor;
 
@@ -47,13 +40,7 @@ public class GridTransformer {
         }
 
         // Calculate cell dimensions at new scale
-        float newCellHeight = BaseCellHeight * newScale;
-        float newCellWidth = (float) (newCellHeight / Math.tan(angle));
 
-        // Check if new cell dimensions would violate constraints
-        if (isCellSizeInvalid(newCellHeight, newCellWidth)) {
-            return state;
-        }
 
         // Calculate position adjustment to maintain pivot point
         float offsetX = (pivotX - state.getPositionX()) * (1 - scaleFactor);
@@ -82,18 +69,6 @@ public class GridTransformer {
         return scale < minScale || scale > maxScale;
     }
 
-    private boolean isCellSizeInvalid(float height, float width) {
-        // Check height constraints
-        if (height > maxCellHeight || height < minCellHeight) {
-            return true;
-        }
-
-        // Check width constraints based on isometric angle
-        float maxWidth = (float) (maxCellHeight / Math.tan(angle));
-        float minWidth = (float) (minCellHeight / Math.tan(angle));
-
-        return width > maxWidth || width < minWidth;
-    }
 
 
 

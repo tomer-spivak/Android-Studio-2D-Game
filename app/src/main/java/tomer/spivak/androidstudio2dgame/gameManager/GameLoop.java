@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame;
+package tomer.spivak.androidstudio2dgame.gameManager;
 
 
 import android.graphics.Canvas;

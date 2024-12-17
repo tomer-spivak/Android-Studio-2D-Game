@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.draw;
+package tomer.spivak.androidstudio2dgame.GridView;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -6,7 +6,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 
-public class DrawGridView implements Draw{
+public class DrawGridView {
     private final int numColumns;
     private final int numRows;
     private final Paint gridPaint;

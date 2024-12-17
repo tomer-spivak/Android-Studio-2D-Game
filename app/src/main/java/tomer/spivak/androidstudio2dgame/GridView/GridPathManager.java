@@ -59,6 +59,7 @@ public class GridPathManager {
                 (int)(adjustedStartY + shapeStartY + cellHeight/2)
         );
     }
+
     public void calculateCellPaths() {
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numColumns; j++) {
@@ -74,7 +75,7 @@ public class GridPathManager {
     }
 
     public Path[][] getCellPaths() {
-        Log.d("cell", "getCellPaths" + cellHeight + " " + cellWidth);
+      //  Log.d("cell", "getCellPaths" + cellHeight + " " + cellWidth);
         return cellPaths;
     }
 
@@ -83,10 +84,13 @@ public class GridPathManager {
     }
 
     public void setCellHeight(float cellHeight) {
+
+        Log.d("cell", "setCellHeight" + cellHeight);
         this.cellHeight = cellHeight;
     }
 
     public void setCellWidth(float cellWidth) {
+        Log.d("cell", "setCellWidth" + cellWidth);
         this.cellWidth = cellWidth;
     }
 }

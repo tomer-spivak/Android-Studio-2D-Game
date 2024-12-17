@@ -77,6 +77,16 @@ public class TouchHandler {
 
             return true;
         }
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            // This method is called when a single tap is detected
+            if (isScrolling) {
+                // Call a new method in the listener to handle box click
+                listener.onBoxClick(e.getX(), e.getY());
+                return true;
+            }
+            return false;
+        }
     }
 
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
@@ -92,5 +102,7 @@ public class TouchHandler {
     public interface TouchHandlerListener {
         void onScale(float scaleFactor, float focusX, float focusY);
         void onScroll(float deltaX, float deltaY);
+        void onBoxClick(float x, float y); // New method for handling box clicks
+
     }
 }
