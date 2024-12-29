@@ -1,38 +1,27 @@
 package tomer.spivak.androidstudio2dgame.GridView;
 
 import static java.lang.Math.PI;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.PathMeasure;
 import android.graphics.Point;
-import android.util.Log;
 import android.widget.GridView;
-
 import androidx.annotation.NonNull;
+
 
 public class CustomGridView extends GridView {
     private int numColumns, numRows;
 
-    private float[] startCoordinates;
-
-    //private float pxDensity;
-
     private static final float angle = (float) (PI * 0.18);
-
 
     private final float[] currentPosition = new float[]{0,0};
 
     private final float minScale = 0.8f;
+
     private final float maxScale = 2f;
 
-    //private final int minCellHeight = 150;
-    private final float BaseCellHeight = 150f;
-
-    private static CustomGridView instance;
+    private final int baseCellHeight = 150;
 
     private DrawGridView drawGridView;
 
@@ -40,48 +29,33 @@ public class CustomGridView extends GridView {
 
     private GridTransformer gridTransformer;
 
+    private final Context context;
 
     public CustomGridView(Context context) {
         super(context);
-        // Initialize custom behavior or handle XML attributes here
+        this.context = context;
     }
-
 
     public void initInstance(int rows, int columns) {
         this.numRows = rows;
         this.numColumns = columns;
 
-
-        float cellHeight = BaseCellHeight;
-        float cellWidth = (float) (cellHeight / Math.tan(angle));
-
-
-
+        int cellHeight = baseCellHeight;
+        int cellWidth = (int) (cellHeight / Math.tan(angle));
 
         float startX = 0;
         float startY = 0;
 
-        this.startCoordinates = new float[] {startX, startY};
+        float[] startCoordinates = new float[]{startX, startY};
 
-
-
-        drawGridView = new DrawGridView(numRows, numColumns);
-        Log.d("cell", cellWidth + " " + cellHeight);
+        drawGridView = new DrawGridView(numRows, numColumns, context);
         gridPathManager = new GridPathManager(numRows, numColumns, cellWidth, cellHeight, startCoordinates);
 
-        gridTransformer = new GridTransformer(startX, startY, minScale, maxScale, BaseCellHeight);
-
-
-
-       // pxDensity = density;
-
+        gridTransformer = new GridTransformer(startX, startY, minScale, maxScale, baseCellHeight);
 
         gridPathManager.calculateCellPaths();
 
-
-        updatePosition(1200,-(gridTransformer.getCellHeight() * 10));
     }
-
 
     public Point getSelectedCell(float x, float y) {
         // Retrieve the current cell paths and centers
@@ -145,60 +119,74 @@ public class CustomGridView extends GridView {
     }
 
     public void updatePosition(float deltaX, float deltaY) {
-        // Define a maximum scroll limit (2500 * scale)
-        float maxScrollX = gridTransformer.getCellWidth() * 10;
-        float maxScrollY = gridTransformer.getCellHeight() * 20 - 1100;
 
-        // Restrict horizontal movement
-        if (currentPosition[0] + deltaX > maxScrollX && deltaX > 0) {
+        int cellWidth = gridTransformer.getCellWidth();
+        int cellHeight = gridTransformer.getCellHeight();
+        int pxWidth = 2300;
+        int pxHeight = 1200;
+
+        float[][] bounds = new float[2][2];
+
+        bounds[0][0] = ((float) numRows /2 * cellWidth) + cellWidth * 2;
+        bounds[0][1] = pxWidth - ((float) (cellWidth * numRows) / 2) - cellWidth * 2;
+        bounds[1][0] = cellHeight * 2;
+        bounds[1][1] = cellHeight * numColumns - pxHeight + cellHeight * 3;
+
+
+        if (deltaX > 0 && currentPosition[0] + deltaX > bounds[0][0]){
             deltaX = 0;
         }
-        if (currentPosition[0] + deltaX < 0 && deltaX < 0) {
+
+
+        if (deltaX < 0 && currentPosition[0] + deltaX < bounds[0][1])
             deltaX = 0;
-        }
 
-        // Restrict vertical movement
-        if (currentPosition[1] + deltaY > 0 && deltaY > 0) {
+
+        if (deltaY > 0 && currentPosition[1] + deltaY > bounds[1][0]){
             deltaY = 0;
         }
-        if (currentPosition[1] + deltaY < -maxScrollY && deltaY < 0) {
+
+        if(deltaY < 0 && currentPosition[1] + deltaY < -bounds[1][1])
+            deltaY = 0;
+
+
+        if (Math.abs(deltaX) < 100 && Math.abs(deltaY) < 100){
+            currentPosition[0] += deltaX;
+            currentPosition[1] += deltaY;
+        } else {
+            deltaX = 0;
             deltaY = 0;
         }
-        // Update the offset positions
-        Log.d("updatePosition", deltaX + " " + deltaY);
-        Log.d("updatePosition", currentPosition[0] + " " + currentPosition[1]);
-
-        currentPosition[0] += deltaX;
-        currentPosition[1] += deltaY;
-
         gridTransformer.translate(deltaX, deltaY);
-        // Recalculate all cell paths
-        gridPathManager.updateCellPaths(gridTransformer.getTransformState());
+        gridPathManager.updateCellPaths(gridTransformer.getCurrentPosition());
 
     }
 
-    //public void fillCell(float x, float y){
-
-    //}
-
     public float updateScale(float scaleFactor, float focusX, float focusY) {
-        Log.d("updateScaling", focusX + " " + focusY);
+        float[] scale = gridTransformer.updateScale(scaleFactor, focusX, focusY);
+        float scaleRatio = scale[0];
+        float newScale = scale[1];
 
-        TransformState transformState = gridTransformer.scale(scaleFactor, focusX, focusY);
-        gridPathManager.updateCellPaths(transformState);
+        currentPosition[0] = focusX + (currentPosition[0] - focusX) * scaleRatio;
+        currentPosition[1] = focusY + (currentPosition[1] - focusY) * scaleRatio;
 
+        gridPathManager.updateCellPaths(gridTransformer.getCurrentPosition());
         gridPathManager.setCellHeight(gridTransformer.getCellHeight());
         gridPathManager.setCellWidth(gridTransformer.getCellWidth());
 
-        return transformState.getScale();
+        return newScale;
     }
 
 
     @Override
     public void draw(@NonNull Canvas canvas) {
         super.draw(canvas);
-        if (drawGridView != null)
-            drawGridView.draw(canvas, gridPathManager.getCellPaths(), gridPathManager.getCellCenters());
+        if (drawGridView != null) {
+
+            drawGridView.draw(canvas, gridPathManager.getCellCenters(),
+                    gridTransformer.getScale() /maxScale);
+        }
+
     }
 }
 

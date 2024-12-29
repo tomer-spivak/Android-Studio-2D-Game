@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "784049216384",
+    "project_id": "androidprojectgame",
+    "storage_bucket": "androidprojectgame.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:784049216384:android:14f9e75a8417cc5ce73f65",
+        "android_client_info": {
+          "package_name": "tomer.spivak.androidstudio2dgame"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8Z-5WU4BQl6NQbaxAiDTZZGp99j7mLu0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

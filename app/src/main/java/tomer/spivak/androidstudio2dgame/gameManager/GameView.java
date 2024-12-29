@@ -7,7 +7,6 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -25,15 +24,13 @@ import tomer.spivak.androidstudio2dgame.buildingHelper.BuildingView;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback, TouchHandler.TouchHandlerListener {
 
-    private GameLoop gameLoop;
+    private final GameLoop gameLoop;
 
-    private CustomGridView gridView;
+    private final CustomGridView gridView;
 
-    private TouchHandler touchHandler;
+    private final TouchHandler touchHandler;
 
-    private Context context;
-
-    private ArrayList<BuildingView> buildingsViewsArrayList = new ArrayList<>();;
+    private final ArrayList<BuildingView> buildingsViewsArrayList = new ArrayList<>();
 
     public BuildingView selectedBuilding;
 
@@ -41,8 +38,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     public GameView(Context context) {
         super(context);
-
-        this.context = context;
 
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
@@ -52,18 +47,23 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         touchHandler = new TouchHandler(context, this);
 
         gridView = new CustomGridView(context);
-        Log.d("gridView", gridView + "");
     }
 
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder holder) {
-        gridView.initInstance(20, 20);
+        gridView.initInstance(10, 10);
 
         gameLoop.startLoop();
     }
 
     @Override
+    public boolean performClick() {
+        return super.performClick();
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent event) {
+        performClick();
         return touchHandler.onTouchEvent(event) || super.onTouchEvent(event);
     }
 
@@ -74,9 +74,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     @Override
     public void onScroll(float deltaX, float deltaY) {
-
-        if (deltaX < 100 && deltaY < 100)
-            gridView.updatePosition(deltaX, deltaY);
+        gridView.updatePosition(deltaX, deltaY);
     }
 
     @Override
@@ -105,44 +103,37 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     @Override
     public void draw(Canvas canvas) {
-        Log.d("canvas", "canvas: " + canvas);
         super.draw(canvas);
 
         if (canvas != null) {
-            // Remove canvas.save() and translate since we're using grid position updates
             drawFPS(canvas);
             drawUPS(canvas);
             gridView.draw(canvas);
 
             for (BuildingView buildingView : buildingsViewsArrayList) {
-                ImageView imageView = buildingView.getView(); // Ensure this returns a valid ImageView
+                ImageView imageView = buildingView.getView();
 
                 if (imageView == null || imageView.getDrawable() == null) {
-                    continue; // Skip this iteration if imageView or drawable is null
+                    continue;
                 }
 
-                // Get the drawable and calculate scaled dimensions
                 Drawable drawable = imageView.getDrawable();
                 int originalWidth = drawable.getIntrinsicWidth();
                 int originalHeight = drawable.getIntrinsicHeight();
 
-                // Calculate scaled dimensions
                 int scaledWidth = (int) (originalWidth * scale * 1);
                 int scaledHeight = (int) (originalHeight * scale * 1);
 
-                // Set the position of the ImageView
                 float posX = buildingView.getPoint().x - (float) scaledWidth / 2;
                 float posY = buildingView.getPoint().y - (float) scaledHeight / 2;
 
-                // Create a scaled bitmap
                 Bitmap scaledBitmap = Bitmap.createScaledBitmap(
                         drawableToBitmap(drawable),
                         scaledWidth,
                         scaledHeight,
-                        true // Use filtering for smoother scaling
+                        true
                 );
 
-                // Draw the scaled bitmap on the canvas
                 canvas.drawBitmap(scaledBitmap, posX, posY, null);
             }
         }
@@ -195,8 +186,5 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     public void addBuildingView(BuildingView selectedBuildingView) {
         buildingsViewsArrayList.add(selectedBuildingView);
-        Log.d("boxClick", buildingsViewsArrayList.toString());
-
-
     }
 }
