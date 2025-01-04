@@ -2,4 +2,43 @@
     <string name="app_name">AndroidStudio2DGame</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="Logo">Image</string>
+    <string name="Email">email</string>
+    <string name="Forgot_password">forgot password?</string>
+    <string name="Sign_up">sign up</string>
+    <string name="Log_in">log in</string>
+    <string name="Password">password</string>
+    <string name="navigation_drawer_open">Open Navigation Drawer</string>
+    <string name="navigation_drawer_close">Close Navigation Drawer</string>
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome!"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+    <string name="tutorial_base_building_text">"Base Building Tutorial
+Introduction - Welcome to the Base Building Tutorial! In this guide, you will learn the fundamental steps to construct and manage your base efficiently.
+1. Starting Your Base
+1a. Choose a Suitable Location - Ensure the area is resource-rich and defensible.
+1b. Lay the Foundation - Build a Command Center or Headquarters as the core structure.
+1c. Resource Gathering - Place resource collection buildings like mines, farms, or extractors.
+
+2. Expanding the Base
+2a. Add walls, towers, and traps to protect your base.
+2b. Storage Facilities - Construct storage units for collected resources.
+2c. Production Buildings - Build factories or workshops for unit creation and upgrades.
+
+3. Monitor Efficiency - Optimize building placement to reduce travel time.
+
+4. Defense and Security
+4a. Fortify Weak Points  - Identify vulnerable areas and reinforce them.
+4b. Strategic Placement** - Position turrets and towers near entry points.
+
+5. Advanced Tips
+5a. Expand Gradually - Avoid over-expansion to prevent resource strain.
+5b. Scout Surroundings - Explore nearby areas for threats and opportunities.
+6. Conclusion Congratulations! You now have the knowledge to build and maintain a strong base. Keep refining your strategies and adapting to new challenges as they arise. Good luck!  "</string>
 </resources>

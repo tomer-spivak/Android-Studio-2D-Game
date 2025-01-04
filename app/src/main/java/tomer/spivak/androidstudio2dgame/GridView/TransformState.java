@@ -40,10 +40,6 @@ class TransformState {
         return new TransformState(newX, newY, newScale);
     }
 
-    @Override
-    public String toString() {
-        return String.format("TransformState(x=%.2f, y=%.2f, scale=%.2f)",
-                positionX, positionY, scale);
-    }
+
 }
 

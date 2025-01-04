@@ -45,6 +45,7 @@ public class DrawGridView {
             }
         }
 
+
         //for (int i = 0; i < numRows; i++) {
           //  for (int j = 0; j < numColumns; j++) {
                 //canvas.drawPath(cellPaths[i][j], gridPaint);

@@ -1,6 +1,7 @@
-package tomer.spivak.androidstudio2dgame.main;
+package tomer.spivak.androidstudio2dgame.game;
 
 import android.content.Context;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,7 +62,10 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
     public Building getSelectedBuilding() {
         ImageView imageView = selectedBuilding.findViewById(R.id.imageView);
         TextView tvName = selectedBuilding.findViewById(R.id.tvName);
-        String imageUrl = (String) imageView.getTag();
+        int imageUrl = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            imageUrl = imageView.getSourceLayoutResId();
+        }
         String title = tvName.getText().toString();
         return new Building(imageUrl, title);
     }

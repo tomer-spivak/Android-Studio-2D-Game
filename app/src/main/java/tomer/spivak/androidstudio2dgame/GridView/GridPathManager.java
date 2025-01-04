@@ -68,9 +68,9 @@ public class GridPathManager {
         }
     }
 
-    public void updateCellPaths(TransformState transformState) {
-        currentPosition[0] = transformState.getPositionX();
-        currentPosition[1] = transformState.getPositionY();
+    public void updateCellPaths(Float[] positionCords) {
+        currentPosition[0] = positionCords[0];
+        currentPosition[1] = positionCords[1];
         calculateCellPaths();
     }
 

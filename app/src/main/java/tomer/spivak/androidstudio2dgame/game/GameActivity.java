@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.main;
+package tomer.spivak.androidstudio2dgame.game;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -28,7 +28,7 @@ import tomer.spivak.androidstudio2dgame.R;
 
 
 
-public class MainActivity extends AppCompatActivity {
+public class GameActivity extends AppCompatActivity {
 
     Context context;
 
@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAlertDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(GameActivity.this);
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.alert_dialog, null);
 
@@ -120,9 +120,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fillArrayList(ArrayList<Building> buildingArrayList, BuildingsRecyclerViewAdapter adapter) {
-        buildingArrayList.add(new Building("https://supercell.com/images/ae58a39e76410b4ae9c2bea65d4a584d/790/hero_bg_clashofclans_.fae7c799.webp", "name"));
+        buildingArrayList.add(new Building(R.drawable.tower, "tower"));
 
-        buildingArrayList.add(new Building("https://hips.hearstapps.com/hmg-prod/images/screen-shot-2021-03-17-at-5-44-29-pm-1616017492.png", "colseum"));
 
 
         adapter.notifyDataSetChanged();
@@ -160,9 +159,4 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    // Method to start the drag process
-
-    public static void fillCell(int x, int y){
-        Log.d("fillCell", x + " " + y);
-    }
 }
