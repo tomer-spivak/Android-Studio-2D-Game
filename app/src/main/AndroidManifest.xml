@@ -13,26 +13,23 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-
         android:theme="@style/Theme.AndroidStudio2DGame"
         tools:targetApi="31">
         <activity
+            android:name=".intermediate.IntermediateActivity"
+            android:exported="false" />
+        <activity
             android:name=".game.GameActivity"
-
             android:exported="true"
             android:screenOrientation="landscape"
-
             android:theme="@style/Base.Theme.AndroidStudio2DGame">
             <intent-filter>
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".home.HomeActivity"
-
             android:exported="true"
-
             android:theme="@style/Base.Theme.AndroidStudio2DGame">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

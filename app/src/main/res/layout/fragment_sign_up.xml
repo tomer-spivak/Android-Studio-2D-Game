@@ -5,11 +5,20 @@
     android:layout_height="match_parent"
    >
 
+    <TextView
+        android:padding="10dp"
+        android:id="@+id/tvUsernameError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/etEmail"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etUsername"></TextView>
     <EditText
         android:id="@+id/etUsername"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Username"
+        android:hint="name"
         android:inputType="text"
         android:importantForAccessibility="yes"
         app:layout_constraintEnd_toEndOf="parent"
@@ -17,6 +26,14 @@
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginTop="50dp"
         android:padding="16dp" />
+    <TextView
+        android:id="@+id/tvEmailError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/etEmail"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+></TextView>
 
     <EditText
         android:id="@+id/etEmail"
@@ -30,6 +47,14 @@
         app:layout_constraintTop_toBottomOf="@id/etUsername"
         android:layout_marginTop="20dp"
         android:padding="16dp" />
+    <TextView
+        android:id="@+id/tvPasswordError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/btnSignUp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etPassword"></TextView>
 
     <EditText
         android:id="@+id/etPassword"

@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -14,6 +15,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -42,6 +44,10 @@ public class GameActivity extends AppCompatActivity {
 
     BuildingView selectedBuildingView;
 
+    CardView cvSelectBuildingMenu;
+
+    ImageButton btnCloseMenu;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,7 +66,14 @@ public class GameActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 showAlertDialog();
+                cvSelectBuildingMenu.setVisibility(View.VISIBLE);
+            }
+        });
 
+        btnCloseMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cvSelectBuildingMenu.setVisibility(View.GONE);   
             }
         });
 
@@ -139,6 +152,9 @@ public class GameActivity extends AppCompatActivity {
     private void initViews() {
         btnChooseBuildingsAlertDialog = findViewById(R.id.btnPopUpMenu);
 
+        cvSelectBuildingMenu = findViewById(R.id.cvSelectBuildingMenu);
+
+        btnCloseMenu = findViewById(R.id.btnCloseMenu);
     }
 
     private void initGame() {

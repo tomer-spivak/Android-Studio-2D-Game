@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -19,6 +20,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.game.GameActivity;
+import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 
 
 public class LoginFragment extends Fragment {
@@ -36,6 +38,9 @@ public class LoginFragment extends Fragment {
 
         EditText etUsername = view.findViewById(R.id.etUsername);
         EditText etPassword = view.findViewById(R.id.etPassword);
+        TextView tvEmailError = view.findViewById(R.id.tvEmailError);
+        TextView tvPasswordError = view.findViewById(R.id.tvPasswordError);
+
 
         TextWatcher textWatcher = new TextWatcher() {
             @Override
@@ -54,17 +59,19 @@ public class LoginFragment extends Fragment {
 
             private boolean validatePassword(String pass) {
                 if (pass.length() < 6){
-                    Toast.makeText(getContext(), "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+                    tvPasswordError.setText("Password must be at least 6 characters");
                     return false;
                 }
+                tvPasswordError.setText("");
                 return true;
             }
 
             private boolean validateEmail(String email) {
                 if (!email.contains("@") || !email.substring(email.indexOf("@")).contains(".com")) {
-                    Toast.makeText(getContext(), "Invalid Email", Toast.LENGTH_SHORT).show();
+                    tvEmailError.setText("Invalid Email");
                     return false;
                 }
+                tvEmailError.setText("");
                 return true;
             }
 
@@ -82,8 +89,7 @@ public class LoginFragment extends Fragment {
                         .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                             @Override
                             public void onSuccess(AuthResult authResult) {
-                                Toast.makeText(getContext(), "You logged in successfully!", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(getActivity(), GameActivity.class);
+                                Intent intent = new Intent(getActivity(), IntermediateActivity.class);
                                 startActivity(intent);
                             }
                         })
