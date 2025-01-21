@@ -2,6 +2,7 @@ package tomer.spivak.androidstudio2dgame.game;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +37,7 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
     @Override
     public BuildingsRecyclerViewAdapter.BuildingViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.recycler_view_building_item, parent, false);
+
         return new BuildingViewHolder(view);
     }
 
@@ -52,6 +54,7 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
 
         // Optional: Set title if you want captions
         holder.tvName.setText(building.getName());
+        Log.d("debug", String.valueOf(building.getName()));
     }
 
     @Override
@@ -69,6 +72,7 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
         String title = tvName.getText().toString();
         return new Building(imageUrl, title);
     }
+
     public View getSelectedBuildingView() {
         return selectedBuilding;
     }
@@ -83,17 +87,18 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
             imageView = itemView.findViewById(R.id.imageView);
             tvName = itemView.findViewById(R.id.tvName);
 
-            itemView.setOnClickListener(v -> {
-                if(selectedBuilding != null){
-                    selectedBuilding.setSelected(false);
-                    selectedBuilding.setBackgroundColor(0);
-                }
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (selectedBuilding != null) {
+                        selectedBuilding.setSelected(false);
+                    }
 
                 selectedBuilding = itemView;
                 itemView.setSelected(true);
-                itemView.setBackgroundColor(-16776961);
                 Toast.makeText(context, "hello", Toast.LENGTH_SHORT).show();
-            });
+                }
+            }) ;
         }
     }
 }

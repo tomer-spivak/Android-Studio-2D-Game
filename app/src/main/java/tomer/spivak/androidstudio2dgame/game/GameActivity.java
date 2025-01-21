@@ -40,13 +40,15 @@ public class GameActivity extends AppCompatActivity {
 
     LinearLayout gameLayout;
 
-    ArrayList<BuildingView> userBuildingsViews = new ArrayList<>();
+    ArrayList<Building> buildings;
 
     BuildingView selectedBuildingView;
 
     CardView cvSelectBuildingMenu;
 
     ImageButton btnCloseMenu;
+
+    BuildingsRecyclerViewAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,8 +67,8 @@ public class GameActivity extends AppCompatActivity {
         btnChooseBuildingsAlertDialog.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showAlertDialog();
-                cvSelectBuildingMenu.setVisibility(View.VISIBLE);
+                //showAlertDialog();
+                showBuildingsCardView();
             }
         });
 
@@ -77,6 +79,46 @@ public class GameActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void showBuildingsCardView() {
+        cvSelectBuildingMenu.setVisibility(View.VISIBLE);
+        RecyclerView buildingRecyclerView = findViewById(R.id.buildingRecyclerView);
+        buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+
+        adapter = new BuildingsRecyclerViewAdapter(context, buildings);
+        buildingRecyclerView.setAdapter(adapter);
+
+
+        adapter.notifyDataSetChanged();
+    }
+
+    private void popBuildingArrayList() {
+        Building tower = new Building(R.drawable.tower, "tower");
+        buildings.add(tower);
+
+        Building monster = new Building(R.drawable.monster, "monster");
+        buildings.add(monster);
+
+
+    }
+
+    void buildingSelected(){
+        Building selectedBuilding = adapter.getSelectedBuilding();
+
+        View view = adapter.getSelectedBuildingView();
+
+        ImageView imageView = new ImageView(context);
+
+        imageView.setImageDrawable(((ImageView)(view.findViewById(R.id.imageView))).getDrawable());
+
+        selectedBuildingView = new BuildingView(selectedBuilding, imageView);
+        Log.d("boxClick", selectedBuildingView + "");
+
+        gameView.selectedBuilding = selectedBuildingView;
+
+        //startDragForItem(bitmap);
+        Toast.makeText(context, selectedBuilding.getName(), Toast.LENGTH_SHORT).show();
     }
 
     private void showAlertDialog() {
@@ -107,24 +149,7 @@ public class GameActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                Building selectedBuilding = adapter.getSelectedBuilding();
 
-                View view = adapter.getSelectedBuildingView();
-
-                ImageView imageView = new ImageView(context);
-
-                imageView.setImageDrawable(((ImageView)(view.findViewById(R.id.imageView))).getDrawable());
-
-                selectedBuildingView = new BuildingView(selectedBuilding, imageView);
-                Log.d("boxClick", selectedBuildingView + "");
-
-                gameView.selectedBuilding = selectedBuildingView;
-
-
-
-
-                //startDragForItem(bitmap);
-                Toast.makeText(context, selectedBuilding.getName(), Toast.LENGTH_SHORT).show();
             }
         });
         AlertDialog dialog = builder.create();
@@ -161,6 +186,9 @@ public class GameActivity extends AppCompatActivity {
         gameLayout = findViewById(R.id.gameView);
         gameView = new GameView(context);
         gameLayout.addView(gameView);
+
+        buildings = new ArrayList<>();
+        popBuildingArrayList();
     }
 
     private void hideSystemUI() {
