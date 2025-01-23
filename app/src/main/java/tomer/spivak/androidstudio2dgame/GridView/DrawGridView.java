@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Canvas;
 
 import android.graphics.Point;
+import android.util.Log;
+
 import androidx.core.content.ContextCompat;
 import tomer.spivak.androidstudio2dgame.R;
 
@@ -37,11 +39,9 @@ public class DrawGridView {
         grass.updateScale(scale);
         for (int i = 0; i < numRows; i++){
             for (int j = 0; j < numColumns; j++){
-
-                float posX = cellCenters[i][j].x - grass.getWidth() / 2;
-                float posY = cellCenters[i][j].y - grass.getHeight() / 2;
-                canvas.drawBitmap(grass.getBitmap(), posX, posY, null);
-
+                float topLeftGrassX = cellCenters[i][j].x - grass.getWidth() / 2;
+                float topLeftGrassY = cellCenters[i][j].y - grass.getHeight() / 2;
+                canvas.drawBitmap(grass.getBitmap(), topLeftGrassX, topLeftGrassY, null);
             }
         }
 

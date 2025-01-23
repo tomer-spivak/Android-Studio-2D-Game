@@ -6,8 +6,11 @@ import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.PathMeasure;
 import android.graphics.Point;
+import android.util.Log;
 import android.widget.GridView;
 import androidx.annotation.NonNull;
+
+import java.util.Arrays;
 
 
 public class CustomGridView extends GridView {
@@ -54,7 +57,11 @@ public class CustomGridView extends GridView {
         gridTransformer = new GridTransformer(startX, startY, minScale, maxScale, baseCellHeight);
 
         gridPathManager.calculateCellPaths();
-
+        for(Point[] cellCenter: gridPathManager.getCellCenters()){
+            for (Point point : cellCenter){
+                Log.d("debug", point.toString());
+            }
+        }
     }
 
     public Point getSelectedCell(float x, float y) {
@@ -182,7 +189,6 @@ public class CustomGridView extends GridView {
     public void draw(@NonNull Canvas canvas) {
         super.draw(canvas);
         if (drawGridView != null) {
-
             drawGridView.draw(canvas, gridPathManager.getCellCenters(),
                     gridTransformer.getScale() /maxScale);
         }

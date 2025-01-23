@@ -26,11 +26,14 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
 
     private final ArrayList<Building> buildingArrayList;
 
+    private final OnItemClickListener listener;
+
     private View selectedBuilding;
 
-    BuildingsRecyclerViewAdapter(Context context, ArrayList<Building> buildingArrayList){
+    BuildingsRecyclerViewAdapter(Context context, ArrayList<Building> buildingArrayList, OnItemClickListener listener){
         this.context = context;
         this.buildingArrayList = buildingArrayList;
+        this.listener = listener;
     }
 
     @NonNull
@@ -55,6 +58,7 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
         // Optional: Set title if you want captions
         holder.tvName.setText(building.getName());
         Log.d("debug", String.valueOf(building.getName()));
+        holder.bind(buildingArrayList.get(position), position);
     }
 
     @Override
@@ -62,20 +66,7 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
         return buildingArrayList.size();
     }
 
-    public Building getSelectedBuilding() {
-        ImageView imageView = selectedBuilding.findViewById(R.id.imageView);
-        TextView tvName = selectedBuilding.findViewById(R.id.tvName);
-        int imageUrl = 0;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            imageUrl = imageView.getSourceLayoutResId();
-        }
-        String title = tvName.getText().toString();
-        return new Building(imageUrl, title);
-    }
 
-    public View getSelectedBuildingView() {
-        return selectedBuilding;
-    }
 
 
     public class BuildingViewHolder extends RecyclerView.ViewHolder{
@@ -99,6 +90,14 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
                 Toast.makeText(context, "hello", Toast.LENGTH_SHORT).show();
                 }
             }) ;
+        }
+        public void bind(Building building, int position) {
+            //tvName.setText(item);
+            itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onBuildingRecyclerViewItemClick(building, position);
+                }
+            });
         }
     }
 }

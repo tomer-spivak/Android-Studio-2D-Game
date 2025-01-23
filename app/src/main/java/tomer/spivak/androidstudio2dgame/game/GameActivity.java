@@ -30,7 +30,7 @@ import tomer.spivak.androidstudio2dgame.R;
 
 
 
-public class GameActivity extends AppCompatActivity {
+public class GameActivity extends AppCompatActivity implements OnItemClickListener{
 
     Context context;
 
@@ -49,6 +49,7 @@ public class GameActivity extends AppCompatActivity {
     ImageButton btnCloseMenu;
 
     BuildingsRecyclerViewAdapter adapter;
+    RecyclerView buildingRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,10 +84,10 @@ public class GameActivity extends AppCompatActivity {
 
     private void showBuildingsCardView() {
         cvSelectBuildingMenu.setVisibility(View.VISIBLE);
-        RecyclerView buildingRecyclerView = findViewById(R.id.buildingRecyclerView);
         buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
 
-        adapter = new BuildingsRecyclerViewAdapter(context, buildings);
+        adapter = new BuildingsRecyclerViewAdapter(context, buildings, this);
+
         buildingRecyclerView.setAdapter(adapter);
 
 
@@ -103,58 +104,19 @@ public class GameActivity extends AppCompatActivity {
 
     }
 
-    void buildingSelected(){
-        Building selectedBuilding = adapter.getSelectedBuilding();
-
-        View view = adapter.getSelectedBuildingView();
+    void buildingSelected(Building selectedBuilding){
 
         ImageView imageView = new ImageView(context);
 
-        imageView.setImageDrawable(((ImageView)(view.findViewById(R.id.imageView))).getDrawable());
+        imageView.setImageResource(selectedBuilding.getImageUrl());
 
         selectedBuildingView = new BuildingView(selectedBuilding, imageView);
-        Log.d("boxClick", selectedBuildingView + "");
+        //Log.d("boxClick", selectedBuildingView + "");
 
-        gameView.selectedBuilding = selectedBuildingView;
+        gameView.setSelectedBuilding(selectedBuildingView);
 
         //startDragForItem(bitmap);
-        Toast.makeText(context, selectedBuilding.getName(), Toast.LENGTH_SHORT).show();
-    }
-
-    private void showAlertDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(GameActivity.this);
-        LayoutInflater inflater = getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.alert_dialog, null);
-
-
-        // Find RecyclerView in the inflated layout
-        RecyclerView rvBuildings = dialogView.findViewById(R.id.rvBuildings);
-
-        // Set up the RecyclerView (adapter, layout manager)
-        rvBuildings.setLayoutManager(new LinearLayoutManager(context));
-
-        ArrayList<Building> buildingArrayList = new ArrayList<>();
-        BuildingsRecyclerViewAdapter adapter = new BuildingsRecyclerViewAdapter(context,
-                buildingArrayList);
-        rvBuildings.setAdapter(adapter);
-
-
-        fillArrayList(buildingArrayList, adapter);
-
-
-        builder.setView(dialogView);
-
-        builder.setTitle("Choose a building");
-        builder.setPositiveButton("confirm", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-
-            }
-        });
-        AlertDialog dialog = builder.create();
-
-        dialog.show();
+        //Toast.makeText(context, selectedBuilding.getName(), Toast.LENGTH_SHORT).show();
     }
 
     private void fillArrayList(ArrayList<Building> buildingArrayList, BuildingsRecyclerViewAdapter adapter) {
@@ -180,6 +142,8 @@ public class GameActivity extends AppCompatActivity {
         cvSelectBuildingMenu = findViewById(R.id.cvSelectBuildingMenu);
 
         btnCloseMenu = findViewById(R.id.btnCloseMenu);
+
+        buildingRecyclerView = findViewById(R.id.buildingRecyclerView);
     }
 
     private void initGame() {
@@ -187,8 +151,16 @@ public class GameActivity extends AppCompatActivity {
         gameView = new GameView(context);
         gameLayout.addView(gameView);
 
+
+        initPlacingBuilding();
+
+    }
+
+    private void initPlacingBuilding() {
         buildings = new ArrayList<>();
         popBuildingArrayList();
+
+       // buildingRecyclerView.setOn
     }
 
     private void hideSystemUI() {
@@ -203,4 +175,12 @@ public class GameActivity extends AppCompatActivity {
         );
     }
 
+    @Override
+    public void onBuildingRecyclerViewItemClick(Building building,  int position) {
+        Toast.makeText(this, "url: " + building.getImageUrl(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, ": " + R.drawable.tower, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Clicked item position: " + position, Toast.LENGTH_SHORT).show();
+        buildingSelected(building);
+        cvSelectBuildingMenu.setVisibility(View.GONE);
+    }
 }
