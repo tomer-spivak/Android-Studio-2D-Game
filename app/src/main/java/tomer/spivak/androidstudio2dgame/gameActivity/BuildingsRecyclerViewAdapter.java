@@ -1,8 +1,6 @@
-package tomer.spivak.androidstudio2dgame.game;
+package tomer.spivak.androidstudio2dgame.gameActivity;
 
 import android.content.Context;
-import android.os.Build;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,19 +16,18 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.buildingHelper.Building;
 
 public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<BuildingsRecyclerViewAdapter.BuildingViewHolder>{
 
     private final Context context;
 
-    private final ArrayList<Building> buildingArrayList;
+    private final ArrayList<BuildingToPick> buildingArrayList;
 
     private final OnItemClickListener listener;
 
     private View selectedBuilding;
 
-    BuildingsRecyclerViewAdapter(Context context, ArrayList<Building> buildingArrayList, OnItemClickListener listener){
+    BuildingsRecyclerViewAdapter(Context context, ArrayList<BuildingToPick> buildingArrayList, OnItemClickListener listener){
         this.context = context;
         this.buildingArrayList = buildingArrayList;
         this.listener = listener;
@@ -46,7 +43,7 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
 
     @Override
     public void onBindViewHolder(@NonNull BuildingsRecyclerViewAdapter.BuildingViewHolder holder, int position) {
-        Building building = buildingArrayList.get(position);
+        BuildingToPick building = buildingArrayList.get(position);
 
         // Load image with Glide
         Glide.with(context)
@@ -57,7 +54,7 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
 
         // Optional: Set title if you want captions
         holder.tvName.setText(building.getName());
-        Log.d("debug", String.valueOf(building.getName()));
+
         holder.bind(buildingArrayList.get(position), position);
     }
 
@@ -91,7 +88,7 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
                 }
             }) ;
         }
-        public void bind(Building building, int position) {
+        public void bind(BuildingToPick building, int position) {
             //tvName.setText(item);
             itemView.setOnClickListener(v -> {
                 if (listener != null) {

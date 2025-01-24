@@ -1,19 +1,14 @@
-package tomer.spivak.androidstudio2dgame.game;
+package tomer.spivak.androidstudio2dgame.gameActivity;
 
 import android.content.Context;
-import android.content.DialogInterface;
+import android.graphics.Point;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -23,11 +18,10 @@ import com.google.firebase.FirebaseApp;
 
 import java.util.ArrayList;
 
-import tomer.spivak.androidstudio2dgame.buildingHelper.Building;
-import tomer.spivak.androidstudio2dgame.buildingHelper.BuildingView;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
-
+import tomer.spivak.androidstudio2dgame.gameObjects.GameBuilding;
+import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 
 
 public class GameActivity extends AppCompatActivity implements OnItemClickListener{
@@ -40,15 +34,14 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
     LinearLayout gameLayout;
 
-    ArrayList<Building> buildings;
-
-    BuildingView selectedBuildingView;
+    ArrayList<BuildingToPick> buildingsToPick;
 
     CardView cvSelectBuildingMenu;
 
     ImageButton btnCloseMenu;
 
     BuildingsRecyclerViewAdapter adapter;
+
     RecyclerView buildingRecyclerView;
 
     @Override
@@ -61,7 +54,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
         FirebaseApp.initializeApp(this);
 
-        Log.d("debug", FirebaseApp.getApps(context).toString());
 
         init();
 
@@ -80,51 +72,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             }
         });
 
-    }
-
-    private void showBuildingsCardView() {
-        cvSelectBuildingMenu.setVisibility(View.VISIBLE);
-        buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-
-        adapter = new BuildingsRecyclerViewAdapter(context, buildings, this);
-
-        buildingRecyclerView.setAdapter(adapter);
-
-
-        adapter.notifyDataSetChanged();
-    }
-
-    private void popBuildingArrayList() {
-        Building tower = new Building(R.drawable.tower, "tower");
-        buildings.add(tower);
-
-        Building monster = new Building(R.drawable.monster, "monster");
-        buildings.add(monster);
-
-
-    }
-
-    void buildingSelected(Building selectedBuilding){
-
-        ImageView imageView = new ImageView(context);
-
-        imageView.setImageResource(selectedBuilding.getImageUrl());
-
-        selectedBuildingView = new BuildingView(selectedBuilding, imageView);
-        //Log.d("boxClick", selectedBuildingView + "");
-
-        gameView.setSelectedBuilding(selectedBuildingView);
-
-        //startDragForItem(bitmap);
-        //Toast.makeText(context, selectedBuilding.getName(), Toast.LENGTH_SHORT).show();
-    }
-
-    private void fillArrayList(ArrayList<Building> buildingArrayList, BuildingsRecyclerViewAdapter adapter) {
-        buildingArrayList.add(new Building(R.drawable.tower, "tower"));
-
-
-
-        adapter.notifyDataSetChanged();
     }
 
     private void init(){
@@ -157,11 +104,28 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     }
 
     private void initPlacingBuilding() {
-        buildings = new ArrayList<>();
+        buildingsToPick = new ArrayList<>();
         popBuildingArrayList();
-
-       // buildingRecyclerView.setOn
+        adapter = new BuildingsRecyclerViewAdapter(context, buildingsToPick, this);
+        buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        buildingRecyclerView.setAdapter(adapter);
     }
+
+    private void popBuildingArrayList() {
+        BuildingToPick tower = new BuildingToPick("Tower", R.drawable.tower);
+
+        buildingsToPick.add(tower);
+    }
+
+    private void showBuildingsCardView() {
+        cvSelectBuildingMenu.setVisibility(View.VISIBLE);
+    }
+
+    //a building was selected in the cardview, transporting info to game view
+    void buildingSelected(GameObject selectedBuilding){
+        gameView.setSelectedBuilding(selectedBuilding);
+    }
+
 
     private void hideSystemUI() {
         View decorView = getWindow().getDecorView();
@@ -176,11 +140,12 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     }
 
     @Override
-    public void onBuildingRecyclerViewItemClick(Building building,  int position) {
-        Toast.makeText(this, "url: " + building.getImageUrl(), Toast.LENGTH_SHORT).show();
-        Toast.makeText(this, ": " + R.drawable.tower, Toast.LENGTH_SHORT).show();
-        Toast.makeText(this, "Clicked item position: " + position, Toast.LENGTH_SHORT).show();
-        buildingSelected(building);
+    public void onBuildingRecyclerViewItemClick(BuildingToPick building, int position) {
+        //Toast.makeText(this, "url: " + building.getImageUrl(), Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, ": " + R.drawable.tower, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Clicked item position: " + position, Toast.LENGTH_SHORT).show();
+        GameBuilding gameBuilding = new GameBuilding(context, new Point(0,0), building.getImageUrl(), building.getName());
+        buildingSelected(gameBuilding);
         cvSelectBuildingMenu.setVisibility(View.GONE);
     }
 }

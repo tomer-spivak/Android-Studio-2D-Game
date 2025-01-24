@@ -2,6 +2,7 @@ package tomer.spivak.androidstudio2dgame.gameManager;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
@@ -22,7 +23,7 @@ import java.util.Objects;
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchHandler;
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.buildingHelper.BuildingView;
+import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback, TouchHandler.TouchHandlerListener {
 
@@ -32,11 +33,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     private final TouchHandler touchHandler;
 
-    private final ArrayList<BuildingView> buildingsViewsArrayList = new ArrayList<>();
+    private final ArrayList<GameObject> gameObjectsViewsArrayList = new ArrayList<>();
 
-    public BuildingView selectedBuilding;
+    public GameObject selectedBuilding;
 
     private Float scale = 1F;
+    private Bitmap backgroundBitmap;
+    private Paint paint;
+
 
     public GameView(Context context) {
         super(context);
@@ -49,6 +53,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         touchHandler = new TouchHandler(context, this);
 
         gridView = new CustomGridView(context);
+
+        init();
+    }
+    void init(){
+        backgroundBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_morning);
+        paint = new Paint();
     }
 
     @Override
@@ -72,6 +82,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     @Override
     public void onScale(float scaleFactor, float focusX, float focusY) {
         scale = gridView.updateScale(scaleFactor, focusX, focusY);
+        updateScaleForGameObjects();
+    }
+
+    private void updateScaleForGameObjects() {
+        for (GameObject gameObject : gameObjectsViewsArrayList) {
+            Log.d("debug", gameObject.getImagePoint().x + ", fuck " + gameObject.getImagePoint().y);
+            gameObject.setScale(scale);
+        }
     }
 
     @Override
@@ -79,76 +97,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         gridView.updatePosition(deltaX, deltaY);
     }
 
-    @Override
-    public void onBoxClick(float x, float y) {
-        Point cellCenterPoint = gridView.getSelectedCell(x, y);
-        if (selectedBuilding != null && isCellEmpty(cellCenterPoint) ) {
-
-            selectedBuilding.setPoint(cellCenterPoint);
-            addBuildingView(selectedBuilding);
-            selectedBuilding = null;
-        }
-    }
 
     private boolean isCellEmpty(Point cellCenterPoint) {
-        for (BuildingView buildingView : buildingsViewsArrayList){
-            if (buildingView.getPoint() != null && buildingView.getPoint().equals(cellCenterPoint)){
+        for (GameObject buildingView : gameObjectsViewsArrayList){
+            if (buildingView.getImagePoint() != null && buildingView.getImagePoint().equals(cellCenterPoint)){
                 return false;
             }
         }
         return true;
     }
 
-
     @Override
     public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
     }
 
-    @Override
-    //draw method
-    public void draw(Canvas canvas) {
-        super.draw(canvas);
-
-        if (canvas != null) {
-            drawFPS(canvas);
-            drawUPS(canvas);
-            //draws basic grid with grass
-            gridView.draw(canvas);
-            //draws buildings
-            for (BuildingView buildingView : buildingsViewsArrayList) {
-                ImageView imageView = buildingView.getView();
-
-                if (imageView == null || imageView.getDrawable() == null) {
-                    continue;
-                }
-
-                Drawable drawable = imageView.getDrawable();
-
-                int originalWidth = (int) (drawable.getIntrinsicWidth());
-                int originalHeight = (int) (drawable.getIntrinsicHeight());
-
-                int scaledWidth = pxToDp(getContext(), (int) (originalWidth * scale * 1));
-                int scaledHeight = pxToDp(getContext(), (int) (originalHeight * scale * 1));
-
-                float topLeftX = buildingView.getPoint().x - (float) scaledWidth / 2;
-                float topLeftY = (float) (buildingView.getPoint().y - (float) scaledHeight / 2);
-
-                if (Objects.equals(buildingView.getName(), "tower")){
-                    topLeftY -= (float) ((float) scaledHeight * 0.2);
-                }
-
-                Bitmap scaledBitmap = Bitmap.createScaledBitmap(
-                        drawableToBitmap(drawable),
-                        scaledWidth,
-                        scaledHeight,
-                        true
-                );
-
-                canvas.drawBitmap(scaledBitmap, topLeftX, topLeftY, null);
-                Log.d("debug", "scaled size: " + scaledBitmap.getWidth() +", " + scaledBitmap.getHeight());
-            }
-        }
-    }
     private Bitmap drawableToBitmap(Drawable drawable) {
         if (drawable instanceof BitmapDrawable) {
             return ((BitmapDrawable) drawable).getBitmap();
@@ -195,15 +157,63 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     }
 
 
-    public void addBuildingView(BuildingView selectedBuildingView) {
-        buildingsViewsArrayList.add(selectedBuildingView);
-    }
-
-    public void setSelectedBuilding(BuildingView selectedBuildingView) {
+    //prepares the building the user picked to be placed by user with a click
+    public void setSelectedBuilding(GameObject selectedBuildingView) {
         this.selectedBuilding = selectedBuildingView;
     }
-    public int pxToDp(Context context, int px) {
-        float density = context.getResources().getDisplayMetrics().density; // Screen density
-        return Math.round(px / density);
+
+    //the user clicked on a cell, adding the selected building(if there is one) to drawn buildings
+    @Override
+    public void onBoxClick(float x, float y) {
+        Point cellCenterPoint = gridView.getSelectedCell(x, y);
+        if (selectedBuilding != null && isCellEmpty(cellCenterPoint) ) {
+            selectedBuilding.setImagePoint(cellCenterPoint);
+            addBuildingView(selectedBuilding);
+            selectedBuilding = null;
+        }
     }
+
+    //adds a building to the drawn buildings in order
+    public void addBuildingView(GameObject selectedBuildingView) {
+        int i = 0;
+        int size = gameObjectsViewsArrayList.size();
+        while (i < size && gameObjectsViewsArrayList.get(i).getImagePoint().y < selectedBuildingView.getImagePoint().y) {
+            i++;
+        }
+        gameObjectsViewsArrayList.add(i, selectedBuildingView); // Insert at the correct position
+        Log.d("debug", "Added building at position: " + selectedBuildingView.getImagePoint() + " | size: " + gameObjectsViewsArrayList.size());
+    }
+
+    @Override
+    //draw method
+    public void draw(Canvas canvas) {
+        super.draw(canvas);
+
+        // Get the screen width and height
+        int screenWidth = canvas.getWidth();
+        int screenHeight = canvas.getHeight();
+
+        Bitmap scaledBackBitmap = Bitmap.createScaledBitmap(
+                backgroundBitmap,
+                screenWidth,
+                screenHeight,
+                true
+        );
+
+        // Draws the background image
+        canvas.drawBitmap(scaledBackBitmap, 0, 0, paint);
+
+        drawFPS(canvas);
+        drawUPS(canvas);
+
+        //draws basic grid with grass
+        gridView.draw(canvas);
+
+        //draws buildings
+        for (GameObject gameObject : gameObjectsViewsArrayList) {
+            Log.d("debug", "drawing: " + gameObject.getImagePoint().x + " " + gameObject.getImagePoint().y);
+            gameObject.drawView(canvas);
+        }
+    }
+
 }

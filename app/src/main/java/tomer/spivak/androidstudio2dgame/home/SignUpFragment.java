@@ -24,7 +24,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.game.GameActivity;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 
 

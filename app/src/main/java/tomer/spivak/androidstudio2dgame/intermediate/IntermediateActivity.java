@@ -14,9 +14,6 @@ import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
@@ -27,10 +24,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.game.GameActivity;
-import tomer.spivak.androidstudio2dgame.home.HomeFragment;
-import tomer.spivak.androidstudio2dgame.home.LoginFragment;
-import tomer.spivak.androidstudio2dgame.home.SignUpFragment;
+import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
 
 public class IntermediateActivity extends AppCompatActivity {
 
