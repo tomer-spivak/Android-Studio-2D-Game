@@ -8,16 +8,18 @@ public class GameLoop implements Runnable {
     private static final double MAX_UPS = 120.0;
     private static final double UPS_PERIOD = 1E+3/MAX_UPS;
     private boolean isRunning = false;
-    private SurfaceHolder surfaceHolder;
-    private GameView gameView;
+    private final SurfaceHolder surfaceHolder;
+    private final GameView gameView;
     private double averageUPS;
     private double averageFPS;
     private Thread gameThread;
+    private boolean isNight = false;
 
 
     public GameLoop(GameView gameView, SurfaceHolder surfaceHolder) {
         this.surfaceHolder = surfaceHolder;
         this.gameView = gameView;
+        isNight = true;
     }
 
     public double getAverageFPS() {
@@ -57,7 +59,10 @@ public class GameLoop implements Runnable {
                     gameView.update();
                     gameView.draw(canvas);
                     updateCount++;
-
+                    if (isNight){
+                        gameView.night();
+                        isNight = false;
+                    }
 
                 }
 
@@ -100,6 +105,15 @@ public class GameLoop implements Runnable {
                 frameCount = 0;
                 startTime = System.currentTimeMillis();
             }
+        }
+
+    }
+    public void stopLoop() {
+        isRunning = false;
+        try {
+            gameThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }

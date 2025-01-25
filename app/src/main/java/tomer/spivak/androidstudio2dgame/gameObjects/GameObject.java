@@ -8,15 +8,13 @@ import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.widget.ImageView;
 
-import tomer.spivak.androidstudio2dgame.R;
 
 public abstract class GameObject {
 
     protected ImageView view;
-    protected Point imagePoint = new Point(0,0);
+    protected Point imagePoint;
     protected int imageUrl;
     protected String name;
     protected Context context;
@@ -27,7 +25,6 @@ public abstract class GameObject {
     // Optional: if you want a caption
 
 
-    public GameObject() { }
 
     public GameObject(Context context, Point point, int imageUrl, String name)  {
         this.context = context;
@@ -49,17 +46,14 @@ public abstract class GameObject {
 
         drawable = view.getDrawable();
 
-        int originalWidth = (int) (drawable.getIntrinsicWidth());
-        int originalHeight = (int) (drawable.getIntrinsicHeight());
+        int originalWidth = drawable.getIntrinsicWidth();
+        int originalHeight = drawable.getIntrinsicHeight();
         this.originalSize = new int[] {originalWidth, originalHeight};
 
 
 
         scaledSize = new int[] {(int) pxToDp(originalWidth * scale * 1, context.getResources().getDisplayMetrics()),
                 (int) pxToDp(originalHeight * scale * 1, context.getResources().getDisplayMetrics())};
-        Log.d("debug", "starterere" + scaledSize[0] + " " + scaledSize[1]);
-        Log.d("debug", "scale: " + scale);
-        Log.d("debug", "width: " + originalWidth + " height: " + originalHeight);
 
     }
 
@@ -70,12 +64,10 @@ public abstract class GameObject {
     }
 
     public void setImagePoint(Point imagePoint) {
-        Log.d("debug", "imagePoint before: " + imagePoint.x + " " + imagePoint.y);
         this.imagePoint = imagePoint;
 
 
 
-        Log.d("debug", "imagePoint after: " + this.imagePoint.x + " " + this.imagePoint.y);
     }
 
     public Point getImagePoint() {
@@ -84,7 +76,7 @@ public abstract class GameObject {
 
     public void drawView(Canvas canvas) {
         Bitmap scaledBitmap = createScaledBitmap();
-        int topLeftX = (int) (imagePoint.x - (int) ((float) scaledSize[0] / 2));
+        int topLeftX = imagePoint.x - (int) ((float) scaledSize[0] / 2);
         int topLeftY = imagePoint.y - scaledSize[1]/2;
         canvas.drawBitmap(scaledBitmap, topLeftX, topLeftY, null);
     }
@@ -115,9 +107,7 @@ public abstract class GameObject {
         return bitmap;
     }
 
-    public int getImageUrl() {
-        return imageUrl;
-    }
+
 
     public String getName() {
         return name;

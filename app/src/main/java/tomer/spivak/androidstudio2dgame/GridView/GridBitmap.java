@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 
 public class GridBitmap {
 
@@ -27,7 +26,6 @@ public class GridBitmap {
         int scaledHeight = (int) pxToDp(context, (float) drawable.getIntrinsicHeight());
 
         this.bitmap = Bitmap.createScaledBitmap(originalBitmap, scaledWidth, scaledHeight, true);
-        Log.d("debug", scaledWidth + ", msg " + scaledHeight);
     }
 
     private void updateBitmap() {

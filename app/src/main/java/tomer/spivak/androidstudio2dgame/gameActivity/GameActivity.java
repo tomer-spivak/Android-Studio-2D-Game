@@ -2,13 +2,19 @@ package tomer.spivak.androidstudio2dgame.gameActivity;
 
 import android.content.Context;
 import android.graphics.Point;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -21,7 +27,6 @@ import java.util.ArrayList;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameBuilding;
-import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 
 
 public class GameActivity extends AppCompatActivity implements OnItemClickListener{
@@ -30,7 +35,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
     GameView gameView;
 
-    Button btnChooseBuildingsAlertDialog;
+    Button btnChooseBuildingsCardView;
 
     LinearLayout gameLayout;
 
@@ -54,14 +59,12 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
         FirebaseApp.initializeApp(this);
 
-
         init();
 
-        btnChooseBuildingsAlertDialog.setOnClickListener(new View.OnClickListener() {
+        btnChooseBuildingsCardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //showAlertDialog();
-                showBuildingsCardView();
+                cvSelectBuildingMenu.setVisibility(View.VISIBLE);
             }
         });
 
@@ -72,6 +75,60 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             }
         });
 
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+                    new OnBackInvokedCallback() {
+                        @Override
+                        public void onBackInvoked() {
+                            Log.d("debug", "pls pls pls");
+                            showAlertDialog();
+                        }
+                    }
+            );
+            Log.d("debug", "registerd back");
+        }
+    }
+
+
+    //checks if user wants to save his base
+    private void showAlertDialog() {
+        Log.d("debug", "tried to show alert");
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View dialogView = inflater.inflate(R.layout.alert_dialog, null);
+
+        AlertDialog alertDialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setCancelable(false)
+                .create();
+
+        Button btnCancel = dialogView.findViewById(R.id.dialog_cancel);
+        Button btnDontSave = dialogView.findViewById(R.id.dialog_exit_without_saving);
+        Button btnSave = dialogView.findViewById(R.id.dialog_exit_with_saving);
+
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+            }
+        });
+
+        btnDontSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
+        btnSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //save base
+            }
+        });
+
+        alertDialog.show();
     }
 
     private void init(){
@@ -84,7 +141,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     }
 
     private void initViews() {
-        btnChooseBuildingsAlertDialog = findViewById(R.id.btnPopUpMenu);
+        btnChooseBuildingsCardView = findViewById(R.id.btnPopUpMenu);
 
         cvSelectBuildingMenu = findViewById(R.id.cvSelectBuildingMenu);
 
@@ -102,31 +159,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         initPlacingBuilding();
 
     }
-
-    private void initPlacingBuilding() {
-        buildingsToPick = new ArrayList<>();
-        popBuildingArrayList();
-        adapter = new BuildingsRecyclerViewAdapter(context, buildingsToPick, this);
-        buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        buildingRecyclerView.setAdapter(adapter);
-    }
-
-    private void popBuildingArrayList() {
-        BuildingToPick tower = new BuildingToPick("Tower", R.drawable.tower);
-
-        buildingsToPick.add(tower);
-    }
-
-    private void showBuildingsCardView() {
-        cvSelectBuildingMenu.setVisibility(View.VISIBLE);
-    }
-
-    //a building was selected in the cardview, transporting info to game view
-    void buildingSelected(GameObject selectedBuilding){
-        gameView.setSelectedBuilding(selectedBuilding);
-    }
-
-
     private void hideSystemUI() {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
@@ -138,14 +170,30 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         );
     }
+    //prepares the recycler view
+    private void initPlacingBuilding() {
+        buildingsToPick = new ArrayList<>();
+        popBuildingArrayList();
+        adapter = new BuildingsRecyclerViewAdapter(context, buildingsToPick, this);
+        buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        buildingRecyclerView.setAdapter(adapter);
+    }
 
+    //pop the options for user (need to add more buildings later)
+    private void popBuildingArrayList() {
+        BuildingToPick tower = new BuildingToPick("Tower", R.drawable.tower);
+
+        buildingsToPick.add(tower);
+    }
+
+
+
+
+    //a building has been selected in the card view, sending info to game view
     @Override
     public void onBuildingRecyclerViewItemClick(BuildingToPick building, int position) {
-        //Toast.makeText(this, "url: " + building.getImageUrl(), Toast.LENGTH_SHORT).show();
-        //Toast.makeText(this, ": " + R.drawable.tower, Toast.LENGTH_SHORT).show();
-        //Toast.makeText(this, "Clicked item position: " + position, Toast.LENGTH_SHORT).show();
         GameBuilding gameBuilding = new GameBuilding(context, new Point(0,0), building.getImageUrl(), building.getName());
-        buildingSelected(gameBuilding);
+        gameView.setSelectedBuilding(gameBuilding);
         cvSelectBuildingMenu.setVisibility(View.GONE);
     }
 }
