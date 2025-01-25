@@ -10,10 +10,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.window.OnBackInvokedCallback;
-import android.window.OnBackInvokedDispatcher;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
@@ -48,6 +47,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     BuildingsRecyclerViewAdapter adapter;
 
     RecyclerView buildingRecyclerView;
+    OnBackPressedCallback backPressedCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,19 +77,23 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
-                    OnBackInvokedDispatcher.PRIORITY_DEFAULT,
-                    new OnBackInvokedCallback() {
-                        @Override
-                        public void onBackInvoked() {
-                            Log.d("debug", "pls pls pls");
-                            showAlertDialog();
-                        }
-                    }
-            );
-            Log.d("debug", "registerd back");
+
+            backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
+
+                @Override
+                public void handleOnBackPressed() {
+
+
+                    // Show the alert dialog and pass a Runnable to be executed when the dialog is dismissed
+                    showAlertDialog();
+                }
+            };
+
+            getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
+
         }
     }
+
 
 
     //checks if user wants to save his base
@@ -117,6 +121,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         btnDontSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                alertDialog.dismiss();
                 finish();
             }
         });
@@ -124,11 +129,16 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //save base
+                alertDialog.dismiss();
+                saveBase();
+                finish();
             }
         });
 
         alertDialog.show();
+    }
+
+    private void saveBase() {
     }
 
     private void init(){
