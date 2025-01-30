@@ -20,8 +20,8 @@ public class GridBitmap {
         this.context = context;
         Bitmap originalBitmap = drawableToBitmap(drawable);
 
-        this.widthFixer = 1.09f;
-
+        this.widthFixer = 1.125f;
+        //this.widthFixer = 1f;
         int scaledWidth = (int) (pxToDp(context, (float) drawable.getIntrinsicWidth()) * widthFixer);
         int scaledHeight = (int) pxToDp(context, (float) drawable.getIntrinsicHeight());
 

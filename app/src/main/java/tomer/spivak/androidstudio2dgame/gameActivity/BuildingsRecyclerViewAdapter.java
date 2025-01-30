@@ -1,12 +1,12 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,13 +21,13 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
 
     private final Context context;
 
-    private final ArrayList<BuildingToPick> buildingArrayList;
+    private final ArrayList<String> buildingArrayList;
 
     private final OnItemClickListener listener;
 
     private View selectedBuilding;
 
-    BuildingsRecyclerViewAdapter(Context context, ArrayList<BuildingToPick> buildingArrayList, OnItemClickListener listener){
+    BuildingsRecyclerViewAdapter(Context context, ArrayList<String> buildingArrayList, OnItemClickListener listener){
         this.context = context;
         this.buildingArrayList = buildingArrayList;
         this.listener = listener;
@@ -43,17 +43,19 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
 
     @Override
     public void onBindViewHolder(@NonNull BuildingsRecyclerViewAdapter.BuildingViewHolder holder, int position) {
-        BuildingToPick building = buildingArrayList.get(position);
-
+        String imageUrl = buildingArrayList.get(position);
+        int resourceId = context.getResources().getIdentifier(imageUrl,
+                "drawable", context.getPackageName());
+        Log.d("debug", imageUrl);
         // Load image with Glide
         Glide.with(context)
-                .load(building.getImageUrl())
+                .load(resourceId)
                 .placeholder(R.drawable.placeholder_building)
 //                .error(R.drawable.error_image)
                 .into(holder.imageView);
 
         // Optional: Set title if you want captions
-        holder.tvName.setText(building.getName());
+        holder.tvName.setText(imageUrl);
 
         holder.bind(buildingArrayList.get(position), position);
     }
@@ -81,18 +83,18 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
                     if (selectedBuilding != null) {
                         selectedBuilding.setSelected(false);
                     }
-
                 selectedBuilding = itemView;
                 itemView.setSelected(true);
-                Toast.makeText(context, "hello", Toast.LENGTH_SHORT).show();
                 }
             }) ;
         }
-        public void bind(BuildingToPick building, int position) {
-            //tvName.setText(item);
-            itemView.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onBuildingRecyclerViewItemClick(building, position);
+        public void bind(String buildingImageURL, int position) {
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) {
+                        listener.onBuildingRecyclerViewItemClick(buildingImageURL, position);
+                    }
                 }
             });
         }

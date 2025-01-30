@@ -2,7 +2,7 @@ package tomer.spivak.androidstudio2dgame.logic;
 
 public class Enemy implements Damage{
 
-    Enemy(){
+    public Enemy(){
 
     }
 

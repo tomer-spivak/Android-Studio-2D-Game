@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -19,6 +20,7 @@ import java.util.Random;
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchHandler;
 import tomer.spivak.androidstudio2dgame.R;
+//import tomer.spivak.androidstudio2dgame.gameActivity.BuildingToPick;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameBuilding;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameEnemy;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
@@ -39,6 +41,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     private Bitmap backgroundBitmap;
     private Paint paint;
 
+    String[][] board;
+
+    Point[][] centerCells;
 
     public GameView(Context context) {
         super(context);
@@ -62,7 +67,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder holder) {
         gridView.initInstance(10, 10);
-
+        centerCells = gridView.getCenterCells();
+        board = new String[10][10];
         gameLoop.startLoop();
     }
 
@@ -142,8 +148,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
 
     //prepares the building the user picked to be placed by user with a click
-    public void setSelectedBuilding(GameBuilding selectedBuildingView) {
-        this.selectedBuilding = selectedBuildingView;
+    public void setSelectedBuilding(String buildingImageURL) {
+        this.selectedBuilding = new GameBuilding(getContext(), new Point(0,0),
+                buildingImageURL.
+                substring(buildingImageURL.lastIndexOf("/") + 1), scale);
     }
 
     //the user clicked on a cell, adding the selected building(if there is one) to drawn buildings
@@ -153,19 +161,55 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         Point cellCenterPoint = gridView.getSelectedCell(x, y);
         if (selectedBuilding != null && isCellEmpty(cellCenterPoint) ) {
             selectedBuilding.setImagePoint(cellCenterPoint);
+            GameObject gameObject = selectedBuilding;
+            addToBoard(gameObject);
             addGameObject(selectedBuilding);
             selectedBuilding = null;
         }
     }
 
+    public void setBoard(String[][] board) {
+        this.board = board;
+        updateGameBoardFromBoard();
+    }
+
+    void addToBoard(GameObject gameObject){
+
+        for (int i = 0; i < centerCells.length; i++){
+            for (int j = 0; j < centerCells.length; j++){
+                Point cellPoint = centerCells[i][j];
+                if (gameObject.getImagePoint().equals(cellPoint)) {
+                    board[i][j] = gameObject.getImageResourceString();
+                    break;
+                }
+            }
+        }
+    }
+
+    //takes everything in the logical String[][] board into the game one
+    void updateGameBoardFromBoard(){
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] != null) {
+
+                    GameObject gameObject = new GameObject(getContext(), centerCells[i][j], board[i][j], scale);
+                    addGameObject(gameObject);
+                    Log.d("debug", gameObject.getImageResourceString());
+                }
+            }
+        }
+    }
+
     //adds a building to the drawn buildings in order
-    public void addGameObject(GameObject selectedBuildingView) {
+    public void addGameObject(GameObject gameObject) {
         int i = 0;
         int size = gameObjectsViewsArrayList.size();
-        while (i < size && gameObjectsViewsArrayList.get(i).getImagePoint().y < selectedBuildingView.getImagePoint().y) {
+        while (i < size && gameObjectsViewsArrayList.get(i).getImagePoint().y < gameObject.getImagePoint().y) {
             i++;
         }
-        gameObjectsViewsArrayList.add(i, selectedBuildingView); // Insert at the correct position
+        Log.d("debug", String.valueOf(i));
+        gameObjectsViewsArrayList.add(i, gameObject); // Insert at the correct position
+        addToBoard(gameObject);
     }
 
     @Override
@@ -203,28 +247,44 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         }
     }
 
-
-
-
-
     //switches to night, spawns enemies
     public void night() {
         backgroundBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_night);
         //spawn enemies
-        Point[][] centerCells = gridView.getCenterCells();
-        Point spawnEnemyPoint = getRandomFramePointIndex(centerCells);
-
-        GameEnemy enemy = new GameEnemy(getContext(), spawnEnemyPoint, R.drawable.monster, "enemy");
-        Point newPoint = getRandomFramePointIndex(centerCells);
-        enemy.setImagePoint(newPoint);
-        addGameEnemy(enemy);
+//        Point spawnEnemyPoint = getRandomFramePointIndex(centerCells);
+//
+//        GameEnemy enemy = new GameEnemy(getContext(), spawnEnemyPoint, "monster_1", scale);
+//        enemy.setImagePoint(spawnEnemyPoint);
+//        addGameEnemy(enemy);
+//
+//
+//        Point spawnEnemyPoint2 = getRandomFramePointIndex(centerCells);
+//
+//        GameEnemy enemy2 = new GameEnemy(getContext(), spawnEnemyPoint2, "monster_2", scale);
+//        enemy2.setImagePoint(spawnEnemyPoint2);
+//        addGameEnemy(enemy2);
+//
+//
+//        Point spawnEnemyPoint3 = getRandomFramePointIndex(centerCells);
+//
+//        GameEnemy enemy3 = new GameEnemy(getContext(), spawnEnemyPoint3, "monster_3", scale);
+//        enemy3.setImagePoint(spawnEnemyPoint3);
+//        addGameEnemy(enemy3);
+//
+//
+//        Point spawnEnemyPoint4 = getRandomFramePointIndex(centerCells);
+//
+//        GameEnemy enemy4 = new GameEnemy(getContext(), spawnEnemyPoint4, "monster_4", scale);
+//        enemy4.setImagePoint(spawnEnemyPoint4);
+//        addGameEnemy(enemy4);
     }
 
 
     //adds a new enemy
     private void addGameEnemy(GameEnemy enemy) {
-        GameBuilding building = findClosestBuilding(enemy);
-        enemy.setAttackingBuilding(building);
+        //GameBuilding building = findClosestBuilding(enemy);
+        //if (building != null)
+          //  enemy.setAttackingBuilding(building);
         addGameObject(enemy);
     }
 
@@ -276,4 +336,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
             // Last column (excluding first/last row)
             return centerCells[randChoice - cols - cols - leftColumnCount + 1][cols - 1];
         }
-    }}
+    }
+
+
+
+    public String[][] getBoard() {
+        return board;
+    }
+}

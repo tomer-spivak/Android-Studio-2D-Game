@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 
 import android.graphics.Point;
-import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 import tomer.spivak.androidstudio2dgame.R;
@@ -21,7 +20,7 @@ public class DrawGridView {
         this.numRows = numRows;
         this.numColumns = numColumns;
 
-        this.grass = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass), context);
+        this.grass = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.better_grass), context);
 
     }
 

@@ -1,21 +1,40 @@
 package tomer.spivak.androidstudio2dgame.gameObjects;
 
+import static androidx.core.util.TypedValueCompat.pxToDp;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.util.Log;
 
 public class GameBuilding extends GameObject {
-    public GameBuilding(Context context, Point point, int imageUrl, String name) {
-        super(context, point, imageUrl, name);
+    public GameBuilding(Context context, Point point, String name, float scale) {
+        super(context, point, name, scale);
+        setScaledSize();
+    }
+
+    private void setScaledSize() {
+        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 0.5), context.getResources().getDisplayMetrics());
+        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 0.5), context.getResources().getDisplayMetrics());
+
+    }
+    @Override
+    public void setScale(float scale) {
+        this.scale = scale;
+
+        Log.d("debug", "scale: " + scale);
+        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 0.5), context.getResources().getDisplayMetrics());
+        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 0.5), context.getResources().getDisplayMetrics());
+
     }
 
     public void drawView(Canvas canvas) {
         Bitmap scaledBitmap = createScaledBitmap();
 
-        int topLeftX = (int) (imagePoint.x - (int) ((float) scaledSize[0] / 2));
+        int topLeftX = imagePoint.x - (int) ((float) scaledSize[0] / 2);
         int topLeftY = imagePoint.y - scaledSize[1]/2;
-        if (this.name.equals("Tower")){
+        if (this.imageResourceString.equals("tower")){
             topLeftY = (int) (imagePoint.y - (double) scaledSize[1] /2 * 1.4);
         }
 
