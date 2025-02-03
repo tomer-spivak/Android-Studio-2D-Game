@@ -20,10 +20,11 @@ import java.util.Random;
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchHandler;
 import tomer.spivak.androidstudio2dgame.R;
-//import tomer.spivak.androidstudio2dgame.gameActivity.BuildingToPick;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameBuilding;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameEnemy;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
+import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectFactory;
+import tomer.spivak.androidstudio2dgame.model.Cell;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback, TouchHandler.TouchHandlerListener {
 
@@ -35,17 +36,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     private final ArrayList<GameObject> gameObjectsViewsArrayList = new ArrayList<>();
 
-    public GameBuilding selectedBuilding;
-
     private Float scale = 1F;
     private Bitmap backgroundBitmap;
     private Paint paint;
 
-    String[][] board;
+    Cell[][] board;
 
     Point[][] centerCells;
 
-    public GameView(Context context) {
+    int boardSize;
+
+    GameViewListener listener;
+
+    public GameView(Context context, int boardSize) {
         super(context);
 
         SurfaceHolder surfaceHolder = getHolder();
@@ -57,6 +60,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
         gridView = new CustomGridView(context);
 
+        this.boardSize = boardSize;
+
         init();
     }
     void init(){
@@ -66,9 +71,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder holder) {
-        gridView.initInstance(10, 10);
+        gridView.initInstance(boardSize, boardSize);
         centerCells = gridView.getCenterCells();
-        board = new String[10][10];
+        board = new Cell[boardSize][boardSize];
         gameLoop.startLoop();
     }
 
@@ -100,15 +105,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         gridView.updatePosition(deltaX, deltaY);
     }
 
-
-    private boolean isCellEmpty(Point cellCenterPoint) {
-        for (GameObject buildingView : gameObjectsViewsArrayList){
-            if (buildingView.getImagePoint() != null && buildingView.getImagePoint().equals(cellCenterPoint)){
-                return false;
-            }
-        }
-        return true;
-    }
 
     @Override
     public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
@@ -149,52 +145,40 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     //prepares the building the user picked to be placed by user with a click
     public void setSelectedBuilding(String buildingImageURL) {
-        this.selectedBuilding = new GameBuilding(getContext(), new Point(0,0),
-                buildingImageURL.
-                substring(buildingImageURL.lastIndexOf("/") + 1), scale);
+        Log.d("debug", buildingImageURL);
+        listener.onBuildingSelected(buildingImageURL.
+                substring(buildingImageURL.lastIndexOf("/") + 1));
+
     }
 
     //the user clicked on a cell, adding the selected building(if there is one) to drawn buildings
     // setting the dynamic center cell to it
     @Override
     public void onBoxClick(float x, float y) {
-        Point cellCenterPoint = gridView.getSelectedCell(x, y);
-        if (selectedBuilding != null && isCellEmpty(cellCenterPoint) ) {
-            selectedBuilding.setImagePoint(cellCenterPoint);
-            GameObject gameObject = selectedBuilding;
-            addToBoard(gameObject);
-            addGameObject(selectedBuilding);
-            selectedBuilding = null;
-        }
+        Point[] cellCenterPointArray = gridView.getSelectedCell(x, y);
+        Point cellPoint = cellCenterPointArray[1];
+        listener.onCellClicked(cellPoint.x, cellPoint.y);
+
     }
 
-    public void setBoard(String[][] board) {
+    public void setBoard(Cell[][] board) {
         this.board = board;
         updateGameBoardFromBoard();
     }
 
-    void addToBoard(GameObject gameObject){
-
-        for (int i = 0; i < centerCells.length; i++){
-            for (int j = 0; j < centerCells.length; j++){
-                Point cellPoint = centerCells[i][j];
-                if (gameObject.getImagePoint().equals(cellPoint)) {
-                    board[i][j] = gameObject.getImageResourceString();
-                    break;
-                }
-            }
-        }
-    }
 
     //takes everything in the logical String[][] board into the game one
     void updateGameBoardFromBoard(){
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
-                if (board[i][j] != null) {
-
-                    GameObject gameObject = new GameObject(getContext(), centerCells[i][j], board[i][j], scale);
+                if (board[i][j] != null && board[i][j].isOccupied()) {
+                    String objectPath = String.valueOf(board[i][j].getObject().getClass());
+                    String objectType = objectPath.substring(objectPath.
+                            lastIndexOf('.') + 1).toLowerCase();
+                    Log.d("debug", "object type: " + objectType);
+                    GameObject gameObject = GameObjectFactory.create(getContext(),
+                            centerCells[i][j], objectType, scale);
                     addGameObject(gameObject);
-                    Log.d("debug", gameObject.getImageResourceString());
                 }
             }
         }
@@ -209,7 +193,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         }
         Log.d("debug", String.valueOf(i));
         gameObjectsViewsArrayList.add(i, gameObject); // Insert at the correct position
-        addToBoard(gameObject);
     }
 
     @Override
@@ -251,40 +234,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     public void night() {
         backgroundBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_night);
         //spawn enemies
-//        Point spawnEnemyPoint = getRandomFramePointIndex(centerCells);
-//
-//        GameEnemy enemy = new GameEnemy(getContext(), spawnEnemyPoint, "monster_1", scale);
-//        enemy.setImagePoint(spawnEnemyPoint);
-//        addGameEnemy(enemy);
-//
-//
-//        Point spawnEnemyPoint2 = getRandomFramePointIndex(centerCells);
-//
-//        GameEnemy enemy2 = new GameEnemy(getContext(), spawnEnemyPoint2, "monster_2", scale);
-//        enemy2.setImagePoint(spawnEnemyPoint2);
-//        addGameEnemy(enemy2);
-//
-//
-//        Point spawnEnemyPoint3 = getRandomFramePointIndex(centerCells);
-//
-//        GameEnemy enemy3 = new GameEnemy(getContext(), spawnEnemyPoint3, "monster_3", scale);
-//        enemy3.setImagePoint(spawnEnemyPoint3);
-//        addGameEnemy(enemy3);
-//
-//
-//        Point spawnEnemyPoint4 = getRandomFramePointIndex(centerCells);
-//
-//        GameEnemy enemy4 = new GameEnemy(getContext(), spawnEnemyPoint4, "monster_4", scale);
-//        enemy4.setImagePoint(spawnEnemyPoint4);
-//        addGameEnemy(enemy4);
+        Point spawnEnemyPoint = getRandomFramePointIndex(centerCells);
+
+        GameEnemy enemy = new GameEnemy(getContext(), spawnEnemyPoint, "monster_1", scale);
+        enemy.setImagePoint(spawnEnemyPoint);
+        addGameEnemy(enemy);
+
     }
 
 
     //adds a new enemy
     private void addGameEnemy(GameEnemy enemy) {
-        //GameBuilding building = findClosestBuilding(enemy);
-        //if (building != null)
-          //  enemy.setAttackingBuilding(building);
+        GameBuilding building = findClosestBuilding(enemy);
+        if (building != null)
+            enemy.setAttackingBuilding(building);
         addGameObject(enemy);
     }
 
@@ -338,9 +301,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         }
     }
 
-
-
-    public String[][] getBoard() {
-        return board;
+    public void setListener(GameViewListener listener) {
+        this.listener = listener;
     }
 }

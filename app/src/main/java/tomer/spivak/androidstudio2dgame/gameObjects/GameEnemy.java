@@ -8,19 +8,13 @@ import android.util.Log;
 
 import java.util.Arrays;
 
-import tomer.spivak.androidstudio2dgame.logic.Enemy;
-import tomer.spivak.androidstudio2dgame.logic.Monster;
 
 public class GameEnemy extends GameObject{
     GameBuilding buildingToAttack;
-    Enemy enemy;
-    
     
     public GameEnemy(Context context, Point point, String name, float scale){
         super(context, point, name, scale);
-        if (name.equals("monster")){
-            enemy = new Monster();
-        }
+
         Log.d("debug", "creating new enemy: " + Arrays.toString(scaledSize));
         setScaledSize();
     }
@@ -42,18 +36,13 @@ public class GameEnemy extends GameObject{
     }
 
 
-
-    @Override
-    public void update() {
+    private void calculatePath() {
 
     }
 
-//    public void setAttackingBuilding(GameBuilding building) {
-//        buildingToAttack = building;
-//        calculatePath();
-//        Log.d("debug", "setAttackingBuilding: " + building.getName());
-//    }
-
-    private void calculatePath() {
+    public void setAttackingBuilding(GameBuilding building) {
+        buildingToAttack = building;
+        calculatePath();
+        Log.d("debug", "setAttackingBuilding: ");
     }
 }

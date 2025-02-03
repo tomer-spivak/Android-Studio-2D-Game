@@ -12,7 +12,7 @@ import android.widget.ImageView;
 
 
 
-public class GameObject {
+public abstract class GameObject {
 
     protected ImageView view;
     protected Point imagePoint;
@@ -115,11 +115,5 @@ public class GameObject {
         drawable.draw(canvas);
 
         return bitmap;
-    }
-
-
-
-    public String getImageResourceString() {
-        return imageResourceString;
     }
 }

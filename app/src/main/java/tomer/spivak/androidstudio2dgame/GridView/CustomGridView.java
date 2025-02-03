@@ -58,7 +58,7 @@ public class CustomGridView extends GridView {
 
     }
 
-    public Point getSelectedCell(float x, float y) {
+    public Point[] getSelectedCell(float x, float y) {
         // Retrieve the current cell paths and centers
         Path[][] cellPaths = gridPathManager.getCellPaths();
         Point[][] cellCenters = gridPathManager.getCellCenters();
@@ -68,7 +68,7 @@ public class CustomGridView extends GridView {
             for (int col = 0; col < numColumns; col++) {
                 Path path = cellPaths[row][col];
                 if (isPointInsidePath(path, x, y)){
-                    return cellCenters[row][col];
+                    return new Point[]{cellCenters[row][col], new Point(row,col)};
                 }
             }
         }

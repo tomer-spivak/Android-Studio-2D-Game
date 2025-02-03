@@ -19,7 +19,9 @@ public class GameLoop implements Runnable {
     public GameLoop(GameView gameView, SurfaceHolder surfaceHolder) {
         this.surfaceHolder = surfaceHolder;
         this.gameView = gameView;
-        isNight = true;
+
+
+
     }
 
     public double getAverageFPS() {
