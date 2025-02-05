@@ -1,7 +1,9 @@
-package tomer.spivak.androidstudio2dgame.model;
+package tomer.spivak.androidstudio2dgame.modelObjects;
 
 
 import java.util.Map;
+
+import tomer.spivak.androidstudio2dgame.model.Position;
 
 public abstract class Enemy extends ModelObject {
     protected final float damage;

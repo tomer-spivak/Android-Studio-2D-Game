@@ -1,6 +1,8 @@
-package tomer.spivak.androidstudio2dgame.model;
+package tomer.spivak.androidstudio2dgame.modelObjects;
 
 import java.util.Map;
+
+import tomer.spivak.androidstudio2dgame.model.Position;
 
 public abstract class Building extends ModelObject {
     public Building(float health, Position pos) {

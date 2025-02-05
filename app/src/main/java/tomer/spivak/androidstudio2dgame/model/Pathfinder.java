@@ -2,6 +2,7 @@ package tomer.spivak.androidstudio2dgame.model;
 
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -76,6 +77,52 @@ public class Pathfinder {
         return !gameState.getGrid()[pos.getX()][pos.getY()].isOccupied();
     }
 
+
+    public List<Position> findPath(Position start, Position goal) {
+        Map<Position, Position> cameFrom = new HashMap<>();
+        Queue<Position> frontier = new LinkedList<>();
+        frontier.add(start);
+        cameFrom.put(start, null);
+
+        while (!frontier.isEmpty()) {
+            Position current = frontier.poll();
+
+            // Stop if we've reached the goal
+            if (current.equals(goal)) {
+                break;
+            }
+
+            for (Position neighbor : current.getNeighbors()) {
+                if (!gameState.isValidPosition(neighbor) || !isPassablePosition(neighbor)) {
+                    continue;
+                }
+                if (!cameFrom.containsKey(neighbor)) {
+                    frontier.add(neighbor);
+                    cameFrom.put(neighbor, current);
+                }
+            }
+        }
+
+        // If the goal wasn't reached, return an empty path.
+        if (!cameFrom.containsKey(goal)) {
+            return new ArrayList<>();
+        }
+
+        // Reconstruct the path from goal to start.
+        List<Position> path = new ArrayList<>();
+        Position current = goal;
+        while (current != null) {
+            path.add(0, current);  // Insert at the beginning.
+            current = cameFrom.get(current);
+        }
+
+        // Remove the starting position if present.
+        if (!path.isEmpty() && path.get(0).equals(start)) {
+            path.remove(0);
+        }
+
+        return path;
+    }
 
 
 }

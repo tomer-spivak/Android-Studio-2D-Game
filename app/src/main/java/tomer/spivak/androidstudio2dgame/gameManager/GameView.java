@@ -18,12 +18,10 @@ import java.util.ArrayList;
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchHandler;
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.gameObjects.GameBuilding;
-import tomer.spivak.androidstudio2dgame.gameObjects.GameEnemy;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Cell;
-import tomer.spivak.androidstudio2dgame.model.ModelObject;
+import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
 

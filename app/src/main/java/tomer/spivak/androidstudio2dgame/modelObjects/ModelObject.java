@@ -1,8 +1,10 @@
-package tomer.spivak.androidstudio2dgame.model;
+package tomer.spivak.androidstudio2dgame.modelObjects;
 
 
 import java.util.HashMap;
 import java.util.Map;
+
+import tomer.spivak.androidstudio2dgame.model.Position;
 
 public abstract class ModelObject implements Damage {
     protected Position pos;

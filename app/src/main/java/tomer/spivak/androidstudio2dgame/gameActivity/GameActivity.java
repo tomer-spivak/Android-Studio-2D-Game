@@ -34,13 +34,13 @@ import java.util.Map;
 import tomer.spivak.androidstudio2dgame.FirebaseRepository;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.model.Tower;
+import tomer.spivak.androidstudio2dgame.modelObjects.Tower;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
-import tomer.spivak.androidstudio2dgame.model.ModelObject;
-import tomer.spivak.androidstudio2dgame.model.ModelObjectFactory;
+import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
+import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Position;
 
 

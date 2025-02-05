@@ -1,7 +1,9 @@
-package tomer.spivak.androidstudio2dgame.model;
+package tomer.spivak.androidstudio2dgame.modelObjects;
 
 
 import java.util.Map;
+
+import tomer.spivak.androidstudio2dgame.model.Position;
 
 public class Monster extends Enemy {
     public Monster(int health, int damage, int movementSpeed, Position position) {

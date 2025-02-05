@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.model;
+package tomer.spivak.androidstudio2dgame.modelObjects;
 
 public interface Damage {
     void takeDamage(float damage); // Called when entity is hit

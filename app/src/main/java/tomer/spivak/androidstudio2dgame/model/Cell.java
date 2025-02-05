@@ -3,6 +3,10 @@ package tomer.spivak.androidstudio2dgame.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import tomer.spivak.androidstudio2dgame.modelObjects.Building;
+import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
+import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
+
 public class Cell {
     private final Position position; // Grid position (fixed)
     private ModelObject object;

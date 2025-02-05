@@ -11,12 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import tomer.spivak.androidstudio2dgame.model.Building;
+import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.model.Cell;
-import tomer.spivak.androidstudio2dgame.model.Enemy;
+import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.model.GameState;
-import tomer.spivak.androidstudio2dgame.model.ModelObjectFactory;
-import tomer.spivak.androidstudio2dgame.model.Monster;
+import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
+import tomer.spivak.androidstudio2dgame.modelObjects.Monster;
 import tomer.spivak.androidstudio2dgame.model.Pathfinder;
 import tomer.spivak.androidstudio2dgame.model.Position;
 
@@ -79,17 +79,24 @@ public class GameViewModel extends ViewModel {
         Monster monster = (Monster) ModelObjectFactory.create("monster", new Position(0,0));
         cellToSpawnEnemyAt.spawnEnemy(monster);
 
-        //get closet building
-        Position closetBuilding = getClosetBuildingToEnemy(current, monster);
 
+        Pathfinder pathfinder = new Pathfinder(current);
+        //get closet building
+        Position closetBuilding = getClosetBuildingToEnemy(current, monster, pathfinder);
+
+        List<Position> path = pathfinder.findPath(monster.getPosition(), closetBuilding);
+        for (Position pos : path){
+            Log.d("enemyspawn", "path: " + pos.toString());
+        }
 
 
 
 
     }
 
-    private Position getClosetBuildingToEnemy(GameState current, Enemy enemy) {
-        Pathfinder pathfinder = new Pathfinder(current);
+    private Position getClosetBuildingToEnemy(GameState current, Enemy enemy,
+                                              Pathfinder pathfinder) {
+
 
         List<Position> allBuildings = getBuildingPositions(current.getGrid());
         List<Position> buildingNeighbors = getNeighborPositions(allBuildings, current);
