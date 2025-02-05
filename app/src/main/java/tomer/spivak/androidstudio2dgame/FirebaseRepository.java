@@ -2,6 +2,7 @@ package tomer.spivak.androidstudio2dgame;
 
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -28,7 +29,8 @@ public class FirebaseRepository {
         user = FirebaseAuth.getInstance().getCurrentUser();
     }
 
-    public void saveBoard(Cell[][] board, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+    public void saveBoard(Cell[][] board, OnSuccessListener<Void> onSuccess,
+                          OnFailureListener onFailure) {
         if (user == null) return;
 
         Map<String, Object> boardData = new HashMap<>();
@@ -47,10 +49,14 @@ public class FirebaseRepository {
                 .set(boardData)
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
+        for (Map.Entry<String, Object> entry : boardData.entrySet()) {
+            Log.d("debug", "board data: " + entry.getKey() + ": " + entry.getValue());
+        }
     }
 
 
-    public void loadBoard(OnSuccessListener<DocumentSnapshot> onSuccess, OnFailureListener onFailure) {
+    public void loadBoard(OnSuccessListener<DocumentSnapshot> onSuccess,
+                          OnFailureListener onFailure) {
         if (user == null) return;
 
         db.collection("users")

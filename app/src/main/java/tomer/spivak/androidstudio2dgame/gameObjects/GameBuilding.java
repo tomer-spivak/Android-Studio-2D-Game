@@ -6,11 +6,12 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Point;
-import android.util.Log;
+
+import tomer.spivak.androidstudio2dgame.model.Position;
 
 public class GameBuilding extends GameObject {
-    public GameBuilding(Context context, Point point, String name, float scale) {
-        super(context, point, name, scale);
+    public GameBuilding(Context context, Point point, String name, float scale, Position pos) {
+        super(context, point, name, scale, pos);
         setScaledSize();
     }
 
@@ -23,7 +24,6 @@ public class GameBuilding extends GameObject {
     public void setScale(float scale) {
         this.scale = scale;
 
-        Log.d("debug", "scale: " + scale);
         this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 0.5), context.getResources().getDisplayMetrics());
         this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 0.5), context.getResources().getDisplayMetrics());
 

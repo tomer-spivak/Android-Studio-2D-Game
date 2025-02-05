@@ -34,9 +34,9 @@ import java.util.Map;
 import tomer.spivak.androidstudio2dgame.FirebaseRepository;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.GameViewModel;
-import tomer.spivak.androidstudio2dgame.gameManager.GameViewListener;
-import tomer.spivak.androidstudio2dgame.model.Building;
+import tomer.spivak.androidstudio2dgame.model.Tower;
+import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
+import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.model.ModelObject;
@@ -184,8 +184,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     private void initGame() {
         boardSize = 10;
         gameLayout = findViewById(R.id.gameView);
-        gameView = new GameView(context, boardSize);
-        gameView.setListener(this);
+        gameView = new GameView(context, boardSize, this);
         gameLayout.addView(gameView);
 
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
@@ -207,29 +206,35 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 if (documentSnapshot.exists()) {
                     Cell[][] board = new Cell[boardSize][boardSize];
                     Map<String, Object> data = documentSnapshot.getData();
-                    int i = 0;
+
                     // Log each row and its contents in a more readable format
                     for (Map.Entry<String, Object> entry : data.entrySet()) {
                         Object rowData = entry.getValue();
                         List<Map<String, Object>> rowList = (List<Map<String, Object>>) rowData;
-                        for (int j = 0; j < rowList.size(); j++) {
-                            HashMap map = (HashMap)(rowList.get(j).get("position"));
+
+                        for (Map<String, Object> col : rowList) {
+                            HashMap map = (HashMap) col.get("position");
                             Position pos = new Position(((Long)(map.get("x"))).intValue(),
                                     ((Long)(map.get("y"))).intValue());
-                            map = (HashMap)(rowList.get(j).get("object"));
-                            if (map != null){
-                                ModelObject object = ModelObjectFactory.create((String) map.get("name"), pos);
-                                if (map.get("type").equals("Building")){
-                                    Building building = (Building) object;
-                                    building.setHealth((Float) ((Double)(map.get("health"))).floatValue());
+                            HashMap objectMap = (HashMap)(col.get("object"));
+
+                            if (objectMap != null){
+                                ModelObject object = ModelObjectFactory.create((String)
+                                                objectMap.get("type"), pos);
+
+                                if (objectMap.get("type").equals("tower")){
+                                    Tower tower = (Tower) object;
+                                    tower.setHealth(((Number) objectMap.get("health")).floatValue());
                                 }
-                                board[i][j] = new Cell(pos, object);
+
+                                board[pos.getX()][pos.getY()] = new Cell(pos, object);
+
                             } else {
-                                board[i][j] = new Cell(pos);
+                                board[pos.getX()][pos.getY()] = new Cell(pos);
                             }
                         }
-                        i++;
                     }
+
                     viewModel.initBoardFromCloud(board);
                     dialog.dismiss();
                 }
@@ -270,7 +275,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     //a building has been selected in the card view, sending info to game view
     @Override
     public void onBuildingRecyclerViewItemClick(String buildingImageURL, int position) {
-        Log.d("debug", "image" + buildingImageURL);
+
         gameView.setSelectedBuilding(buildingImageURL);
         cvSelectBuildingMenu.setVisibility(View.GONE);
     }
@@ -279,6 +284,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         viewModel.getGameState().observe(this, new Observer<GameState>() {
             @Override
             public void onChanged(GameState gameState) {
+                Log.d("board", "changed");
                 Cell[][] board = gameState.getGrid();
                 gameView.setBoard(board);
             }
@@ -294,5 +300,11 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     public void onBuildingSelected(String buildingType) {
         viewModel.selectBuilding(buildingType);
     }
+
+    @Override
+    public void updateGameState(long elapsedTime) {
+        viewModel.updateGameState(elapsedTime);
+    }
+
 
 }

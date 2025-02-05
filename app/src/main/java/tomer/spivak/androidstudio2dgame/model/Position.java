@@ -1,6 +1,8 @@
 package tomer.spivak.androidstudio2dgame.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Position {
@@ -21,14 +23,44 @@ public class Position {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (!(obj instanceof Position)) return false;
         Position other = (Position) obj;
-        return x == other.x && y == other.y;
+        return this.x == other.x && this.y == other.y;
+    }
+
+    public List<Position> getNeighbors() {
+        List<Position> neighbors = new ArrayList<>();
+        neighbors.add(new Position(x + 1, y)); // Right
+        neighbors.add(new Position(x - 1, y)); // Left
+        neighbors.add(new Position(x, y + 1)); // Down
+        neighbors.add(new Position(x, y - 1)); // Up
+        return neighbors;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * x + y;
     }
     public Map<String, Object> toMap() {
         Map<String, Object> positionData = new HashMap<>();
         positionData.put("x", x);
         positionData.put("y", y);
         return positionData;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    @Override
+    public String toString() {
+        return "Position{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
     }
 }

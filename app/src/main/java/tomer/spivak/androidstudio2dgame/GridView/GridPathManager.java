@@ -2,15 +2,14 @@ package tomer.spivak.androidstudio2dgame.GridView;
 
 import android.graphics.Path;
 import android.graphics.Point;
-import android.util.Log;
-import android.view.LayoutInflater;
+
 
 public class GridPathManager {
     private final int numRows, numColumns;
     private float cellWidth, cellHeight;
     private final float[] startCoordinates;
-    private Path[][] cellPaths;
-    private Point[][] cellCenters;
+    private final Path[][] cellPaths;
+    private final Point[][] cellCenters;
     private final float[] currentPosition = new float[]{0,0};
 
     public GridPathManager(int numRows, int numColumns, float cellWidth, float cellHeight, float[] startCoordinates){
@@ -31,7 +30,7 @@ public class GridPathManager {
         }
         path.reset();
 
-        float shapeStartX = (col - row) * cellWidth / 2;;
+        float shapeStartX = (col - row) * cellWidth / 2;
         float shapeStartY = (col + row) * cellHeight/2;
 
         float adjustedStartX = startCoordinates[0] + currentPosition[0];
@@ -85,12 +84,10 @@ public class GridPathManager {
 
     public void setCellHeight(float cellHeight) {
 
-        Log.d("cell", "setCellHeight" + cellHeight);
         this.cellHeight = cellHeight;
     }
 
     public void setCellWidth(float cellWidth) {
-        Log.d("cell", "setCellWidth" + cellWidth);
         this.cellWidth = cellWidth;
     }
 }

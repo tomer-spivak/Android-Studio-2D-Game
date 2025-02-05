@@ -1,7 +1,6 @@
 package tomer.spivak.androidstudio2dgame.home;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 
 import androidx.activity.EdgeToEdge;
@@ -32,7 +31,6 @@ public class HomeActivity extends AppCompatActivity{
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
-                Log.d("debug", "onNavigationItemReselected: " + id);
                 if (id == R.id.nav_home) {
                     replaceFragment(new HomeFragment());
                 } else if (id == R.id.nav_Login) {
@@ -48,7 +46,6 @@ public class HomeActivity extends AppCompatActivity{
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
     }
     private void replaceFragment(Fragment fragment) {
-        Log.d("debug", "replaceFragment: " + fragment);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.flHome, fragment);
         transaction.addToBackStack(null);

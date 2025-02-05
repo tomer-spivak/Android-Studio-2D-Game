@@ -8,8 +8,10 @@ import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.widget.ImageView;
 
+import tomer.spivak.androidstudio2dgame.model.Position;
 
 
 public abstract class GameObject {
@@ -22,17 +24,19 @@ public abstract class GameObject {
     protected int[] originalSize;
     protected Drawable drawable;
     protected String imageResourceString;
+    protected Position pos;
     // Optional: if you want a caption
 
 
 
-    public GameObject(Context context, Point point, String name, float scale)  {
+    public GameObject(Context context, Point point, String name, float scale, Position pos)  {
         this.context = context;
         this.imagePoint = point;
         this.imageResourceString = name;
         this.scale = scale;
         this.scaledSize = new int[2];
-
+        this.originalSize = new int[2];
+        this.pos = pos;
         createView();
     }
 
@@ -43,6 +47,7 @@ public abstract class GameObject {
                 "drawable", context.getPackageName()));
         this.view = imageView;
 
+        Log.d("debug", "creating new game object: " + imageResourceString);
 
         if (view.getDrawable() == null) {
             return;
@@ -53,34 +58,19 @@ public abstract class GameObject {
         int originalWidth = drawable.getIntrinsicWidth();
         int originalHeight = drawable.getIntrinsicHeight();
 
-        this.originalSize = new int[] {originalWidth, originalHeight};
+        this.originalSize[0] = originalWidth;
+        this.originalSize[1] = originalHeight;
 
-
-        scaledSize = new int[] {(int) pxToDp(originalWidth * scale * 1,
-                context.getResources().getDisplayMetrics()),
-                (int) pxToDp(originalHeight * scale * 1,
-                        context.getResources().getDisplayMetrics())};
-
-    }
-
-    public void setScale(float scale) {
-        this.scale = scale;
-        this.scaledSize[0] = (int) pxToDp(originalSize[0] * scale * 1,
+        scaledSize[0] = (int) pxToDp(originalWidth * scale * 1,
                 context.getResources().getDisplayMetrics());
-        this.scaledSize[1] = (int) pxToDp(originalSize[1] * scale * 1,
-                context.getResources().getDisplayMetrics());
-    }
-
-    public void setImagePoint(Point imagePoint) {
-        this.imagePoint = imagePoint;
-
-
+        scaledSize[1] = (int) pxToDp(originalHeight * scale * 1,
+                        context.getResources().getDisplayMetrics());
 
     }
 
-    public Point getImagePoint() {
-        return imagePoint;
-    }
+
+
+
 
     public void drawView(Canvas canvas) {
         Bitmap scaledBitmap = createScaledBitmap();
@@ -115,5 +105,23 @@ public abstract class GameObject {
         drawable.draw(canvas);
 
         return bitmap;
+    }
+
+    public void setScale(float scale) {
+        this.scale = scale;
+        this.scaledSize[0] = (int) pxToDp(originalSize[0] * scale * 1,
+                context.getResources().getDisplayMetrics());
+        this.scaledSize[1] = (int) pxToDp(originalSize[1] * scale * 1,
+                context.getResources().getDisplayMetrics());
+    }
+
+
+
+    public Point getImagePoint() {
+        return imagePoint;
+    }
+
+    public Position getPos() {
+        return pos;
     }
 }

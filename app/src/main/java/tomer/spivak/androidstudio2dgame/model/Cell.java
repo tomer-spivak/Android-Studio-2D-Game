@@ -47,5 +47,14 @@ public class Cell {
         cellData.put("object", object != null ? object.toMap() : null); // Convert ModelObject to Map if not null
         return cellData;
     }
+
+    @Override
+    public String toString() {
+        String str = "Cell{" +
+                "position=" + position;
+        if (object != null)
+            str += ", object=" + object;
+        return str + '}';
+    }
 }
 

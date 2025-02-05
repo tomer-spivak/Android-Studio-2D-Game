@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -94,9 +93,7 @@ public class IntermediateActivity extends AppCompatActivity {
 
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        Log.d("TAG", "initHeader: " + currentUser.getDisplayName());
-        Log.d("TAG", "initHeader: " + currentUser.getEmail());
-        tvUsername.setText(currentUser.getDisplayName());
+         tvUsername.setText(currentUser.getDisplayName());
 
         //tvUsername.setText();
     }

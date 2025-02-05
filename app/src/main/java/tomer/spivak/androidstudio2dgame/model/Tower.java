@@ -1,6 +1,5 @@
 package tomer.spivak.androidstudio2dgame.model;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -8,8 +7,8 @@ public class Tower extends Building {
     private final float attackDamage;
     private final float attackRange;
 
-    public Tower(float health, float attackDamage, float attackRange, Position pos, String name) {
-        super(health, pos, name);
+    public Tower(float health, float attackDamage, float attackRange, Position pos) {
+        super(health, pos);
         this.attackDamage = attackDamage;
         this.attackRange = attackRange;
     }
@@ -37,12 +36,10 @@ public class Tower extends Building {
 
     @Override
     public Object toMap() {
-        Map<String, Object> buildingData = new HashMap<>();
-        buildingData.put("type", "Building"); // Store the type of object
-        buildingData.put("name", name);
-        buildingData.put("health", health);
-        buildingData.put("attackDamage", attackDamage);
-        buildingData.put("attackRange", attackRange);
-        return buildingData;
+        Map towerData = (Map) super.toMap();
+        towerData.put("type", "tower"); // Store the type of object
+        towerData.put("attackDamage", attackDamage);
+        towerData.put("attackRange", attackRange);
+        return towerData;
     }
 }

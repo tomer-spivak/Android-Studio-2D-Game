@@ -1,6 +1,5 @@
 package tomer.spivak.androidstudio2dgame.GridView;
 
-import android.util.Log;
 
 class TransformState {
     private final float positionX;
@@ -26,8 +25,6 @@ class TransformState {
 
     // Transformation methods that return new states
     public TransformState translate(float deltaX, float deltaY) {
-        Log.d("translate", deltaX + " " + deltaY);
-        Log.d("translate", positionX + " " + positionY);
         return new TransformState(
                 positionX + deltaX,
                 positionY + deltaY,

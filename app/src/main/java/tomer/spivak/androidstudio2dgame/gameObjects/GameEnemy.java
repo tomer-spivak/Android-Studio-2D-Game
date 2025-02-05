@@ -8,12 +8,14 @@ import android.util.Log;
 
 import java.util.Arrays;
 
+import tomer.spivak.androidstudio2dgame.model.Position;
+
 
 public class GameEnemy extends GameObject{
     GameBuilding buildingToAttack;
     
-    public GameEnemy(Context context, Point point, String name, float scale){
-        super(context, point, name, scale);
+    public GameEnemy(Context context, Point point, String name, float scale, Position pos){
+        super(context, point, name, scale, pos);
 
         Log.d("debug", "creating new enemy: " + Arrays.toString(scaledSize));
         setScaledSize();

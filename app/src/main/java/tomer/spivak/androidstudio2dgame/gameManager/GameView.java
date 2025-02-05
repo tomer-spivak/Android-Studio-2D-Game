@@ -12,10 +12,8 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchHandler;
@@ -25,6 +23,9 @@ import tomer.spivak.androidstudio2dgame.gameObjects.GameEnemy;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Cell;
+import tomer.spivak.androidstudio2dgame.model.ModelObject;
+import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback, TouchHandler.TouchHandlerListener {
 
@@ -48,20 +49,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     GameViewListener listener;
 
-    public GameView(Context context, int boardSize) {
+    public GameView(Context context, int boardSize, GameViewListener listener) {
         super(context);
 
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
 
-        gameLoop = new GameLoop(this, surfaceHolder);
-
+        gameLoop = new GameLoop(this, surfaceHolder, listener);
         touchHandler = new TouchHandler(context, this);
 
         gridView = new CustomGridView(context);
 
         this.boardSize = boardSize;
 
+        this.listener = listener;
         init();
     }
     void init(){
@@ -74,6 +75,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         gridView.initInstance(boardSize, boardSize);
         centerCells = gridView.getCenterCells();
         board = new Cell[boardSize][boardSize];
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                board[i][j] = new Cell(new Position(i, j));
+            }
+        }
         gameLoop.startLoop();
     }
 
@@ -111,29 +117,29 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     }
 
 
-    public void drawUPS(Canvas canvas) {
-        String averageUPS = Double.toString(gameLoop.getAverageUPS());
-        Paint paint = new Paint();
-        int color = ContextCompat.getColor(getContext(), R.color.yellow);
-        paint.setColor(color);
-        paint.setTextSize(30);
-        // Draw UI elements at fixed positions
-        canvas.drawText("UPS: " + averageUPS, 100, 100, paint);
-    }
-
-    public void drawFPS(Canvas canvas) {
-        String averageFPS = Double.toString(gameLoop.getAverageFPS());
-        Paint paint = new Paint();
-        int color = ContextCompat.getColor(getContext(), R.color.red);
-        paint.setColor(color);
-        paint.setTextSize(30);
-        // Draw UI elements at fixed positions
-        canvas.drawText("FPS: " + averageFPS, 100, 200, paint);
-    }
-
-    public void update() {
-        // Add any update logic here
-    }
+//    public void drawUPS(Canvas canvas) {
+//        String averageUPS = Double.toString(gameLoop.getAverageUPS());
+//        Paint paint = new Paint();
+//        int color = ContextCompat.getColor(getContext(), R.color.yellow);
+//        paint.setColor(color);
+//        paint.setTextSize(30);
+//        // Draw UI elements at fixed positions
+//        canvas.drawText("UPS: " + averageUPS, 100, 100, paint);
+//    }
+//
+//    public void drawFPS(Canvas canvas) {
+//        String averageFPS = Double.toString(gameLoop.getAverageFPS());
+//        Paint paint = new Paint();
+//        int color = ContextCompat.getColor(getContext(), R.color.red);
+//        paint.setColor(color);
+//        paint.setTextSize(30);
+//        // Draw UI elements at fixed positions
+//        canvas.drawText("FPS: " + averageFPS, 100, 200, paint);
+//    }
+//
+//    public void update() {
+//        // Add any update logic here
+//    }
 
     @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
@@ -145,7 +151,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     //prepares the building the user picked to be placed by user with a click
     public void setSelectedBuilding(String buildingImageURL) {
-        Log.d("debug", buildingImageURL);
         listener.onBuildingSelected(buildingImageURL.
                 substring(buildingImageURL.lastIndexOf("/") + 1));
 
@@ -162,26 +167,66 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     }
 
     public void setBoard(Cell[][] board) {
-        this.board = board;
-        updateGameBoardFromBoard();
+        updateGameBoardFromBoard(board);
+        //this.board = board;
     }
 
+    //in future add an actual update method because this one is just overriding
 
-    //takes everything in the logical String[][] board into the game one
-    void updateGameBoardFromBoard(){
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board[i].length; j++) {
-                if (board[i][j] != null && board[i][j].isOccupied()) {
-                    String objectPath = String.valueOf(board[i][j].getObject().getClass());
-                    String objectType = objectPath.substring(objectPath.
-                            lastIndexOf('.') + 1).toLowerCase();
-                    Log.d("debug", "object type: " + objectType);
-                    GameObject gameObject = GameObjectFactory.create(getContext(),
-                            centerCells[i][j], objectType, scale);
-                    addGameObject(gameObject);
+    //takes everything in the model board into the game one
+    void updateGameBoardFromBoard(Cell[][] newBoard){
+        for (int i = 0; i < newBoard.length; i++) {
+            for (int j = 0; j < newBoard[i].length; j++) {
+
+                Log.d("debug", "new board: " + newBoard[i][j]);
+                Log.d("debug", "old board: " + board[i][j]);
+
+                //if both of them dont have anything, it doesnt matter to us
+                if ((!newBoard[i][j].isOccupied() && !board[i][j].isOccupied())){
+                    continue;
                 }
+
+                //if the new board has it and the old one doesnt,
+                // it means we need to add a new object
+                Log.d("board", newBoard[i][j].toString());
+                Log.d("board", board[i][j].toString());
+                if (newBoard[i][j].isOccupied() && !board[i][j].isOccupied()){
+                    Log.d("board", "updated");
+                    addObjectFromModelToView(newBoard[i][j].getObject(), i, j);
+                    board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject());
+                }
+
+                //if the old board has it but the new one doesnt,
+                //we need to remove it.
+                if (!newBoard[i][j].isOccupied() && board[i][j].isOccupied()){
+                    removeGameObject(i, j);
+                    board[i][j] = new Cell(newBoard[i][j].getPosition());
+                }
+
+                //if (newBoard[i][j].isOccupied() && board[i][j].isOccupied()){
+                    //add later health bar?
+                //}
             }
         }
+    }
+
+    private void removeGameObject(int i, int j) {
+        for (int k = 0; k < gameObjectsViewsArrayList.size(); k++) {
+            GameObject gameObject = gameObjectsViewsArrayList.get(k);
+            if (gameObject.getPos().getX() == i && gameObject.getPos().getY() == j) {
+                gameObjectsViewsArrayList.remove(k);
+                break;
+            }
+        }
+    }
+
+    private void addObjectFromModelToView(ModelObject object, int centerX, int centerY) {
+        String objectPath = String.valueOf(object.getClass());
+        String objectType = objectPath.substring(objectPath.
+                lastIndexOf('.') + 1).toLowerCase();
+        GameObject gameObject = GameObjectFactory.create(getContext(),
+                centerCells[centerX][centerY], objectType, scale, new Position(centerX, centerY));
+        addGameObject(gameObject);
     }
 
     //adds a building to the drawn buildings in order
@@ -191,7 +236,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         while (i < size && gameObjectsViewsArrayList.get(i).getImagePoint().y < gameObject.getImagePoint().y) {
             i++;
         }
-        Log.d("debug", String.valueOf(i));
         gameObjectsViewsArrayList.add(i, gameObject); // Insert at the correct position
     }
 
@@ -216,9 +260,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         // Draws the background image
         canvas.drawBitmap(scaledBackBitmap, 0, 0, paint);
 
-        drawFPS(canvas);
-        drawUPS(canvas);
-
         //draws basic grid with grass
         gridView.draw(canvas);
 
@@ -228,80 +269,5 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
                 gameObject.drawView(canvas);
             }
         }
-    }
-
-    //switches to night, spawns enemies
-    public void night() {
-        backgroundBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_night);
-        //spawn enemies
-        Point spawnEnemyPoint = getRandomFramePointIndex(centerCells);
-
-        GameEnemy enemy = new GameEnemy(getContext(), spawnEnemyPoint, "monster_1", scale);
-        enemy.setImagePoint(spawnEnemyPoint);
-        addGameEnemy(enemy);
-
-    }
-
-
-    //adds a new enemy
-    private void addGameEnemy(GameEnemy enemy) {
-        GameBuilding building = findClosestBuilding(enemy);
-        if (building != null)
-            enemy.setAttackingBuilding(building);
-        addGameObject(enemy);
-    }
-
-    //finds the building the new enemy should attack
-    public GameBuilding findClosestBuilding(GameEnemy enemy) {
-        GameBuilding closestBuilding = null;
-        double closestDistance = Double.MAX_VALUE;
-
-        for (GameObject building : gameObjectsViewsArrayList) {
-            if (!(building instanceof GameBuilding)){
-                continue;
-            }
-            double distance = distanceTo(enemy.getImagePoint(), building.getImagePoint());
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestBuilding = (GameBuilding) building;
-            }
-        }
-
-        return closestBuilding;
-    }
-    public double distanceTo(Point my, Point other) {
-        return Math.sqrt(Math.pow(other.x - my.x, 2) + Math.pow(other.y - my.y, 2));
-    }
-    //gets a random point from the frame
-    public Point getRandomFramePointIndex(Point[][] centerCells) {
-        int rows = centerCells.length;
-        int cols = centerCells[0].length;
-        Random rand = new Random();
-
-        // Total frame positions
-        int leftColumnCount = rows - 2;
-        int rightColumnCount = rows - 2;
-        int totalFramePositions = cols + cols + leftColumnCount + rightColumnCount;
-
-        // Generate random index from the frame positions
-        int randChoice = rand.nextInt(totalFramePositions);
-
-        if (randChoice < cols) {
-            // First row
-            return centerCells[0][randChoice];
-        } else if (randChoice < cols + cols) {
-            // Last row
-            return centerCells[rows - 1][randChoice - cols];
-        } else if (randChoice < cols + cols + leftColumnCount) {
-            // First column (excluding first/last row)
-            return centerCells[randChoice - cols - cols + 1][0];
-        } else {
-            // Last column (excluding first/last row)
-            return centerCells[randChoice - cols - cols - leftColumnCount + 1][cols - 1];
-        }
-    }
-
-    public void setListener(GameViewListener listener) {
-        this.listener = listener;
     }
 }
