@@ -1,6 +1,7 @@
 package tomer.spivak.androidstudio2dgame.viewModel;
 
 
+
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
@@ -15,22 +16,31 @@ import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
-import tomer.spivak.androidstudio2dgame.modelObjects.Monster;
 import tomer.spivak.androidstudio2dgame.model.Pathfinder;
 import tomer.spivak.androidstudio2dgame.model.Position;
 
 public class GameViewModel extends ViewModel {
     private final MutableLiveData<GameState> gameState = new MutableLiveData<>();
     private String selectedBuildingType;
+    private long accumulatedDayTime = 0;
+    // Define the threshold for night start (5000 ms in this case).
+    private static final long NIGHT_THRESHOLD = 5000;
 
+    public void initBoardFromCloud(Cell[][] board) {
+        gameState.setValue(new GameState(board));
+    }
 
+    public void selectBuilding(String buildingType) {
+        selectedBuildingType = buildingType;
+    }
 
     public void placeBuilding(int row, int col) {
         GameState current = gameState.getValue();
         if (current != null) {
             Cell cell = current.getGrid()[row][col];
-            if (!cell.isOccupied() && !selectedBuildingType.isEmpty()) {
+            if (!cell.isOccupied() && selectedBuildingType != null) {
                 cell.placeBuilding((Building)ModelObjectFactory.create(selectedBuildingType,
                         new Position(row, col)));
                 gameState.postValue(current);
@@ -38,26 +48,15 @@ public class GameViewModel extends ViewModel {
         }
     }
 
-    public LiveData<GameState> getGameState() {
-        return gameState;
-    }
-
-    public void selectBuilding(String buildingType) {
-        selectedBuildingType = buildingType;
-    }
-
-    public void initBoardFromCloud(Cell[][] board) {
-        gameState.setValue(new GameState(board));
-    }
-
-
-    // In GameViewModel
-    public void updateGameState(long elapsedTime) {
+    public void updateGameState(long deltaTime) {
+        accumulatedDayTime += deltaTime;
         GameState current = gameState.getValue();
         if (current != null) {
-            Log.d("debug", "elapsedTime: " + elapsedTime);
-            if (elapsedTime > 5000 && current.getTimeOfDay()){
-                startNight(current);
+            if (accumulatedDayTime > NIGHT_THRESHOLD) {
+                if (current.getTimeOfDay()) {
+                    startNight(current);
+                }
+                updateEnemies(current, deltaTime);
                 gameState.postValue(current); // Use postValue for background thread
             }
         }
@@ -70,64 +69,24 @@ public class GameViewModel extends ViewModel {
         int amount = 1;
         spawnEnemies(current, amount);
     }
+
+
     private void spawnEnemies(GameState current, int amount){
-        //Log.d("enemyspawn", "cell to spawn enemies at: " + cellToSpawnEnemyAt
-          //              .getPosition().toString());
+        for (int i = 0; i < amount; i++){
+            spawnEnemy(current, "monster");
+        }
+    }
 
-        //spawns enemies
+    private void spawnEnemy(GameState current, String enemyType) {
         Cell cellToSpawnEnemyAt = getRandomFramePointIndex(current.getGrid());
-        Monster monster = (Monster) ModelObjectFactory.create("monster", new Position(0,0));
-        cellToSpawnEnemyAt.spawnEnemy(monster);
-
-
-        Pathfinder pathfinder = new Pathfinder(current);
-        //get closet building
-        Position closetBuilding = getClosetBuildingToEnemy(current, monster, pathfinder);
-
-        List<Position> path = pathfinder.findPath(monster.getPosition(), closetBuilding);
-        for (Position pos : path){
-            Log.d("enemyspawn", "path: " + pos.toString());
+        while (cellToSpawnEnemyAt.isOccupied()){
+            cellToSpawnEnemyAt = getRandomFramePointIndex(current.getGrid());
         }
+        Enemy enemy = (Enemy) ModelObjectFactory.create(enemyType,
+                new Position(0,0));
+        cellToSpawnEnemyAt.spawnEnemy(enemy);
 
-
-
-
-    }
-
-    private Position getClosetBuildingToEnemy(GameState current, Enemy enemy,
-                                              Pathfinder pathfinder) {
-
-
-        List<Position> allBuildings = getBuildingPositions(current.getGrid());
-        List<Position> buildingNeighbors = getNeighborPositions(allBuildings, current);
-
-        Position closest = pathfinder.findClosestBuilding(enemy.getPosition(), buildingNeighbors);
-        return closest;
-
-    }
-
-    private List<Position> getNeighborPositions(List<Position> positions, GameState current){
-        List<Position> buildingPositions = new ArrayList<>();
-        for (Position pos : positions) {
-            List<Position> neighbors = pos.getNeighbors();
-            for (Position neighbour : neighbors){
-                if (current.isValidPosition(neighbour))
-                    buildingPositions.add(neighbour);
-            }
-        }
-        return buildingPositions;
-    }
-
-    private List<Position> getBuildingPositions(Cell[][] grid) {
-        List<Position> buildingPositions = new ArrayList<>();
-        for (Cell[] cells : grid) {
-            for (Cell cell : cells) {
-                if (cell.isOccupied() && cell.getObject() instanceof Building) {
-                    buildingPositions.add(cell.getObject().getPosition());
-                }
-            }
-        }
-        return buildingPositions;
+        createPathForEnemy(current, enemy);
     }
 
     public Cell getRandomFramePointIndex(Cell[][] centerCells) {
@@ -158,4 +117,167 @@ public class GameViewModel extends ViewModel {
         }
     }
 
+    private void updateEnemies(GameState current, long deltaTime) {
+        List<Enemy> enemies = new ArrayList<>();
+        Cell[][] grid = current.getGrid();
+
+        // Collect all enemies
+        for (Cell[] row : grid) {
+            for (Cell cell : row) {
+                ModelObject modelObject = cell.getObject();
+                if (modelObject instanceof Enemy) {
+                    enemies.add((Enemy) modelObject);
+                }
+            }
+        }
+
+        // Process each enemy's movement
+        for (Enemy enemy : enemies) {
+            createPathForEnemy(current, enemy);
+            Log.d("debug", enemy.toString());
+            for (Position pos : enemy.getPath()) {
+                Log.d("debug", pos.toString());
+            }
+            List<Position> path = enemy.getPath();
+
+            int targetIndex = enemy.getCurrentTargetIndex();
+            Log.d("attack", "targetIndex: " + targetIndex);
+            if (path == null || path.isEmpty() || targetIndex >= path.size()){
+                finishedPath(current, enemy, deltaTime);
+                continue;
+            }
+            Log.d("attack", "path size: " + path.size());
+
+            enemy.updateDirection(enemy.getPosition(), path.get(0));
+            enemy.accumulateTime(deltaTime);
+
+            float timePerStep = 1000 / enemy.getMovementSpeed(); // ms per cell
+
+            while (enemy.getAccumulatedTime() >= timePerStep && targetIndex < path.size()) {
+                Position nextPos = path.get(targetIndex);
+                Cell nextCell = current.getCellAt(nextPos);
+                if (nextCell.getObject() != null) {
+                    path = createPathForEnemy(current, enemy);
+                    nextPos = path.get(targetIndex);
+                    nextCell = current.getCellAt(nextPos);
+                }
+                Cell currentCell = current.getCellAt(enemy.getPosition());
+                targetIndex = moveEnemy(currentCell, nextCell, enemy, timePerStep);
+            }
+            if (path.isEmpty() || targetIndex >= path.size()){
+                fixDirectionToBuilding(enemy, current);
+            }
+
+
+        }
+    }
+
+    private void finishedPath(GameState current, Enemy enemy, long deltaTime) {
+        // After movement logic, check for adjacent buildings and attack
+
+        Cell currentEnemyCell = current.getCellAt(enemy.getPosition());
+        List<Cell> neighbors = currentEnemyCell.getNeighbors(current);
+        List<Building> adjacentBuildings = new ArrayList<>();
+
+        for (Cell neighbor : neighbors) {
+            ModelObject obj = neighbor.getObject();
+            if (obj instanceof Building) {
+                adjacentBuildings.add((Building) obj);
+            }
+        }
+        for (Cell cells: neighbors){
+            Log.d("attack", "buildings to hit:" + cells.toString());
+        }
+
+        if (!adjacentBuildings.isEmpty()) {
+            enemy.accumulateAttackTime(deltaTime);
+            if (enemy.canAttack()) {
+                for (Building building : adjacentBuildings) {
+                    Log.d("attack", "building struck: " + building.toString());
+                    enemy.attack(building);
+                    if (building.getHealth() <= 0) {
+                        Cell buildingCell = current.getCellAt(building.getPosition());
+                        buildingCell.removeObject();
+                    }
+                    enemy.resetAttackTimer();
+                }
+            }
+        }
+    }
+
+    private void fixDirectionToBuilding(Enemy enemy, GameState current) {
+        Cell enemyCell = current.getCellAt(enemy.getPosition());
+        List<Cell> buildingPotential = enemyCell.getNeighbors(current);
+        for (Cell cell : buildingPotential) {
+            if (cell.getObject() instanceof Building) {
+                enemy.updateDirection(enemy.getPosition(), cell.getPosition());
+            }
+        }
+    }
+
+    private int moveEnemy(Cell currentCell, Cell nextCell, Enemy enemy, float timePerStep){
+        currentCell.removeObject();
+        Position prevPos = enemy.getPosition();
+        nextCell.spawnEnemy(enemy);
+        enemy.updateDirection(prevPos);
+        enemy.incrementTargetIndex();
+        enemy.decreaseAccumulatedTime(timePerStep);
+        return enemy.getCurrentTargetIndex();
+
+    }
+
+    private List<Position> createPathForEnemy(GameState current, Enemy enemy) {
+        Pathfinder pathfinder = new Pathfinder(current);
+        Position closetBuilding = getClosetBuildingToEnemy(current, enemy, pathfinder);
+
+        List<Position> path = pathfinder.findPath(enemy.getPosition(), closetBuilding);
+
+        enemy.setPath(path);
+        return enemy.getPath();
+    }
+
+
+    private Position getClosetBuildingToEnemy(GameState current, Enemy enemy,
+                                              Pathfinder pathfinder) {
+
+
+        List<Position> allBuildings = getBuildingPositions(current.getGrid());
+        List<Position> buildingNeighbors = getNeighborPositions(allBuildings, current);
+
+        Position closest = pathfinder.findClosestBuilding(enemy.getPosition(), buildingNeighbors);
+        while (closest == null){
+            buildingNeighbors = getNeighborPositions(buildingNeighbors, current);
+            closest = pathfinder.findClosestBuilding(enemy.getPosition(), buildingNeighbors);
+        }
+        return closest;
+
+    }
+
+    private List<Position> getNeighborPositions(List<Position> positions, GameState current){
+        List<Position> buildingPositions = new ArrayList<>();
+        for (Position pos : positions) {
+            List<Position> neighbors = pos.getNeighbors();
+            for (Position neighbour : neighbors){
+                if (current.isValidPosition(neighbour))
+                    buildingPositions.add(neighbour);
+            }
+        }
+        return buildingPositions;
+    }
+
+    private List<Position> getBuildingPositions(Cell[][] grid) {
+        List<Position> buildingPositions = new ArrayList<>();
+        for (Cell[] cells : grid) {
+            for (Cell cell : cells) {
+                if (cell.isOccupied() && cell.getObject() instanceof Building) {
+                    buildingPositions.add(cell.getObject().getPosition());
+                }
+            }
+        }
+        return buildingPositions;
+    }
+
+    public LiveData<GameState> getGameState() {
+        return gameState;
+    }
 }

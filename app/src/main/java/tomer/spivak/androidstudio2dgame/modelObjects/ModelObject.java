@@ -1,6 +1,10 @@
 package tomer.spivak.androidstudio2dgame.modelObjects;
 
 
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +32,7 @@ public abstract class ModelObject implements Damage {
     @Override
     public void takeDamage(float damage) {
         health -= damage;
+        Log.d("debug", "damage took health: " + health);
         if (health <= 0) {
             onDeath();
         }
@@ -47,7 +52,9 @@ public abstract class ModelObject implements Damage {
     public void setHealth(float health) {
         this.health = health;
     }
-
+    public float getHealth() {
+        return health;
+    }
 
 
 
@@ -59,6 +66,7 @@ public abstract class ModelObject implements Damage {
         return modelObjectData;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "ModelObject{" +

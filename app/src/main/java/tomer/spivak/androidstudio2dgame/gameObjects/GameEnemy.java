@@ -12,18 +12,20 @@ import tomer.spivak.androidstudio2dgame.model.Position;
 
 
 public class GameEnemy extends GameObject{
-    GameBuilding buildingToAttack;
-    
-    public GameEnemy(Context context, Point point, String name, float scale, Position pos){
-        super(context, point, name, scale, pos);
 
-        Log.d("debug", "creating new enemy: " + Arrays.toString(scaledSize));
+    public GameEnemy(Context context, Point point, String name, float scale, Position pos,
+                     int direction, int enemyState){
+        super(context, point, name, scale, pos);
+        imageResourceString = name + "_" + (direction + 1) + "_" + (enemyState + 1);
+        createView();
         setScaledSize();
     }
     private void setScaledSize(){
         Log.d("debug", Arrays.toString(originalSize));
-        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 0.6), context.getResources().getDisplayMetrics());
-        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 0.6), context.getResources().getDisplayMetrics());
+        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 0.6),
+                context.getResources().getDisplayMetrics());
+        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 0.6),
+                context.getResources().getDisplayMetrics());
 
     }
 
@@ -32,19 +34,11 @@ public class GameEnemy extends GameObject{
         this.scale = scale;
 
         Log.d("debug", "scale: " + scale);
-        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 0.6), context.getResources().getDisplayMetrics());
-        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 0.6), context.getResources().getDisplayMetrics());
+        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 0.6),
+                context.getResources().getDisplayMetrics());
+        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 0.6),
+                context.getResources().getDisplayMetrics());
 
     }
 
-
-    private void calculatePath() {
-
-    }
-
-    public void setAttackingBuilding(GameBuilding building) {
-        buildingToAttack = building;
-        calculatePath();
-        Log.d("debug", "setAttackingBuilding: ");
-    }
 }

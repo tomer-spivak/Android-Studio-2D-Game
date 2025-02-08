@@ -14,6 +14,7 @@ import android.view.SurfaceView;
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchHandler;
@@ -21,11 +22,13 @@ import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Cell;
+import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
 
-public class GameView extends SurfaceView implements SurfaceHolder.Callback, TouchHandler.TouchHandlerListener {
+public class GameView extends SurfaceView implements SurfaceHolder.Callback,
+        TouchHandler.TouchHandlerListener {
 
     private final GameLoop gameLoop;
 
@@ -64,7 +67,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         init();
     }
     void init(){
-        backgroundBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_morning);
+        backgroundBitmap = BitmapFactory.decodeResource(getResources(),
+                R.drawable.background_game_morning);
         paint = new Paint();
     }
 
@@ -114,31 +118,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
     }
 
-
-//    public void drawUPS(Canvas canvas) {
-//        String averageUPS = Double.toString(gameLoop.getAverageUPS());
-//        Paint paint = new Paint();
-//        int color = ContextCompat.getColor(getContext(), R.color.yellow);
-//        paint.setColor(color);
-//        paint.setTextSize(30);
-//        // Draw UI elements at fixed positions
-//        canvas.drawText("UPS: " + averageUPS, 100, 100, paint);
-//    }
-//
-//    public void drawFPS(Canvas canvas) {
-//        String averageFPS = Double.toString(gameLoop.getAverageFPS());
-//        Paint paint = new Paint();
-//        int color = ContextCompat.getColor(getContext(), R.color.red);
-//        paint.setColor(color);
-//        paint.setTextSize(30);
-//        // Draw UI elements at fixed positions
-//        canvas.drawText("FPS: " + averageFPS, 100, 200, paint);
-//    }
-//
-//    public void update() {
-//        // Add any update logic here
-//    }
-
     @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
         if (gameLoop != null) {
@@ -176,19 +155,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         for (int i = 0; i < newBoard.length; i++) {
             for (int j = 0; j < newBoard[i].length; j++) {
 
-                Log.d("debug", "new board: " + newBoard[i][j]);
-                Log.d("debug", "old board: " + board[i][j]);
 
                 //if both of them dont have anything, it doesnt matter to us
                 if ((!newBoard[i][j].isOccupied() && !board[i][j].isOccupied())){
                     continue;
                 }
 
-                //if the new board has it and the old one doesnt,
-                // it means we need to add a new object
-                Log.d("board", newBoard[i][j].toString());
-                Log.d("board", board[i][j].toString());
-                if (newBoard[i][j].isOccupied() && !board[i][j].isOccupied()){
+                 if (newBoard[i][j].isOccupied() && !board[i][j].isOccupied()){
                     Log.d("board", "updated");
                     addObjectFromModelToView(newBoard[i][j].getObject(), i, j);
                     board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject());
@@ -201,11 +174,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
                     board[i][j] = new Cell(newBoard[i][j].getPosition());
                 }
 
-                //if (newBoard[i][j].isOccupied() && board[i][j].isOccupied()){
-                    //add later health bar?
-                //}
+                if (newBoard[i][j].isOccupied() && board[i][j].isOccupied()){
+                    board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject());
+                    updateGameObject(newBoard[i][j], i, j);
+                }
             }
         }
+    }
+
+    private void updateGameObject(Cell cell, int i, int j) {
+        removeGameObject(i, j);
+        addObjectFromModelToView(cell.getObject(), i, j);
     }
 
     private void removeGameObject(int i, int j) {
@@ -222,8 +201,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         String objectPath = String.valueOf(object.getClass());
         String objectType = objectPath.substring(objectPath.
                 lastIndexOf('.') + 1).toLowerCase();
-        GameObject gameObject = GameObjectFactory.create(getContext(),
-                centerCells[centerX][centerY], objectType, scale, new Position(centerX, centerY));
+        GameObject gameObject;
+        if (object instanceof Enemy){
+            Enemy enemy = (Enemy) object;
+            gameObject = GameObjectFactory.create(getContext(), centerCells[centerX][centerY],
+                    objectType, scale,
+                    new Position(centerX, centerY),
+                    enemy.getCurrentDirection().ordinal(), enemy.getEnemyState().ordinal());
+        } else
+            gameObject = GameObjectFactory.create(getContext(),
+                    centerCells[centerX][centerY], objectType, scale,
+                    new Position(centerX, centerY), -1, -1);
         addGameObject(gameObject);
     }
 
@@ -231,7 +219,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     public void addGameObject(GameObject gameObject) {
         int i = 0;
         int size = gameObjectsViewsArrayList.size();
-        while (i < size && gameObjectsViewsArrayList.get(i).getImagePoint().y < gameObject.getImagePoint().y) {
+        while (i < size && gameObjectsViewsArrayList.get(i).getImagePoint().y <
+                gameObject.getImagePoint().y) {
             i++;
         }
         gameObjectsViewsArrayList.add(i, gameObject); // Insert at the correct position
@@ -262,10 +251,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         gridView.draw(canvas);
 
         //draws buildings
+        List<GameObject> objectsToDraw;
         synchronized (gameObjectsViewsArrayList) {
-            for (GameObject gameObject : gameObjectsViewsArrayList) {
-                gameObject.drawView(canvas);
-            }
+            objectsToDraw = new ArrayList<>(gameObjectsViewsArrayList);
+        }
+        for (GameObject gameObject : objectsToDraw) {
+            gameObject.drawView(canvas);
         }
     }
 }

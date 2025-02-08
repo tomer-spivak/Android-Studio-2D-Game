@@ -16,11 +16,6 @@ public class Tower extends Building {
     }
 
     @Override
-    public void takeDamage(float damage) {
-        // Implement damage handling logic here
-    }
-
-    @Override
     public void dealDamage(Damage target) {
         target.takeDamage(attackDamage);
     }

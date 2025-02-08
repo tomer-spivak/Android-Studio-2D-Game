@@ -1,6 +1,10 @@
 package tomer.spivak.androidstudio2dgame.model;
 
+import androidx.annotation.NonNull;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
@@ -29,6 +33,31 @@ public class Cell {
         this.object = enemy;
         enemy.setPosition(position); // Use grid position
     }
+    public List<Cell> getNeighbors(GameState current) {
+        List<Cell> neighbors = new ArrayList<>();
+        try {
+            neighbors.add(current.getCellAt(new Position(position.getX() + 1, position.getY())));
+        } catch (Exception ignored) {
+
+        }
+        try {
+            neighbors.add(current.getCellAt(new Position(position.getX() - 1, position.getY())));
+        } catch (Exception ignored) {
+
+        }
+        try {
+            neighbors.add(current.getCellAt(new Position(position.getX(), position.getY() + 1)));
+        } catch (Exception ignored) {
+
+        }
+        try {
+            neighbors.add(current.getCellAt(new Position(position.getX(), position.getY() - 1)));
+        } catch (Exception ignored) {
+
+        }
+
+        return neighbors;
+    }
 
     // Getters
     public Position getPosition() {
@@ -52,6 +81,7 @@ public class Cell {
         return cellData;
     }
 
+    @NonNull
     @Override
     public String toString() {
         String str = "Cell{" +
@@ -59,6 +89,10 @@ public class Cell {
         if (object != null)
             str += ", object=" + object;
         return str + '}';
+    }
+
+    public void removeObject() {
+        this.object = null;
     }
 }
 

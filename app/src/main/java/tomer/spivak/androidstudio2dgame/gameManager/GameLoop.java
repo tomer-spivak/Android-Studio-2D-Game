@@ -17,7 +17,6 @@ public class GameLoop implements Runnable {
     private Thread gameThread;
     private final GameViewListener listener;
 
-
     public GameLoop(GameView gameView, SurfaceHolder surfaceHolder, GameViewListener listener) {
         this.surfaceHolder = surfaceHolder;
         this.gameView = gameView;
@@ -25,14 +24,6 @@ public class GameLoop implements Runnable {
 
 
     }
-
-//    public double getAverageFPS() {
-//        return averageFPS;
-//    }
-//
-//    public double getAverageUPS() {
-//        return averageUPS;
-//    }
 
     public void startLoop() {
         isRunning = true;
@@ -42,71 +33,49 @@ public class GameLoop implements Runnable {
 
     @Override
     public void run() {
+        // Track the time of the previous frame.
+        long previousTime = System.currentTimeMillis();
 
+        // Game loop
+        while (isRunning) {
+            long currentTime = System.currentTimeMillis();
+            // Calculate delta time (time passed since the last frame in milliseconds)
+            long deltaTime = currentTime - previousTime;
+            previousTime = currentTime;  // Update previous time for the next iteration
 
-        //declare time and cycle count variables
-        int updateCount = 0;
-        long startTime;
-        long elapsedTime = 0;
-        long sleepTime;
-
-
-        //game loop
-        Canvas canvas = null;
-        startTime = System.currentTimeMillis();
-        while (isRunning){
-            //try to update and render game
+            Canvas canvas = null;
             try {
                 canvas = surfaceHolder.lockCanvas();
-                synchronized (surfaceHolder){
-                    listener.updateGameState(elapsedTime); // Update game state first
-                    gameView.draw(canvas); // Only handle rendering
-                    updateCount++;
-
+                synchronized (surfaceHolder) {
+                    // Pass the delta time instead of a growing elapsedTime value.
+                    listener.updateGameState(deltaTime);
+                    gameView.draw(canvas);
                 }
-
-                } catch (IllegalArgumentException e){
+            } catch (IllegalArgumentException e) {
                 e.printStackTrace();
             } finally {
-                if (canvas != null){
-                     try {
+                if (canvas != null) {
+                    try {
                         surfaceHolder.unlockCanvasAndPost(canvas);
-                    } catch (Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             }
-            //pause game Loop to not exceed target UPS
-            elapsedTime = System.currentTimeMillis() - startTime;
-            sleepTime = (long) (updateCount*UPS_PERIOD-elapsedTime);
-            if (sleepTime > 0){
+
+            // Calculate sleepTime based on your target UPS (updates per second)
+            // (You might want to adjust this logic if necessary.)
+            long frameTime = System.currentTimeMillis() - currentTime;
+            long sleepTime = (long) (UPS_PERIOD - frameTime);
+            if (sleepTime > 0) {
                 try {
                     Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-
             }
-            //skip frames to keep up with target UPS
-            while (sleepTime < 0 && updateCount < MAX_UPS-1){
-                //gameView.update();
-                updateCount++;
-                elapsedTime = System.currentTimeMillis() - startTime;
-                sleepTime = (long) (updateCount*UPS_PERIOD-elapsedTime);
-            }
-            //Calculate avg FPS and UPS
-//            elapsedTime = System.currentTimeMillis() - startTime;
-//            if (elapsedTime >= 1000){
-//                averageUPS = updateCount/(1E-3 * elapsedTime);
-//                averageFPS = frameCount/(1E-3 * elapsedTime);
-//                updateCount = 0;
-//                frameCount = 0;
-//                startTime = System.currentTimeMillis();
-//            }
         }
-
-    }
-    public void stopLoop() {
+    }    public void stopLoop() {
         isRunning = false;
         try {
             gameThread.join();

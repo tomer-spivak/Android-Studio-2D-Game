@@ -37,8 +37,8 @@ public abstract class GameObject {
         this.scaledSize = new int[2];
         this.originalSize = new int[2];
         this.pos = pos;
-        createView();
     }
+
 
     //creates the view of the Game Object
     protected void createView() {
@@ -47,7 +47,7 @@ public abstract class GameObject {
                 "drawable", context.getPackageName()));
         this.view = imageView;
 
-        Log.d("debug", "creating new game object: " + imageResourceString);
+        Log.d("attack", "creating new game object: " + imageResourceString);
 
         if (view.getDrawable() == null) {
             return;
@@ -67,10 +67,6 @@ public abstract class GameObject {
                         context.getResources().getDisplayMetrics());
 
     }
-
-
-
-
 
     public void drawView(Canvas canvas) {
         Bitmap scaledBitmap = createScaledBitmap();

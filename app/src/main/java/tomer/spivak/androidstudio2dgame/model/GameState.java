@@ -29,4 +29,9 @@ public class GameState {
         return pos.getX() >= 0 && pos.getX() < grid.length &&
                 pos.getY() >= 0 && pos.getY() < grid[0].length;
     }
+    public Cell getCellAt(Position pos) {
+        return grid[pos.getX()][pos.getY()];
+    }
+
+
 }

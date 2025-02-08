@@ -12,6 +12,7 @@ import tomer.spivak.androidstudio2dgame.model.Position;
 public class GameBuilding extends GameObject {
     public GameBuilding(Context context, Point point, String name, float scale, Position pos) {
         super(context, point, name, scale, pos);
+        createView();
         setScaledSize();
     }
 
@@ -44,8 +45,5 @@ public class GameBuilding extends GameObject {
 
 
 
-    @Override
-    public void update() {
 
-    }
 }
