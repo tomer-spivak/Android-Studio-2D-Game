@@ -78,9 +78,6 @@ public abstract class Enemy extends ModelObject {
     public void accumulateAttackTime(long deltaTime) {
         timeSinceLastAttack += deltaTime;
     }
-    void decresaseAttackTime(float deltaTime){
-        timeSinceLastAttack -= deltaTime;
-    }
 
     public EnemyState getEnemyState() {
         return enemyState;
@@ -90,11 +87,10 @@ public abstract class Enemy extends ModelObject {
         this.enemyState = enemyState;
     }
 
-    public float getAttackCooldown() {
-        return attackCooldown;
-    }
 
     public boolean canAttack() {
+        Log.d("attack", String.valueOf(timeSinceLastAttack));
+        Log.d("attack", String.valueOf(attackCooldown));
         return timeSinceLastAttack >= attackCooldown;
     }
 
@@ -115,9 +111,6 @@ public abstract class Enemy extends ModelObject {
         updateDirection(prevPos, pos);
     }
     public void updateDirection(Position prevPos, Position nextPos) {
-        Log.d("debug", "before update: " + currentDirection);
-        Log.d("debug", "prevPos: " + prevPos);
-        Log.d("debug", "pos: " + nextPos);
         if (prevPos.getX() > nextPos.getX()){
             setCurrentDirection(Direction.UPRIGHT);
         } else if(prevPos.getX() < nextPos.getX()){
@@ -128,18 +121,22 @@ public abstract class Enemy extends ModelObject {
             } else
                 setCurrentDirection(Direction.DOWNRIGHT);
         }
-        Log.d("debug", "after update: " + currentDirection);
     }
 
     public void attack(Building building) {
-        setEnemyState(EnemyState.ATTACKING);
-        new Timer().schedule(new TimerTask() {
+        // Use a Handler to post a delayed task to the main thread (if needed)
+        // Use a Handler to post a delayed task to the main thread (if needed)
+        resetAttackTimer();
+
+        dealDamage(building);
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                dealDamage(building);
-                decresaseAttackTime(attackCooldown);
+                // After 200ms, reset the state and the attack timer.
                 setEnemyState(EnemyState.IDLE);
+                resetAttackTimer();
             }
-        }, 200);
+        }, 1200);
     }
 }

@@ -1,21 +1,22 @@
 package tomer.spivak.androidstudio2dgame.viewModel;
 
 
-
-import android.util.Log;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
+import tomer.spivak.androidstudio2dgame.model.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.modelObjects.EnemyState;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Pathfinder;
@@ -51,25 +52,39 @@ public class GameViewModel extends ViewModel {
     public void updateGameState(long deltaTime) {
         accumulatedDayTime += deltaTime;
         GameState current = gameState.getValue();
+
         if (current != null) {
+
             if (accumulatedDayTime > NIGHT_THRESHOLD) {
+                //raid is in progress
                 if (current.getTimeOfDay()) {
+                    //init night
                     startNight(current);
                 }
-                updateEnemies(current, deltaTime);
-                gameState.postValue(current); // Use postValue for background thread
+
+                if (!getBuildingPositions(current.getGrid()).isEmpty()){
+                    //raid hasn't ended yet
+                    updateEnemies(current, deltaTime);
+                } else {
+                    //raid ended with all buildings destroyed
+                    Lose(current);
+                }
             }
+            gameState.postValue(current); // Use postValue for background thread
         }
+    }
+
+    private void Lose(GameState current) {
+        current.setGameStatus(GameStatus.LOST);
     }
 
     private void startNight(GameState current) {
         current.setTimeOfDay(false);
 
         //place holder amount
-        int amount = 1;
+        int amount = 3;
         spawnEnemies(current, amount);
     }
-
 
     private void spawnEnemies(GameState current, int amount){
         for (int i = 0; i < amount; i++){
@@ -120,8 +135,6 @@ public class GameViewModel extends ViewModel {
     private void updateEnemies(GameState current, long deltaTime) {
         List<Enemy> enemies = new ArrayList<>();
         Cell[][] grid = current.getGrid();
-
-        // Collect all enemies
         for (Cell[] row : grid) {
             for (Cell cell : row) {
                 ModelObject modelObject = cell.getObject();
@@ -130,46 +143,45 @@ public class GameViewModel extends ViewModel {
                 }
             }
         }
-
-        // Process each enemy's movement
         for (Enemy enemy : enemies) {
-            createPathForEnemy(current, enemy);
-            Log.d("debug", enemy.toString());
-            for (Position pos : enemy.getPath()) {
-                Log.d("debug", pos.toString());
-            }
-            List<Position> path = enemy.getPath();
-
-            int targetIndex = enemy.getCurrentTargetIndex();
-            Log.d("attack", "targetIndex: " + targetIndex);
-            if (path == null || path.isEmpty() || targetIndex >= path.size()){
-                finishedPath(current, enemy, deltaTime);
-                continue;
-            }
-            Log.d("attack", "path size: " + path.size());
-
-            enemy.updateDirection(enemy.getPosition(), path.get(0));
-            enemy.accumulateTime(deltaTime);
-
-            float timePerStep = 1000 / enemy.getMovementSpeed(); // ms per cell
-
-            while (enemy.getAccumulatedTime() >= timePerStep && targetIndex < path.size()) {
-                Position nextPos = path.get(targetIndex);
-                Cell nextCell = current.getCellAt(nextPos);
-                if (nextCell.getObject() != null) {
-                    path = createPathForEnemy(current, enemy);
-                    nextPos = path.get(targetIndex);
-                    nextCell = current.getCellAt(nextPos);
-                }
-                Cell currentCell = current.getCellAt(enemy.getPosition());
-                targetIndex = moveEnemy(currentCell, nextCell, enemy, timePerStep);
-            }
-            if (path.isEmpty() || targetIndex >= path.size()){
-                fixDirectionToBuilding(enemy, current);
-            }
-
-
+            updateEnemyMovement(enemy, current, deltaTime);
         }
+    }
+
+    private void updateEnemyMovement(Enemy enemy, GameState current, long deltaTime) {
+        createPathForEnemy(current, enemy);
+        List<Position> path = enemy.getPath();
+        int targetIndex = enemy.getCurrentTargetIndex();
+
+        if (path == null || path.isEmpty() || targetIndex >= path.size()){
+            finishedPath(current, enemy, deltaTime);
+            return;
+        }
+
+        enemy.updateDirection(enemy.getPosition(), path.get(0));
+        enemy.accumulateTime(deltaTime);
+
+        float timePerStep = 1000 / enemy.getMovementSpeed(); // ms per cell
+        boolean hasMoved = false;
+
+        while (enemy.getAccumulatedTime() >= timePerStep && targetIndex < path.size()) {
+            hasMoved = true;
+            Position nextPos = path.get(targetIndex);
+            Cell nextCell = current.getCellAt(nextPos);
+            if (nextCell.getObject() != null) {
+                path = createPathForEnemy(current, enemy);
+                nextPos = path.get(targetIndex);
+                nextCell = current.getCellAt(nextPos);
+            }
+            Cell currentCell = current.getCellAt(enemy.getPosition());
+            targetIndex = moveEnemy(currentCell, nextCell, enemy, timePerStep);
+            enemy.setEnemyState(EnemyState.IDLE);
+        }
+        if (path.isEmpty() || targetIndex >= path.size()){
+            fixDirectionToBuilding(enemy, current);
+        }
+        if (!hasMoved)
+            enemy.setEnemyState(EnemyState.MOVING);
     }
 
     private void finishedPath(GameState current, Enemy enemy, long deltaTime) {
@@ -177,7 +189,8 @@ public class GameViewModel extends ViewModel {
 
         Cell currentEnemyCell = current.getCellAt(enemy.getPosition());
         List<Cell> neighbors = currentEnemyCell.getNeighbors(current);
-        List<Building> adjacentBuildings = new ArrayList<>();
+
+        Set<Building> adjacentBuildings = new HashSet<>();
 
         for (Cell neighbor : neighbors) {
             ModelObject obj = neighbor.getObject();
@@ -185,23 +198,24 @@ public class GameViewModel extends ViewModel {
                 adjacentBuildings.add((Building) obj);
             }
         }
-        for (Cell cells: neighbors){
-            Log.d("attack", "buildings to hit:" + cells.toString());
-        }
 
         if (!adjacentBuildings.isEmpty()) {
             enemy.accumulateAttackTime(deltaTime);
             if (enemy.canAttack()) {
                 for (Building building : adjacentBuildings) {
-                    Log.d("attack", "building struck: " + building.toString());
+                    enemy.setEnemyState(EnemyState.ATTACKING);
+
+                    // Attack immediately without delay
                     enemy.attack(building);
                     if (building.getHealth() <= 0) {
                         Cell buildingCell = current.getCellAt(building.getPosition());
                         buildingCell.removeObject();
                     }
-                    enemy.resetAttackTimer();
                 }
             }
+        }
+        if (getBuildingPositions(current.getGrid()).isEmpty()){
+            Lose(current);
         }
     }
 
@@ -236,21 +250,22 @@ public class GameViewModel extends ViewModel {
         return enemy.getPath();
     }
 
-
     private Position getClosetBuildingToEnemy(GameState current, Enemy enemy,
                                               Pathfinder pathfinder) {
 
-
         List<Position> allBuildings = getBuildingPositions(current.getGrid());
+        if (allBuildings.isEmpty()){
+            return enemy.getPosition();
+        }
         List<Position> buildingNeighbors = getNeighborPositions(allBuildings, current);
 
         Position closest = pathfinder.findClosestBuilding(enemy.getPosition(), buildingNeighbors);
+
         while (closest == null){
             buildingNeighbors = getNeighborPositions(buildingNeighbors, current);
             closest = pathfinder.findClosestBuilding(enemy.getPosition(), buildingNeighbors);
         }
         return closest;
-
     }
 
     private List<Position> getNeighborPositions(List<Position> positions, GameState current){

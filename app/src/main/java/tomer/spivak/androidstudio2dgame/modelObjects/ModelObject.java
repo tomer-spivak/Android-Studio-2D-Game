@@ -1,7 +1,6 @@
 package tomer.spivak.androidstudio2dgame.modelObjects;
 
 
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -32,7 +31,6 @@ public abstract class ModelObject implements Damage {
     @Override
     public void takeDamage(float damage) {
         health -= damage;
-        Log.d("debug", "damage took health: " + health);
         if (health <= 0) {
             onDeath();
         }
@@ -42,12 +40,6 @@ public abstract class ModelObject implements Damage {
 
     }
 
-//    public String getName() {
-//        return name;
-//    }
-//    public void setName(String name) {
-//        this.name = name;
-//    }
 
     public void setHealth(float health) {
         this.health = health;

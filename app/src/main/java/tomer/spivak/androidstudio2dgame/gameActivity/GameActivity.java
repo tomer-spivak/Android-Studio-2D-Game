@@ -34,6 +34,7 @@ import java.util.Map;
 import tomer.spivak.androidstudio2dgame.FirebaseRepository;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.model.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Tower;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
@@ -285,8 +286,28 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             @Override
             public void onChanged(GameState gameState) {
                 Log.d("board", "changed");
-                Cell[][] board = gameState.getGrid();
-                gameView.setBoard(board);
+                gameView.unpackGameState(gameState);
+                if (gameState.getGameStatus() == GameStatus.LOST){
+                    Toast.makeText(context, "lost", Toast.LENGTH_SHORT).show();
+                    Log.d("lost", "lost");
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle("Title")
+                            .setMessage("This is an alert dialog.")
+                            .setPositiveButton("Go back to menu", (dialog, which) -> {
+                                finish();
+                            })
+                            .setNegativeButton("Exit App", (dialog, which) -> {
+                                finishAffinity();
+                                System.exit(0);
+                            });
+
+                    AlertDialog alertDialog = builder.create();
+                    alertDialog.show();
+
+
+
+                }
+
             }
         });
     }

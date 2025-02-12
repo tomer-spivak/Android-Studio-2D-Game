@@ -1,6 +1,5 @@
 package tomer.spivak.androidstudio2dgame.model;
 
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,12 +22,6 @@ public class Pathfinder {
         // Step 2: Iterate through all buildings to find the closest one
         Position closestBuilding = null;
         int minDistance = Integer.MAX_VALUE;
-
-        Log.d("enemyspawn", "keyset: " + bfsDistances.keySet());
-
-        for (Position entry : bfsDistances.keySet()){
-            Log.d("enemyspawn", "key: " + entry);
-        }
 
         for (Position building : allBuildings) {
             if (bfsDistances.containsKey(building)) {
@@ -70,13 +63,10 @@ public class Pathfinder {
         return distances;
     }
 
-
-
     private boolean isPassablePosition(Position pos) {
         // Check if the position is valid AND not occupied
         return !gameState.getGrid()[pos.getX()][pos.getY()].isOccupied();
     }
-
 
     public List<Position> findPath(Position start, Position goal) {
         Map<Position, Position> cameFrom = new HashMap<>();
@@ -123,6 +113,5 @@ public class Pathfinder {
 
         return path;
     }
-
 
 }

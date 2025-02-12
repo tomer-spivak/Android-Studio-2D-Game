@@ -11,7 +11,7 @@ public class ModelObjectFactory {
 
     static {
         typeMap.put("tower", (position) -> new Tower(100, 20, 3, position));
-        typeMap.put("monster", (position) -> new Monster(50, 51, 1.5F,
+        typeMap.put("monster", (position) -> new Monster(50, 50, 1.5F,
                 position,1000F));
     }
 

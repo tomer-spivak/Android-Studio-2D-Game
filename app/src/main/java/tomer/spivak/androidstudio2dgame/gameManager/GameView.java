@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -22,6 +23,8 @@ import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Cell;
+import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.model.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.model.Position;
@@ -39,7 +42,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     private final ArrayList<GameObject> gameObjectsViewsArrayList = new ArrayList<>();
 
     private Float scale = 1F;
-    private Bitmap backgroundBitmap;
+    private Bitmap morningBackground;
+    private Bitmap nightBackground;
+    private Bitmap backgroundBitmap; // This will point to one of the above.
     private Paint paint;
 
     Cell[][] board;
@@ -67,8 +72,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         init();
     }
     void init(){
-        backgroundBitmap = BitmapFactory.decodeResource(getResources(),
-                R.drawable.background_game_morning);
+        morningBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_morning);
+        nightBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_night);
+        // Set the initial background (assuming morning is default)
+        backgroundBitmap = morningBackground;
         paint = new Paint();
     }
 
@@ -145,7 +152,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
 
     public void setBoard(Cell[][] board) {
         updateGameBoardFromBoard(board);
-        //this.board = board;
     }
 
     //in future add an actual update method because this one is just overriding
@@ -257,6 +263,21 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         }
         for (GameObject gameObject : objectsToDraw) {
             gameObject.drawView(canvas);
+        }
+    }
+
+    public void unpackGameState(GameState gameState) {
+        setBoard(gameState.getGrid());
+        boolean timeOfDay = gameState.getTimeOfDay();
+        if (timeOfDay){
+            backgroundBitmap = morningBackground;
+        } else {
+            backgroundBitmap = nightBackground;
+        }
+        if (gameState.getGameStatus() == GameStatus.LOST){
+            Toast.makeText(getContext(), "lost", Toast.LENGTH_SHORT).show();
+            Log.d("lost", "lost");
+            gameLoop.stopLoop();
         }
     }
 }
