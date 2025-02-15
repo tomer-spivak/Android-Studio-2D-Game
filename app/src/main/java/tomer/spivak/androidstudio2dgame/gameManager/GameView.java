@@ -24,10 +24,12 @@ import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
-import tomer.spivak.androidstudio2dgame.model.GameStatus;
+import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.modelObjects.Ruin;
+import tomer.spivak.androidstudio2dgame.modelObjects.Turret;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback,
@@ -145,30 +147,43 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     @Override
     public void onBoxClick(float x, float y) {
         Point[] cellCenterPointArray = gridView.getSelectedCell(x, y);
+        if (cellCenterPointArray == null)
+            return;
         Point cellPoint = cellCenterPointArray[1];
         listener.onCellClicked(cellPoint.x, cellPoint.y);
 
+    }
+
+    public void unpackGameState(GameState gameState) {
+        setBoard(gameState.getGrid());
+        boolean timeOfDay = gameState.getTimeOfDay();
+        if (timeOfDay){
+            backgroundBitmap = morningBackground;
+        } else {
+            backgroundBitmap = nightBackground;
+        }
+        if (gameState.getGameStatus() == GameStatus.LOST){
+            Toast.makeText(getContext(), "lost", Toast.LENGTH_SHORT).show();
+            Log.d("lost", "lost");
+            gameLoop.stopLoop();
+        }
     }
 
     public void setBoard(Cell[][] board) {
         updateGameBoardFromBoard(board);
     }
 
-    //in future add an actual update method because this one is just overriding
-
     //takes everything in the model board into the game one
     void updateGameBoardFromBoard(Cell[][] newBoard){
         for (int i = 0; i < newBoard.length; i++) {
             for (int j = 0; j < newBoard[i].length; j++) {
-
-
                 //if both of them dont have anything, it doesnt matter to us
                 if ((!newBoard[i][j].isOccupied() && !board[i][j].isOccupied())){
                     continue;
                 }
 
                  if (newBoard[i][j].isOccupied() && !board[i][j].isOccupied()){
-                    Log.d("board", "updated");
+                    Log.d("board", newBoard[i][j].getObject().toString());
                     addObjectFromModelToView(newBoard[i][j].getObject(), i, j);
                     board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject());
                 }
@@ -204,20 +219,24 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     }
 
     private void addObjectFromModelToView(ModelObject object, int centerX, int centerY) {
-        String objectPath = String.valueOf(object.getClass());
-        String objectType = objectPath.substring(objectPath.
-                lastIndexOf('.') + 1).toLowerCase();
-        GameObject gameObject;
+        GameObject gameObject = null;
         if (object instanceof Enemy){
             Enemy enemy = (Enemy) object;
             gameObject = GameObjectFactory.create(getContext(), centerCells[centerX][centerY],
-                    objectType, scale,
+                    enemy.getType().name(), scale,
                     new Position(centerX, centerY),
                     enemy.getCurrentDirection().ordinal(), enemy.getEnemyState().ordinal());
-        } else
+        } else if (object instanceof Ruin){
+            Ruin ruin = (Ruin) object;
             gameObject = GameObjectFactory.create(getContext(),
-                    centerCells[centerX][centerY], objectType, scale,
+                    centerCells[centerX][centerY], ruin.getType().name(), scale,
                     new Position(centerX, centerY), -1, -1);
+        } else if (object instanceof Turret) {
+            Turret turret = (Turret) object;
+            gameObject = GameObjectFactory.create(getContext(),
+                    centerCells[centerX][centerY], turret.getType().name(), scale,
+                    new Position(centerX, centerY), -1, -1);
+        }
         addGameObject(gameObject);
     }
 
@@ -262,22 +281,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
             objectsToDraw = new ArrayList<>(gameObjectsViewsArrayList);
         }
         for (GameObject gameObject : objectsToDraw) {
+            if (gameObject == null)
+                continue;
             gameObject.drawView(canvas);
         }
     }
 
-    public void unpackGameState(GameState gameState) {
-        setBoard(gameState.getGrid());
-        boolean timeOfDay = gameState.getTimeOfDay();
-        if (timeOfDay){
-            backgroundBitmap = morningBackground;
-        } else {
-            backgroundBitmap = nightBackground;
-        }
-        if (gameState.getGameStatus() == GameStatus.LOST){
-            Toast.makeText(getContext(), "lost", Toast.LENGTH_SHORT).show();
-            Log.d("lost", "lost");
-            gameLoop.stopLoop();
-        }
+    public void pauseGameLoop() {
+        gameLoop.stopLoop();
+    }
+
+    public void stopGameLoop() {
+        gameLoop.stopLoop();
     }
 }

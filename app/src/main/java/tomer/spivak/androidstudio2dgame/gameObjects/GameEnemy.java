@@ -16,7 +16,7 @@ public class GameEnemy extends GameObject{
     public GameEnemy(Context context, Point point, String name, float scale, Position pos,
                      int direction, int enemyState){
         super(context, point, name, scale, pos);
-        imageResourceString = name + "_" + (direction + 1) + "_" + (enemyState + 1);
+        imageResourceString = imageResourceString + "_" + (direction + 1) + "_" + (enemyState + 1);
         createView();
         setScaledSize();
     }

@@ -1,8 +1,6 @@
 package tomer.spivak.androidstudio2dgame.modelObjects;
 
-public interface Damage {
+public interface IDamageable {
     void takeDamage(float damage); // Called when entity is hit
-    void dealDamage(Damage target); // Called when entity attacks
-
     float getHealth();
 }

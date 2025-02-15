@@ -1,6 +1,7 @@
 package tomer.spivak.androidstudio2dgame.model;
 
 
+import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 
 public class GameState {
     private final Cell[][] grid; // 2D grid of cells

@@ -1,5 +1,7 @@
 package tomer.spivak.androidstudio2dgame.model;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +19,10 @@ public class Position {
     // Calculate distance between two grid positions (for attack range checks)
     public float distanceTo(Position other) {
         // Use Manhattan distance for grid-based movement
-        return Math.abs(x - other.x) + Math.abs(y - other.y);
+        Log.d("dist", x + " " + other.x + " " + y + " " + other.y);
+        int distX = Math.abs(x - other.x);
+        int distY = Math.abs(y - other.y);
+        return distX + distY;
     }
 
     @Override

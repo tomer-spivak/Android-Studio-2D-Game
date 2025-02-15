@@ -9,15 +9,13 @@ import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.model.Position;
 
-public abstract class ModelObject implements Damage {
+public abstract class ModelObject implements IDamageable {
     protected Position pos;
     protected float health;
-    //protected String name;
 
     public ModelObject(float health, Position pos) {
         this.health = health;
         this.pos = pos;
-      //this.name = name;
     }
 
     public Position getPosition() {
@@ -36,7 +34,7 @@ public abstract class ModelObject implements Damage {
         }
     }
 
-    private void onDeath() {
+    void onDeath() {
 
     }
 
@@ -47,8 +45,6 @@ public abstract class ModelObject implements Damage {
     public float getHealth() {
         return health;
     }
-
-
 
     public Object toMap(){
         Map<String, Object> modelObjectData = new HashMap<>();

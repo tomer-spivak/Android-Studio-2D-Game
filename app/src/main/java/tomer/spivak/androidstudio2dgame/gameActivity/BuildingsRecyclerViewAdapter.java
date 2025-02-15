@@ -43,7 +43,7 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
 
     @Override
     public void onBindViewHolder(@NonNull BuildingsRecyclerViewAdapter.BuildingViewHolder holder, int position) {
-        String imageUrl = buildingArrayList.get(position);
+        String imageUrl = buildingArrayList.get(position).toLowerCase();
         int resourceId = context.getResources().getIdentifier(imageUrl,
                 "drawable", context.getPackageName());
         Log.d("debug", imageUrl);

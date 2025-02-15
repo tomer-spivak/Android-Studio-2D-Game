@@ -34,8 +34,11 @@ import java.util.Map;
 import tomer.spivak.androidstudio2dgame.FirebaseRepository;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.model.GameStatus;
-import tomer.spivak.androidstudio2dgame.modelObjects.Tower;
+import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
+import tomer.spivak.androidstudio2dgame.modelEnums.Direction;
+import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
+import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
+import tomer.spivak.androidstudio2dgame.modelEnums.EnemyType;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
 import tomer.spivak.androidstudio2dgame.model.Cell;
@@ -45,7 +48,8 @@ import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Position;
 
 
-public class GameActivity extends AppCompatActivity implements OnItemClickListener, GameViewListener {
+public class GameActivity extends AppCompatActivity implements OnItemClickListener,
+        GameViewListener {
 
     Context context;
 
@@ -102,7 +106,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 @Override
                 public void handleOnBackPressed() {
 
-                    // Show the alert dialog and pass a Runnable to be executed when the dialog is dismissed
+                    // Show the alert dialog and pass a Runnable to be executed when
+                    // the dialog is dismissed
                     showAlertDialog();
                 }
             };
@@ -110,6 +115,23 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
         }
     }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (gameView != null) {
+            gameView.pauseGameLoop(); // implement this method to stop the thread
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (gameView != null) {
+            gameView.stopGameLoop(); // if needed, ensure complete shutdown of the thread
+        }
+    }
+
+
     //checks if user wants to save his base
     private void showAlertDialog() {
         LayoutInflater inflater = LayoutInflater.from(this);
@@ -143,7 +165,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             @Override
             public void onClick(View v) {
                 alertDialog.dismiss();
-                firebaseRepository.saveBoard(viewModel.getGameState().getValue().getGrid(), new OnSuccessListener<Void>() {
+                firebaseRepository.saveBoard(viewModel.getGameState().getValue().getGrid(),
+                        new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void unused) {
                         finish();
@@ -222,10 +245,21 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                             if (objectMap != null){
                                 ModelObject object = ModelObjectFactory.create((String)
                                                 objectMap.get("type"), pos);
+                                String type = (String) objectMap.get("type");
+                                object.setHealth(((Number) objectMap.get("health"))
+                                        .floatValue());
+                                if (isInEnum(type, EnemyType.class)) {
+                                    Enemy enemy = (Enemy) object;
+                                    enemy.setState((EnemyState) objectMap.get("enemyState"));
+                                    enemy.setCurrentDirection((Direction) objectMap.
+                                            get("currentDirection"));
+                                    enemy.setPath((List<Position>) objectMap.get("path"));
+                                    enemy.setCurrentTargetIndex(((Number) objectMap.
+                                            get("currentTargetIndex"))
+                                            .intValue());
+                                    enemy.setTimeSinceLastAttack((Float) objectMap.get("timeSinceLastAttack"));
+                                    enemy.setTimeSinceLastMove((Float) objectMap.get("timeSinceLastMove"));
 
-                                if (objectMap.get("type").equals("tower")){
-                                    Tower tower = (Tower) object;
-                                    tower.setHealth(((Number) objectMap.get("health")).floatValue());
                                 }
 
                                 board[pos.getX()][pos.getY()] = new Cell(pos, object);
@@ -246,6 +280,14 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             }
         });
     }
+    public static <T extends Enum<T>> boolean isInEnum(String value, Class<T> enumClass) {
+        for (T enumValue : enumClass.getEnumConstants()) {
+            if (enumValue.name().equals(value)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private void hideSystemUI() {
         View decorView = getWindow().getDecorView();
@@ -262,15 +304,18 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     private void initPlacingBuilding() {
         initBuildingToChoose();
         adapter = new BuildingsRecyclerViewAdapter(context, buildingImagesURL, this);
-        buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this,
+                LinearLayoutManager.HORIZONTAL, false));
         buildingRecyclerView.setAdapter(adapter);
     }
 
     //pop the options for user (need to add more buildings later)
     private void initBuildingToChoose() {
-        String tower = "tower";
+        String obelisk = "OBELISK";
+        String archerTower = "ARCHERTOWER";
 
-        buildingImagesURL.add(tower);
+        buildingImagesURL.add(obelisk);
+        buildingImagesURL.add(archerTower);
     }
 
     //a building has been selected in the card view, sending info to game view

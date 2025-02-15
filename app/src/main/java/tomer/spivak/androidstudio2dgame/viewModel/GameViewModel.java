@@ -1,6 +1,8 @@
 package tomer.spivak.androidstudio2dgame.viewModel;
 
 
+import android.util.Log;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -11,16 +13,17 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import tomer.spivak.androidstudio2dgame.model.GameStatus;
+import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.model.GameState;
-import tomer.spivak.androidstudio2dgame.modelObjects.EnemyState;
+import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Pathfinder;
 import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.modelObjects.Turret;
 
 public class GameViewModel extends ViewModel {
     private final MutableLiveData<GameState> gameState = new MutableLiveData<>();
@@ -42,8 +45,10 @@ public class GameViewModel extends ViewModel {
         if (current != null) {
             Cell cell = current.getGrid()[row][col];
             if (!cell.isOccupied() && selectedBuildingType != null) {
+                Log.d("debug", selectedBuildingType);
                 cell.placeBuilding((Building)ModelObjectFactory.create(selectedBuildingType,
                         new Position(row, col)));
+                Log.d("debug", String.valueOf(cell.getObject().getClass()));
                 gameState.postValue(current);
             }
         }
@@ -56,22 +61,77 @@ public class GameViewModel extends ViewModel {
         if (current != null) {
 
             if (accumulatedDayTime > NIGHT_THRESHOLD) {
-                //raid is in progress
+                //night
                 if (current.getTimeOfDay()) {
-                    //init night
+                    //init night and raid
                     startNight(current);
                 }
 
+
+                checkDeath(current);
+
                 if (!getBuildingPositions(current.getGrid()).isEmpty()){
-                    //raid hasn't ended yet
+                    //raid is still in progress
+                    List<Enemy> enemies = getEnemies(current);
+                    updateTurrets(current, enemies, deltaTime);
+
                     updateEnemies(current, deltaTime);
                 } else {
                     //raid ended with all buildings destroyed
                     Lose(current);
                 }
+                gameState.postValue(current); // Use postValue for background thread
             }
-            gameState.postValue(current); // Use postValue for background thread
         }
+    }
+
+    private void checkDeath(GameState current ) {
+        Cell[][] grid = current.getGrid();
+        for (Cell[] cellRow : grid){
+            for (Cell cell: cellRow){
+                if (cell.getObject() != null){
+                    ModelObject object = cell.getObject();
+                    if (object.getHealth() <= 0){
+                        cell.removeObject();
+                    }
+                }
+            }
+        }
+
+    }
+
+    private List<Turret> getTurrets(GameState current) {
+        List<Turret> turrets = new ArrayList<>();
+        Cell[][] grid = current.getGrid();
+        for (Cell[] row : grid) {
+            for (Cell cell : row) {
+                ModelObject obj = cell.getObject();
+                if (obj instanceof Turret) {
+                    turrets.add((Turret) obj);
+                }
+            }
+        }
+        return turrets;
+    }
+
+    private void updateTurrets(GameState current, List<Enemy> enemies, long deltaTime) {
+        List<Turret> turrets = getTurrets(current);
+        for (Turret turret : turrets) {
+            turret.update(enemies, deltaTime);
+        }
+    }
+    private List<Enemy> getEnemies(GameState current) {
+        List<Enemy> enemies = new ArrayList<>();
+        Cell[][] grid = current.getGrid();
+        for (Cell[] row : grid) {
+            for (Cell cell : row) {
+                ModelObject obj = cell.getObject();
+                if (obj instanceof Enemy) {
+                    enemies.add((Enemy) obj);
+                }
+            }
+        }
+        return enemies;
     }
 
     private void Lose(GameState current) {
@@ -88,7 +148,7 @@ public class GameViewModel extends ViewModel {
 
     private void spawnEnemies(GameState current, int amount){
         for (int i = 0; i < amount; i++){
-            spawnEnemy(current, "monster");
+            spawnEnemy(current, "MONSTER");
         }
     }
 
@@ -144,13 +204,13 @@ public class GameViewModel extends ViewModel {
             }
         }
         for (Enemy enemy : enemies) {
-            updateEnemyMovement(enemy, current, deltaTime);
+            if (enemy.getEnemyState() != EnemyState.HURT && enemy.getEnemyState() != EnemyState.ATTACKING)
+                updateEnemyMovement(enemy, current, deltaTime);
         }
     }
 
     private void updateEnemyMovement(Enemy enemy, GameState current, long deltaTime) {
-        createPathForEnemy(current, enemy);
-        List<Position> path = enemy.getPath();
+        List<Position> path = createPathForEnemy(current, enemy);
         int targetIndex = enemy.getCurrentTargetIndex();
 
         if (path == null || path.isEmpty() || targetIndex >= path.size()){
@@ -175,13 +235,13 @@ public class GameViewModel extends ViewModel {
             }
             Cell currentCell = current.getCellAt(enemy.getPosition());
             targetIndex = moveEnemy(currentCell, nextCell, enemy, timePerStep);
-            enemy.setEnemyState(EnemyState.IDLE);
+            enemy.setState(EnemyState.IDLE);
         }
         if (path.isEmpty() || targetIndex >= path.size()){
             fixDirectionToBuilding(enemy, current);
         }
         if (!hasMoved)
-            enemy.setEnemyState(EnemyState.MOVING);
+            enemy.setState(EnemyState.MOVING);
     }
 
     private void finishedPath(GameState current, Enemy enemy, long deltaTime) {
@@ -201,21 +261,13 @@ public class GameViewModel extends ViewModel {
 
         if (!adjacentBuildings.isEmpty()) {
             enemy.accumulateAttackTime(deltaTime);
-            if (enemy.canAttack()) {
-                for (Building building : adjacentBuildings) {
-                    enemy.setEnemyState(EnemyState.ATTACKING);
 
+            for (Building building : adjacentBuildings) {
+                if (enemy.canAttack()) {
                     // Attack immediately without delay
                     enemy.attack(building);
-                    if (building.getHealth() <= 0) {
-                        Cell buildingCell = current.getCellAt(building.getPosition());
-                        buildingCell.removeObject();
-                    }
                 }
             }
-        }
-        if (getBuildingPositions(current.getGrid()).isEmpty()){
-            Lose(current);
         }
     }
 

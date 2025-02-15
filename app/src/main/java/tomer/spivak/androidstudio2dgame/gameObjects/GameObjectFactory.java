@@ -13,14 +13,15 @@ public class GameObjectFactory {
 
     static {
         // Register types that match the five-parameter constructor signature.
-        typeMap.put("tower", GameBuilding::new);
+        typeMap.put("OBELISK", GameBuilding::new);
+        typeMap.put("ARCHERTOWER", GameBuilding::new);
         // Do not register "monster" here since GameEnemy requires an extra parameter.
     }
 
 
     public static GameObject create(Context context, Point point, String type, float scale,
                                     Position pos, int direction, int enemyState) {
-        if (type.equals("monster")) {
+        if (type.equals("MONSTER")) {
             // Handle GameEnemy separately since it needs the extra direction parameter.
             return new GameEnemy(context, point, type, scale, pos, direction, enemyState);
         }

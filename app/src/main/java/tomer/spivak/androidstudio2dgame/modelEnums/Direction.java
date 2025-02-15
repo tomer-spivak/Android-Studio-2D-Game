@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.modelObjects;
+package tomer.spivak.androidstudio2dgame.modelEnums;
 
 public enum Direction {
     DOWNLEFT, DOWNRIGHT, UPLEFT, UPRIGHT

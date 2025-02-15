@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.model;
+package tomer.spivak.androidstudio2dgame.modelEnums;
 
 public enum GameStatus {
     PLAYING,

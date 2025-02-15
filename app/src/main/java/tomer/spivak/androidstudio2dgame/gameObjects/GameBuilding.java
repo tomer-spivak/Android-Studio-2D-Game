@@ -35,7 +35,7 @@ public class GameBuilding extends GameObject {
 
         int topLeftX = imagePoint.x - (int) ((float) scaledSize[0] / 2);
         int topLeftY = imagePoint.y - scaledSize[1]/2;
-        if (this.imageResourceString.equals("tower")){
+        if (this.imageResourceString.equals("obelisk")){
             topLeftY = (int) (imagePoint.y - (double) scaledSize[1] /2 * 1.4);
         }
 

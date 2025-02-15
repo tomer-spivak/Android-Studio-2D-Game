@@ -32,7 +32,7 @@ public abstract class GameObject {
     public GameObject(Context context, Point point, String name, float scale, Position pos)  {
         this.context = context;
         this.imagePoint = point;
-        this.imageResourceString = name;
+        this.imageResourceString = name.toLowerCase();
         this.scale = scale;
         this.scaledSize = new int[2];
         this.originalSize = new int[2];
@@ -42,12 +42,12 @@ public abstract class GameObject {
 
     //creates the view of the Game Object
     protected void createView() {
+        Log.d("debug", "creating new game object: " + imageResourceString);
         ImageView imageView = new ImageView(context); // Use your Activity or Application context
         imageView.setImageResource(context.getResources().getIdentifier(imageResourceString,
                 "drawable", context.getPackageName()));
         this.view = imageView;
 
-        Log.d("attack", "creating new game object: " + imageResourceString);
 
         if (view.getDrawable() == null) {
             return;
