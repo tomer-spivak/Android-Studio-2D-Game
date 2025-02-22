@@ -1,6 +1,8 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+<resources >
+
     <style name="Base.Theme.AndroidStudio2DGame" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:listDivider">@layout/nav_divider</item>
+
         <!-- Customize your light theme here. -->
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowNoTitle">true</item>

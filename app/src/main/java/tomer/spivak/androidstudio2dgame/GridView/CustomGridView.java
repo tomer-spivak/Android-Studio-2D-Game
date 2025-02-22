@@ -9,6 +9,7 @@ import android.graphics.Point;
 import android.widget.GridView;
 import androidx.annotation.NonNull;
 
+import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 
 
 public class CustomGridView extends GridView {
@@ -31,6 +32,7 @@ public class CustomGridView extends GridView {
     private GridTransformer gridTransformer;
 
     private final Context context;
+    private CellState[][] cellStates;
 
     public CustomGridView(Context context) {
         super(context);
@@ -49,7 +51,7 @@ public class CustomGridView extends GridView {
 
         float[] startCoordinates = new float[]{startX, startY};
 
-        drawGridView = new DrawGridView(numRows, numColumns, context);
+        drawGridView = new DrawGridView(context);
         gridPathManager = new GridPathManager(numRows, numColumns, cellWidth, cellHeight, startCoordinates);
 
         gridTransformer = new GridTransformer(startX, startY, minScale, maxScale, baseCellHeight);
@@ -185,10 +187,20 @@ public class CustomGridView extends GridView {
     public void draw(@NonNull Canvas canvas) {
         super.draw(canvas);
         if (drawGridView != null) {
-            drawGridView.draw(canvas, gridPathManager.getCellCenters(),
-                    gridTransformer.getScale() /maxScale);
+            for (int i = 0; i < numRows; i++) {
+                for (int j = 0; j < numColumns; j++) {
+                    drawGridView.draw(canvas, gridPathManager.getCellCenters()[i][j],
+                            gridTransformer.getScale() /maxScale, cellStates[i][j]);
+                }
+            }
+
+
         }
 
+    }
+
+    public void setCellsState(CellState[][] cellStates) {
+        this.cellStates = cellStates;
     }
 }
 

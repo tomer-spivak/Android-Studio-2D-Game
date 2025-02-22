@@ -48,9 +48,9 @@ public class IntermediateActivity extends AppCompatActivity {
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
                 if (id == R.id.nav_about) {
-                    replaceFragment(new AboutFragment());
+                    replaceFragment(new AboutFragment(), true);
                 } else if (id == R.id.nav_Rules) {
-                    replaceFragment(new RulesFragment());
+                    replaceFragment(new RulesFragment(), true);
                 } else if (id == R.id.go_to_game){
                     Intent intent = new Intent(context, GameActivity.class);
                     startActivity(intent);
@@ -83,7 +83,7 @@ public class IntermediateActivity extends AppCompatActivity {
     private void init() {
         initDrawerToolBar();
         initHeader();
-        replaceFragment(new RulesFragment());
+        replaceFragment(new RulesFragment(), false);
 
     }
 
@@ -129,10 +129,12 @@ public class IntermediateActivity extends AppCompatActivity {
 
     }
 
-    private void replaceFragment(Fragment fragment){
+    private void replaceFragment(Fragment fragment, boolean addToBackStack) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.flIntermediate, fragment);
-        transaction.addToBackStack(null);
+        if (addToBackStack) {
+            transaction.addToBackStack(null);
+        }
         transaction.commit();
     }
 }

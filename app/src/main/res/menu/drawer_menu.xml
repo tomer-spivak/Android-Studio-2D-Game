@@ -1,16 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <menu xmlns:android="http://schemas.android.com/apk/res/android"
+    >
+    <group android:id="@+id/group_1">
+        <!-- First group of items -->
+        <item
+            android:id="@+id/nav_Rules"
+            android:icon="@drawable/baseline_description_24"
+            android:title="how to play" />
 
-    <item
-        android:id="@+id/nav_Rules"
-        android:icon="@drawable/baseline_description_24"
-        android:title="how to play" />
-    <item android:id="@+id/nav_about"
-        android:icon="@drawable/baseline_info_24"
-        android:title="About"/>
-    <item android:id="@+id/go_to_game"
-        android:icon="@drawable/baseline_fort_24"
-        android:title="continue to game"
-        ></item>
+    </group>
+    <group android:id="@+id/group_2">
+    <item   android:id="@+id/nav_about"
+            android:icon="@drawable/baseline_info_24"
+            android:title="About" />
+    </group>
 
-</menu>
+    <group android:id="@+id/group_3">
+    <!-- Second group of items -->
+        <item
+            android:id="@+id/go_to_game"
+            android:icon="@drawable/baseline_fort_24"
+            android:title="continue to game"
+            />
+    </group>
+    </menu>
+
+
+
+

@@ -18,6 +18,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+
+
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 
@@ -35,13 +37,12 @@ public class LoginFragment extends Fragment {
 
         Button btn = view.findViewById(R.id.btnLogin);
 
-        EditText etUsername = view.findViewById(R.id.etUsername);
+        EditText etEmail = view.findViewById(R.id.etUsername);
         EditText etPassword = view.findViewById(R.id.etPassword);
         TextView tvEmailError = view.findViewById(R.id.tvEmailError);
         TextView tvPasswordError = view.findViewById(R.id.tvPasswordError);
 
-
-        TextWatcher textWatcher = new TextWatcher() {
+        TextWatcher textWatcherPassword = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
@@ -52,50 +53,81 @@ public class LoginFragment extends Fragment {
                 String pass = ((EditText)(view.findViewById(R.id.etPassword))).getText()
                         .toString().trim();
 
-                boolean isValid = validateEmail(email) && validatePassword(pass);
+                boolean isValid = validateEmail(email, tvEmailError) &&
+                        validatePassword(pass, tvPasswordError);
                 btn.setEnabled(isValid);
             }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        };
+        TextWatcher textWatcherEmail = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-            private boolean validatePassword(String pass) {
-                if (pass.length() < 6){
-                    tvPasswordError.setText("Password must be at least 6 characters");
-                    return false;
-                }
-                tvPasswordError.setText("");
-                return true;
-            }
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String email = ((EditText)view.findViewById(R.id.etUsername)).getText()
+                        .toString().trim();
+                String pass = ((EditText)(view.findViewById(R.id.etPassword))).getText()
+                        .toString().trim();
 
-            private boolean validateEmail(String email) {
-                if (!email.contains("@") || !email.substring(email.indexOf("@")).contains(".com")) {
-                    tvEmailError.setText("Invalid Email");
-                    return false;
-                }
-                tvEmailError.setText("");
-                return true;
+                boolean isValid = validateEmail(email, tvEmailError) &&
+                        validatePassword(pass, tvPasswordError);
+                btn.setEnabled(isValid);
             }
 
             @Override
             public void afterTextChanged(Editable s) {}
         };
 
-        etUsername.addTextChangedListener(textWatcher);
-        etPassword.addTextChangedListener(textWatcher);
+        etEmail.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                        etEmail.addTextChangedListener(textWatcherEmail);
+                } else {
+                    validateEmail(etEmail.getText().toString(), tvEmailError);
+                }
+            }
+        });
+
+        etPassword.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus){
+                    etPassword.addTextChangedListener(textWatcherPassword);
+                } else {
+                    validatePassword(etPassword.getText().toString(), tvPasswordError);
+                }
+            }
+        });
 
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mAuth.signInWithEmailAndPassword(etUsername.getText().toString(), (etPassword.getText().toString()))
+                mAuth.signInWithEmailAndPassword(etEmail.getText().toString(),
+                                (etPassword.getText().toString()))
                         .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                             @Override
                             public void onSuccess(AuthResult authResult) {
-                                Intent intent = new Intent(getActivity(), IntermediateActivity.class);
+                                Intent intent = new Intent(getActivity(),
+                                        IntermediateActivity.class);
                                 startActivity(intent);
                             }
                         })
                         .addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(getContext(), "Failure: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                LayoutInflater inflater = LayoutInflater.from(getContext());
+                                View layout = inflater.inflate(R.layout.custom_toast, null); // Use null as the parent
+
+                                TextView text = layout.findViewById(R.id.toast_text);
+                                text.setText("Couldn't Log in"); // Set the text properly
+
+                                Toast toast = new Toast(getContext());
+                                toast.setDuration(Toast.LENGTH_SHORT);
+                                toast.setView(layout);
+                                toast.show();
                             }
                         })
                 ;
@@ -103,6 +135,24 @@ public class LoginFragment extends Fragment {
         });
 
         return view;
+    }
+
+    private boolean validatePassword(String pass, TextView tvPasswordError) {
+        if (pass.length() < 6){
+            tvPasswordError.setText("Password must be at least 6 characters");
+            return false;
+        }
+        tvPasswordError.setText("");
+        return true;
+    }
+
+    private boolean validateEmail(String email, TextView tvEmailError) {
+        if (!email.contains("@") || !email.substring(email.indexOf("@")).contains(".com")) {
+            tvEmailError.setText("Invalid Email");
+            return false;
+        }
+        tvEmailError.setText("");
+        return true;
     }
 
 }

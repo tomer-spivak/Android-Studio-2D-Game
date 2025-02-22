@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/game"
-    android:screenOrientation="sensorLandscape"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".gameActivity.GameActivity">
+    android:screenOrientation="sensorLandscape"
+
+    >
 
 
         <LinearLayout
@@ -20,17 +20,41 @@
 
         </LinearLayout>
 
+    <TextView
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="20dp"
+        android:fontFamily="@font/nikea"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Next round"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
     <Button
         android:id="@+id/btnPopUpMenu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="choose buildings"
+        android:background="@drawable/custom_button_background"
+        android:drawableStart="@drawable/game_button_icon"
+        android:drawablePadding="8dp"
+        android:elevation="8dp"
+        android:fontFamily="@font/nikea"
+        android:letterSpacing="0.1"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="16dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Light"
+        app:backgroundTint="@null"
+        android:paddingBottom="16dp"
+        android:stateListAnimator="@null"
+        android:text="BUILD"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-    </Button>
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_margin="16dp" />
 
 
 

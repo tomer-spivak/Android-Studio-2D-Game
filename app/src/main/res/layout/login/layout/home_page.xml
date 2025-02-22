@@ -13,7 +13,17 @@
         android:gravity="center"
         android:padding="24dp">
 
-        <!-- App Logo -->
+        <TextView
+            android:textAlignment="center"
+            android:id="@+id/app_title"
+            android:fontFamily="@font/nikea"
+            android:text="@string/app_name"
+            android:textSize="35sp"
+            android:textColor="#0FF252"
+            android:layout_marginBottom="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
         <ImageView
             android:id="@+id/app_logo"
             android:layout_width="150dp"
@@ -21,6 +31,17 @@
             android:contentDescription="@string/Logo"
             android:src="@drawable/logo"
             android:layout_marginBottom="32dp"/>
+
+        <TextView
+            android:fontFamily="@font/ortland"
+            android:id="@+id/welcome_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/welcome_msg_home"
+            android:textSize="24sp"
+            android:textColor="#F00FFF"
+            android:layout_marginBottom="24dp"/>
+
 
 
     </LinearLayout>

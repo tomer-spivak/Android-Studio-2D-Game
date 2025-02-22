@@ -4,8 +4,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -24,6 +26,7 @@ import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
@@ -48,14 +51,21 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     private Bitmap nightBackground;
     private Bitmap backgroundBitmap; // This will point to one of the above.
     private Paint paint;
+    long timeTillNextRound = 0;
+    Paint timerPaint = new Paint();
+    Rect timerBounds = new Rect();
+
 
     Cell[][] board;
+
+    CellState[][] cellStates;
 
     Point[][] centerCells;
 
     int boardSize;
 
     GameViewListener listener;
+    private long deltaTime;
 
     public GameView(Context context, int boardSize, GameViewListener listener) {
         super(context);
@@ -79,6 +89,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         // Set the initial background (assuming morning is default)
         backgroundBitmap = morningBackground;
         paint = new Paint();
+        timerPaint.setColor(Color.WHITE);
+        timerPaint.setTextSize(60);
+        timerPaint.setAntiAlias(true);
+        timerPaint.setTextAlign(Paint.Align.LEFT);  // Align text to the left
+        timerPaint.setShadowLayer(5, 0, 0, Color.BLACK);  // Add shadow for visibility
+
+
     }
 
     @Override
@@ -86,9 +103,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         gridView.initInstance(boardSize, boardSize);
         centerCells = gridView.getCenterCells();
         board = new Cell[boardSize][boardSize];
+        cellStates = new CellState[boardSize][boardSize];
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
                 board[i][j] = new Cell(new Position(i, j));
+                cellStates[i][j] = CellState.EMPTY;
             }
         }
         gameLoop.startLoop();
@@ -162,6 +181,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         } else {
             backgroundBitmap = nightBackground;
         }
+
+        timeTillNextRound = gameState.getTimeUntilNextRound();
+
         if (gameState.getGameStatus() == GameStatus.LOST){
             Toast.makeText(getContext(), "lost", Toast.LENGTH_SHORT).show();
             Log.d("lost", "lost");
@@ -175,28 +197,47 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
 
     //takes everything in the model board into the game one
     void updateGameBoardFromBoard(Cell[][] newBoard){
-        for (int i = 0; i < newBoard.length; i++) {
-            for (int j = 0; j < newBoard[i].length; j++) {
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board.length; j++) {
                 //if both of them dont have anything, it doesnt matter to us
+                if (i >= newBoard.length || j >= newBoard[0].length)
+                    continue;
+
+                Log.d("broad", newBoard.length + ", " + newBoard[0].length);
+                Log.d("broad", board.length + ", " + board[0].length);
+                Log.d("broad", i + ", " + j);
                 if ((!newBoard[i][j].isOccupied() && !board[i][j].isOccupied())){
+                    CellState cellState = newBoard[i][j].getCellState();
+                    board[i][j] = new Cell(newBoard[i][j].getPosition(), cellState);
+                    cellStates[i][j] = cellState;
                     continue;
                 }
 
                  if (newBoard[i][j].isOccupied() && !board[i][j].isOccupied()){
                     Log.d("board", newBoard[i][j].getObject().toString());
                     addObjectFromModelToView(newBoard[i][j].getObject(), i, j);
-                    board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject());
-                }
+                    CellState cellState = newBoard[i][j].getCellState();
+                    board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject(),
+                            cellState);
+                     cellStates[i][j] = cellState;
+                     continue;
+                 }
 
                 //if the old board has it but the new one doesnt,
                 //we need to remove it.
                 if (!newBoard[i][j].isOccupied() && board[i][j].isOccupied()){
                     removeGameObject(i, j);
-                    board[i][j] = new Cell(newBoard[i][j].getPosition());
+                    CellState cellState = newBoard[i][j].getCellState();
+                    board[i][j] = new Cell(newBoard[i][j].getPosition(), cellState);
+                    cellStates[i][j] = cellState;
+                    continue;
                 }
 
                 if (newBoard[i][j].isOccupied() && board[i][j].isOccupied()){
-                    board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject());
+                    CellState cellState = newBoard[i][j].getCellState();
+                    board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject()
+                            , cellState);
+                    cellStates[i][j] = cellState;
                     updateGameObject(newBoard[i][j], i, j);
                 }
             }
@@ -273,6 +314,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         canvas.drawBitmap(scaledBackBitmap, 0, 0, paint);
 
         //draws basic grid with grass
+        gridView.setCellsState(cellStates);
         gridView.draw(canvas);
 
         //draws buildings
@@ -285,6 +327,25 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
                 continue;
             gameObject.drawView(canvas);
         }
+
+
+        String timeText = formatTime(timeTillNextRound);
+        timerPaint.getTextBounds(timeText, 0, timeText.length(), timerBounds);
+
+        float x = 125;  // Left margin
+        float y = 120 + timerBounds.height();  // Top margin
+
+        canvas.drawText(timeText, x, y, timerPaint);
+
+// Debug text - position properly
+
+    }
+
+    private String formatTime(long millis) {
+        long milliseconds = millis % 1000;
+        long seconds = (millis / 1000) % 60;
+        long minutes = (millis / (1000 * 60)) % 60;
+        return String.format("%01d:%02d:%03d", minutes, seconds, milliseconds);
     }
 
     public void pauseGameLoop() {
@@ -293,5 +354,25 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
 
     public void stopGameLoop() {
         gameLoop.stopLoop();
+    }
+
+    public Cell[][] getBoard() {
+        Cell[][] original = board;
+        if (original == null) {
+                return null;
+        }
+
+        Cell[][] copy = new Cell[original.length][];
+        for (int i = 0; i < original.length; i++) {
+                if (original[i] != null) {
+                    copy[i] = new Cell[original[i].length];
+                    System.arraycopy(original[i], 0, copy[i], 0, original[i].length);
+                }
+            }
+            return copy;
+    }
+
+    public void updateDeltaTime(long deltaTime) {
+        this.deltaTime = deltaTime;
     }
 }

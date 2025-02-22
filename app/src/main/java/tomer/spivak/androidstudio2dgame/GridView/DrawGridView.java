@@ -7,36 +7,38 @@ import android.graphics.Point;
 
 import androidx.core.content.ContextCompat;
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 
 public class DrawGridView {
-    private final int numColumns;
-    private final int numRows;
     //private final Paint gridPaint;
-    private final GridBitmap grass;
+    private final GridBitmap[] grasses;
     Context context;
 
-    public DrawGridView(int numRows, int numColumns, Context context) {
+    public DrawGridView(Context context) {
+        this.grasses = new GridBitmap[CellState.values().length];
+        grasses[0] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_default), context);
+        grasses[1] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_hurt), context);
+
         this.context = context;
-        this.numRows = numRows;
-        this.numColumns = numColumns;
 
-        this.grass = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.better_grass), context);
 
     }
 
 
 
-    public void draw(Canvas canvas, Point[][] cellCenters, float scale) {
-        grass.updateScale(scale);
-        for (int i = 0; i < numRows; i++){
-            for (int j = 0; j < numColumns; j++){
-                float topLeftGrassX = cellCenters[i][j].x - grass.getWidth() / 2;
-                float topLeftGrassY = cellCenters[i][j].y - grass.getHeight() / 2;
-                canvas.drawBitmap(grass.getBitmap(), topLeftGrassX, topLeftGrassY, null);
-            }
-        }
+    public void draw(Canvas canvas, Point cellCenter, float scale, CellState cellState) {
+        GridBitmap bitmap;
+        if (cellState == null)
+            bitmap = grasses[0];
+        else
+            bitmap = grasses[cellState.ordinal()];
+        bitmap.updateScale(scale);
+        float topLeftGrassX = cellCenter.x - bitmap.getWidth() / 2;
+        float topLeftGrassY = cellCenter.y - bitmap.getHeight() / 2;
+        canvas.drawBitmap(bitmap.getBitmap(), topLeftGrassX, topLeftGrassY, null);
 
     }
+
 
 
 }

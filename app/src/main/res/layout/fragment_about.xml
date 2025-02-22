@@ -2,6 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/background_gradient_about"
     android:padding="16dp">
 
     <LinearLayout
@@ -21,6 +22,7 @@
              />
 
         <TextView
+            android:fontFamily="@font/nikea"
             android:id="@+id/app_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -30,39 +32,22 @@
             android:textColor="@android:color/white"
             android:layout_marginBottom="8dp" />
 
-        <TextView
-
-            android:id="@+id/app_version"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Version 1.0"
-            android:textSize="18sp"
-            android:textColor="@android:color/white"
-            android:layout_marginBottom="16dp" />
 
         <TextView
+            android:fontFamily="@font/ortland"
             android:id="@+id/developer_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Developed by Your Name"
+            android:text="Developed by Tomer Spivak"
             android:textSize="16sp"
             android:textColor="@android:color/white"
             android:layout_marginBottom="16dp" />
 
-        <TextView
-            android:id="@+id/app_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="This app is designed to..."
-            android:textSize="14sp"
-            android:textColor="@android:color/white"
-            android:gravity="center"
 
-            android:layout_marginBottom="16dp" />
 
         <Button
 
-            android:id="@+id/contact_us_button"
+            android:id="@+id/btnContactUs"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Contact Us"

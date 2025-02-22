@@ -42,7 +42,7 @@ public abstract class GameObject {
 
     //creates the view of the Game Object
     protected void createView() {
-        Log.d("debug", "creating new game object: " + imageResourceString);
+        Log.d("grass", "creating new game object: " + imageResourceString);
         ImageView imageView = new ImageView(context); // Use your Activity or Application context
         imageView.setImageResource(context.getResources().getIdentifier(imageResourceString,
                 "drawable", context.getPackageName()));

@@ -14,6 +14,7 @@ import java.util.Random;
 import java.util.Set;
 
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
+import tomer.spivak.androidstudio2dgame.modelObjects.AOETurret;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
@@ -29,10 +30,10 @@ public class GameViewModel extends ViewModel {
     private final MutableLiveData<GameState> gameState = new MutableLiveData<>();
     private String selectedBuildingType;
     private long accumulatedDayTime = 0;
-    // Define the threshold for night start (5000 ms in this case).
-    private static final long NIGHT_THRESHOLD = 5000;
+    private static final long NIGHT_THRESHOLD = 50000;
 
     public void initBoardFromCloud(Cell[][] board) {
+        Log.d("debug", String.valueOf(board[0].length));
         gameState.setValue(new GameState(board));
     }
 
@@ -59,7 +60,8 @@ public class GameViewModel extends ViewModel {
         GameState current = gameState.getValue();
 
         if (current != null) {
-
+            current.setAccumulatedDayTime(accumulatedDayTime);
+            current.setTimeOfNextRound(NIGHT_THRESHOLD);
             if (accumulatedDayTime > NIGHT_THRESHOLD) {
                 //night
                 if (current.getTimeOfDay()) {
@@ -80,8 +82,8 @@ public class GameViewModel extends ViewModel {
                     //raid ended with all buildings destroyed
                     Lose(current);
                 }
-                gameState.postValue(current); // Use postValue for background thread
             }
+            gameState.postValue(current); // Use postValue for background thread
         }
     }
 
@@ -117,9 +119,22 @@ public class GameViewModel extends ViewModel {
     private void updateTurrets(GameState current, List<Enemy> enemies, long deltaTime) {
         List<Turret> turrets = getTurrets(current);
         for (Turret turret : turrets) {
-            turret.update(enemies, deltaTime);
+            if (turret instanceof AOETurret){
+                if (((AOETurret) turret).update(enemies, deltaTime)){
+                    List<Position> positionsToAttack = ((AOETurret) turret).getCellsToAttack();
+                    cellsToAttack(current, (ArrayList<Position>) positionsToAttack);
+                }
+            }
         }
     }
+
+    private void cellsToAttack(GameState current, ArrayList<Position> positionsToAttack) {
+        for (Position pos : positionsToAttack){
+            Cell cell = current.getCellAt(pos);
+            cell.cellAttacked();
+        }
+    }
+
     private List<Enemy> getEnemies(GameState current) {
         List<Enemy> enemies = new ArrayList<>();
         Cell[][] grid = current.getGrid();
@@ -142,7 +157,7 @@ public class GameViewModel extends ViewModel {
         current.setTimeOfDay(false);
 
         //place holder amount
-        int amount = 3;
+        int amount = 1;
         spawnEnemies(current, amount);
     }
 
@@ -167,6 +182,8 @@ public class GameViewModel extends ViewModel {
     public Cell getRandomFramePointIndex(Cell[][] centerCells) {
         int rows = centerCells.length;
         int cols = centerCells[0].length;
+        Log.d("debug", String.valueOf(rows));
+        Log.d("debug", String.valueOf(cols));
         Random rand = new Random();
 
         // Total frame positions

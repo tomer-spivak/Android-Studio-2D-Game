@@ -2,6 +2,8 @@ package tomer.spivak.androidstudio2dgame.model;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,10 +37,13 @@ public class Position {
 
     public List<Position> getNeighbors() {
         List<Position> neighbors = new ArrayList<>();
+
         neighbors.add(new Position(x + 1, y)); // Right
-        neighbors.add(new Position(x - 1, y)); // Left
+        if (x - 1 >= 0)
+            neighbors.add(new Position(x - 1, y)); // Left
         neighbors.add(new Position(x, y + 1)); // Down
-        neighbors.add(new Position(x, y - 1)); // Up
+        if (y - 1 >= 0)
+            neighbors.add(new Position(x, y - 1)); // Up
         return neighbors;
     }
 
@@ -61,6 +66,8 @@ public class Position {
         return y;
     }
 
+
+    @NonNull
     @Override
     public String toString() {
         return "Position{" +

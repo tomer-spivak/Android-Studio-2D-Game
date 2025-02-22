@@ -49,6 +49,7 @@ android {
 }
 
 dependencies {
+    implementation (libs.circleimageview)
 
     implementation(libs.appcompat)
     implementation(libs.material)
@@ -60,15 +61,15 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation ("com.github.bumptech.glide:glide:4.12.0")
+    implementation (libs.glide)
 
-    implementation ("androidx.recyclerview:recyclerview:1.2.1")
+    implementation (libs.recyclerview)
 
-    implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
+    implementation(platform(libs.firebase.bom))
 
-    implementation("com.google.firebase:firebase-firestore")
-    implementation ("com.google.firebase:firebase-auth:22.1.2")
-    implementation ("androidx.cardview:cardview:1.0.0")
+    implementation(libs.firebase.firestore)
+    implementation (libs.firebase.auth)
+    implementation (libs.cardview)
 
 
 

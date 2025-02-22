@@ -14,10 +14,12 @@ public class ModelObjectFactory {
 
     static {
         typeMap.put("OBELISK", (position) -> new Ruin(200, position, RuinType.OBELISK));
-        typeMap.put("ARCHERTOWER", (position) -> new Turret(100, 20, 2,
-                position, TurretType.ARCHERTOWER, 2000));
-        typeMap.put("MONSTER", (position) -> new Enemy(100, 10, 1f, position
-                , EnemyType.MONSTER, 1000));
+
+        typeMap.put("ARCHERTOWER", (position) -> new AOETurret(100, 20, 2,
+                position, TurretType.ARCHERTOWER, 1100));
+
+        typeMap.put("MONSTER", (position) -> new Enemy(80, 30, 3f, position
+                , EnemyType.MONSTER, 2000));
     }
 
     public static ModelObject create(String type, Position position) {

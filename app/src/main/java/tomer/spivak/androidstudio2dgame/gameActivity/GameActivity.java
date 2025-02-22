@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.FirebaseRepository;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
@@ -115,6 +116,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
         }
     }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -130,7 +132,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             gameView.stopGameLoop(); // if needed, ensure complete shutdown of the thread
         }
     }
-
 
     //checks if user wants to save his base
     private void showAlertDialog() {
@@ -165,8 +166,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             @Override
             public void onClick(View v) {
                 alertDialog.dismiss();
-                firebaseRepository.saveBoard(viewModel.getGameState().getValue().getGrid(),
-                        new OnSuccessListener<Void>() {
+                firebaseRepository.saveBoard(Objects.requireNonNull(viewModel.getGameState().
+                                getValue()).getGrid(), new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void unused) {
                         finish();
@@ -206,7 +207,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     }
 
     private void initGame() {
-        boardSize = 10;
+        boardSize = 12;
         gameLayout = findViewById(R.id.gameView);
         gameView = new GameView(context, boardSize, this);
         gameLayout.addView(gameView);
@@ -227,6 +228,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         firebaseRepository.loadBoard(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
+                Toast.makeText(context, "success", Toast.LENGTH_SHORT).show();
+                Log.d("debug", String.valueOf(documentSnapshot.exists()));
                 if (documentSnapshot.exists()) {
                     Cell[][] board = new Cell[boardSize][boardSize];
                     Map<String, Object> data = documentSnapshot.getData();
@@ -246,19 +249,21 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                                 ModelObject object = ModelObjectFactory.create((String)
                                                 objectMap.get("type"), pos);
                                 String type = (String) objectMap.get("type");
-                                object.setHealth(((Number) objectMap.get("health"))
-                                        .floatValue());
+                                object.setHealth(((Number) Objects.requireNonNull(objectMap.
+                                        get("health"))).floatValue());
                                 if (isInEnum(type, EnemyType.class)) {
                                     Enemy enemy = (Enemy) object;
                                     enemy.setState((EnemyState) objectMap.get("enemyState"));
                                     enemy.setCurrentDirection((Direction) objectMap.
                                             get("currentDirection"));
                                     enemy.setPath((List<Position>) objectMap.get("path"));
-                                    enemy.setCurrentTargetIndex(((Number) objectMap.
-                                            get("currentTargetIndex"))
+                                    enemy.setCurrentTargetIndex(((Number) Objects.
+                                            requireNonNull(objectMap.get("currentTargetIndex")))
                                             .intValue());
-                                    enemy.setTimeSinceLastAttack((Float) objectMap.get("timeSinceLastAttack"));
-                                    enemy.setTimeSinceLastMove((Float) objectMap.get("timeSinceLastMove"));
+                                    enemy.setTimeSinceLastAttack((Float) objectMap.
+                                            get("timeSinceLastAttack"));
+                                    enemy.setTimeSinceLastMove((Float) objectMap.
+                                            get("timeSinceLastMove"));
 
                                 }
 
@@ -269,8 +274,19 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                             }
                         }
                     }
-
-                    viewModel.initBoardFromCloud(board);
+                    board = removeNullRowsAndColumns(board);
+                    gameView.setBoard(board);
+                    viewModel.initBoardFromCloud(gameView.getBoard());
+                    dialog.dismiss();
+                } else {
+                    Cell[][] board = new Cell[boardSize][boardSize];
+                    for (int i = 0; i < boardSize; i++) {
+                        for (int j = 0; j < boardSize; j++) {
+                            board[i][j] = new Cell(new Position(i, j));
+                        }
+                    }
+                    gameView.setBoard(board);
+                    viewModel.initBoardFromCloud(gameView.getBoard());
                     dialog.dismiss();
                 }
             }
@@ -280,13 +296,62 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             }
         });
     }
-    public static <T extends Enum<T>> boolean isInEnum(String value, Class<T> enumClass) {
+
+    public <T extends Enum<T>> boolean isInEnum(String value, Class<T> enumClass) {
         for (T enumValue : enumClass.getEnumConstants()) {
             if (enumValue.name().equals(value)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public Cell[][] removeNullRowsAndColumns(Cell[][] array) {
+            if (array == null || array.length == 0) return new Cell[0][0];
+
+            int rows = array.length;
+            int cols = array[0].length;
+
+            // Track valid rows and columns
+            boolean[] validRows = new boolean[rows];
+            boolean[] validCols = new boolean[cols];
+
+            // Identify valid rows and columns
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    if (array[i][j] != null) {
+                        validRows[i] = true;
+                        validCols[j] = true;
+                    }
+                }
+            }
+
+            // Count valid rows and columns
+            int validRowCount = 0;
+            for (boolean row : validRows) if (row) validRowCount++;
+
+            int validColCount = 0;
+            for (boolean col : validCols) if (col) validColCount++;
+
+            // Create the new array
+            Cell[][] result = new Cell[validRowCount][validColCount];
+
+            // Fill the new array
+            int newRow = 0;
+            for (int i = 0; i < rows; i++) {
+                if (validRows[i]) {
+                    int newCol = 0;
+                    for (int j = 0; j < cols; j++) {
+                        if (validCols[j]) {
+                            result[newRow][newCol++] = array[i][j];
+                        }
+                    }
+                    newRow++;
+                }
+            }
+
+            return result;
+
     }
 
     private void hideSystemUI() {
@@ -301,6 +366,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         );
     }
     //prepares the recycler view
+
     private void initPlacingBuilding() {
         initBuildingToChoose();
         adapter = new BuildingsRecyclerViewAdapter(context, buildingImagesURL, this);
@@ -371,6 +437,4 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     public void updateGameState(long elapsedTime) {
         viewModel.updateGameState(elapsedTime);
     }
-
-
 }

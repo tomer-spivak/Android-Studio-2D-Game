@@ -6,7 +6,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
@@ -14,14 +17,26 @@ import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 public class Cell {
     private final Position position; // Grid position (fixed)
     private ModelObject object;
+    private CellState cellState;
 
     public Cell(Position position) {
         this.position = position;
+        cellState = CellState.EMPTY;
     }
 
     public Cell(Position position, ModelObject object) {
         this.position = position;
         this.object = object;
+    }
+    public Cell(Position position, ModelObject object, CellState cellState) {
+        this.position = position;
+        this.object = object;
+        this.cellState = cellState;
+    }
+
+    public Cell(Position position, CellState cellState) {
+        this.position = position;
+        this.cellState = cellState;
     }
 
     public void placeBuilding(Building building) {
@@ -33,29 +48,15 @@ public class Cell {
         this.object = enemy;
         enemy.setPosition(position); // Use grid position
     }
+
     public List<Cell> getNeighbors(GameState current) {
         List<Cell> neighbors = new ArrayList<>();
-        try {
-            neighbors.add(current.getCellAt(new Position(position.getX() + 1, position.getY())));
-        } catch (Exception ignored) {
-
+        for (Position neighborPos : position.getNeighbors()) {
+            try {
+                neighbors.add(current.getCellAt(neighborPos));
+            } catch (Exception ignored) {
+            }
         }
-        try {
-            neighbors.add(current.getCellAt(new Position(position.getX() - 1, position.getY())));
-        } catch (Exception ignored) {
-
-        }
-        try {
-            neighbors.add(current.getCellAt(new Position(position.getX(), position.getY() + 1)));
-        } catch (Exception ignored) {
-
-        }
-        try {
-            neighbors.add(current.getCellAt(new Position(position.getX(), position.getY() - 1)));
-        } catch (Exception ignored) {
-
-        }
-
         return neighbors;
     }
 
@@ -70,6 +71,14 @@ public class Cell {
 
     public boolean isOccupied() {
         return object != null;
+    }
+
+    public CellState getCellState() {
+        return cellState;
+    }
+
+    public void setState(CellState cellState) {
+        this.cellState = cellState;
     }
 
     // Method to convert the Cell to a Map for Firestore
@@ -93,6 +102,19 @@ public class Cell {
 
     public void removeObject() {
         this.object = null;
+    }
+
+    public void cellAttacked() {
+        setState(CellState.HURT);
+        // Schedule a task to reset the state after 200ms
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                // After 200ms, reset the state and the attack timer.
+                setState(CellState.EMPTY);
+            }
+        }, 200);
     }
 }
 

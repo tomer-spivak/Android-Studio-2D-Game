@@ -2,9 +2,12 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#accfc1">
+    android:paddingBottom="50dp"
+
+    android:background="@drawable/gradient_rules_background">
 
     <LinearLayout
+        android:layout_marginTop="30dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -12,43 +15,111 @@
 
         <!-- Header -->
         <TextView
+            android:textColor="#F0F020"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="How to Play"
+            android:fontFamily="@font/nikea"
+            android:text="How to Play TowerLands"
             android:textSize="24sp"
             android:textStyle="bold"
             android:layout_marginBottom="24dp"/>
 
+
+
+        <TextView
+            android:textColor="#a080fa"
+            android:fontFamily="@font/ortland"
+            android:textSize="21sp"
+            android:text="The basics of towerlands:"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20sp"
+            >
+
+        </TextView>
+        <TextView
+            android:padding="10sp"
+            android:fontFamily="@font/wosker"
+            android:textSize="18sp"
+            android:textColor="#700077"
+            android:text="@string/tutorial_basics"
+            android:textAlignment="viewStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        </TextView>
+
+
+
+
         <!-- Base Building Section -->
         <TextView
+            android:textColor="#a080fa"
+            android:fontFamily="@font/ortland"
+            android:textSize="21sp"
+            android:padding="20sp"
+
+            android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Building Your Base"
-            android:textSize="20sp"
             android:textStyle="bold"
             android:layout_marginBottom="8dp"/>
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_marginBottom="8dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/base"/>
-
         <TextView
+            android:padding="10sp"
+            android:fontFamily="@font/wosker"
+            android:textSize="18sp"
+            android:textColor="#700077"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/tutorial_base_building_text"
-            android:textSize="20sp"
             android:layout_marginBottom="24dp"/>
 
+        <TextView
+            android:layout_width="match_parent"
+
+            android:layout_marginBottom="24dp"
+            android:padding="10sp"
+            android:fontFamily="@font/wosker"
+            android:textSize="18sp"
+            android:textColor="#700077"
+            android:text="@string/tutorial_placing_buildings"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+
+            android:padding="0dp"
+            android:src="@drawable/placing_building"
+            android:layout_width="match_parent"
+            android:layout_height="200dp" />
 
 
 
+        <!-- Combat Section -->
+        <TextView   android:textColor="#a080fa"
+            android:fontFamily="@font/ortland"
+            android:textSize="21sp"
+            android:padding="20sp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Combat System"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
 
 
 
+        <TextView
+            android:padding="10sp"
+            android:fontFamily="@font/wosker"
+            android:textSize="18sp"
+            android:textColor="#700077"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/tutorial_combat_text"
+            android:layout_marginBottom="24dp"/>
 
 
 

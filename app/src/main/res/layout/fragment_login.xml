@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,25 +8,30 @@
     android:paddingTop="@dimen/fragment_vertical_margin"
     android:paddingRight="@dimen/fragment_horizontal_margin"
     android:paddingBottom="@dimen/fragment_vertical_margin"
-    tools:context=".home.LoginFragment">
+    android:background="@drawable/gradient_login_background">
 
     <TextView
-        android:textColor="@color/red"
-        android:textSize="22dp"
+        android:fontFamily="@font/ortland"
+        android:layout_marginTop="30dp"
+        android:textColor="#6164A3"
+        android:textSize="25sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="you must sign up before logining in"
+        android:text="@string/disclaimer_about_signing_up"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"></TextView>
+        app:layout_constraintTop_toTopOf="parent" />
+
     <EditText
+        android:textSize="21sp"
+        android:textColorHint="#9FFa90"
+        android:fontFamily="@font/wosker"
         android:id="@+id/etUsername"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="96dp"
         android:layout_marginEnd="24dp"
-        android:autofillHints="@string/prompt_email"
         android:hint="@string/prompt_email"
         android:inputType="textEmailAddress"
         android:selectAllOnFocus="true"
@@ -36,14 +40,19 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
+        android:textColor="@color/red"
+        android:textSize="17sp"
         android:id="@+id/tvEmailError"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etUsername"></TextView>
+        app:layout_constraintTop_toBottomOf="@+id/etUsername" />
 
     <EditText
+        android:textSize="21sp"
+        android:textColorHint="#9FFa90"
+        android:fontFamily="@font/wosker"
         android:id="@+id/etPassword"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -54,7 +63,6 @@
         android:imeActionLabel="@string/action_sign_in_short"
         android:imeOptions="actionDone"
         android:inputType="textPassword"
-        android:password="true"
         android:selectAllOnFocus="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -62,14 +70,19 @@
         app:layout_constraintTop_toBottomOf="@+id/tvEmailError" />
 
     <TextView
+        android:textColor="@color/red"
+        android:textSize="17sp"
         android:id="@+id/tvPasswordError"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toTopOf="@+id/btnLogin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etPassword"></TextView>
+        app:layout_constraintTop_toBottomOf="@+id/etPassword" />
     <Button
+        android:textColor="#000a90"
+            android:backgroundTint="@color/login_sign_up_button_background"
+        android:fontFamily="@font/nikea"
         android:enabled="false"
         android:id="@+id/btnLogin"
         android:layout_width="wrap_content"

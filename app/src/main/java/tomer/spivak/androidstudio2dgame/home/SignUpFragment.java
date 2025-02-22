@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment;
 
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,8 +21,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserProfileChangeRequest;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
@@ -47,101 +46,160 @@ public class SignUpFragment extends Fragment {
         TextView tvPasswordError = view.findViewById(R.id.tvPasswordError);
         TextView tvUsernameError = view.findViewById(R.id.tvUsernameError);
 
-
-        TextWatcher textWatcher = new TextWatcher() {
+        TextWatcher textWatcherPassword = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String username = ((EditText)view.findViewById(R.id.etUsername)).getText()
+                String email = ((EditText)view.findViewById(R.id.etEmail)).getText()
                         .toString().trim();
                 String pass = ((EditText)(view.findViewById(R.id.etPassword))).getText()
                         .toString().trim();
-                String email = ((EditText)(view.findViewById(R.id.etEmail))).getText().toString().trim();
-                boolean isValid = validateUsername(username) && validateEmail(email) && validatePassword(pass);
+                String name = ((EditText)(view.findViewById(R.id.etUsername))).getText().toString();
+                boolean isValid = validatePassword(pass, tvPasswordError) &&
+                        validateEmail(email, tvEmailError)
+                         && validateUsername(name, tvUsernameError);
+                Log.d("TAG", "onTextChanged: " + isValid);
                 btn.setEnabled(isValid);
             }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        };
+        TextWatcher textWatcherEmail = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-            private boolean validatePassword(String pass) {
-                if (pass.length() < 6){
-                    tvPasswordError.setText("Password must be at least 6 characters");
-                    return false;
-                }
-                tvPasswordError.setText("");
-                return true;
-            }
-
-            private boolean validateEmail(String email) {
-                if (!email.contains("@") || !email.substring(email.indexOf("@")).contains(".com")){
-                    tvEmailError.setText("Invalid Email");
-                    return false;
-                }
-                tvEmailError.setText("");
-
-                return true;
-            }
-            private boolean validateUsername(String username) {
-                tvUsernameError.setText("");
-                return true;
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String email = ((EditText)view.findViewById(R.id.etEmail)).getText()
+                        .toString().trim();
+                String pass = ((EditText)(view.findViewById(R.id.etPassword))).getText()
+                        .toString().trim();
+                String name = ((EditText)(view.findViewById(R.id.etUsername))).getText().toString();
+                boolean isValid = validateEmail(email, tvEmailError) &&
+                        validatePassword(pass, tvPasswordError) &&
+                        validateUsername(name, tvUsernameError);
+                Log.d("TAG", "onTextChanged: " + isValid);
+                btn.setEnabled(isValid);
             }
 
             @Override
             public void afterTextChanged(Editable s) {}
         };
+        TextWatcher textWatcherUsername = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-        etUsername.addTextChangedListener(textWatcher);
-        etPassword.addTextChangedListener(textWatcher);
+            }
 
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String email = ((EditText)view.findViewById(R.id.etEmail)).getText()
+                        .toString().trim();
+                String pass = ((EditText)(view.findViewById(R.id.etPassword))).getText()
+                        .toString().trim();
+                String name = ((EditText)(view.findViewById(R.id.etUsername))).getText().toString();
+                boolean isValid = validateUsername(name, tvUsernameError) &&
+                        validateEmail(email, tvEmailError) &&
+                        validatePassword(pass, tvPasswordError);
+                Log.d("TAG", "onTextChanged: " + isValid);
+                btn.setEnabled(isValid);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        };
+
+        etEmail.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    Log.d("TAG", "onFocusChange:" + tvEmailError.getText().toString());
+                        etEmail.addTextChangedListener(textWatcherEmail);
+
+                } else {
+                    Log.d("TAG", "onFocusChange:" + tvEmailError.getText().toString());
+                    validateEmail(etEmail.getText().toString(), tvEmailError);
+                }
+            }
+        });
+
+        etPassword.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus){
+                        etPassword.addTextChangedListener(textWatcherPassword);
+
+                } else {
+                    validatePassword(etPassword.getText().toString(), tvPasswordError);
+                }
+            }
+        });
+
+        etUsername.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus){
+                        etUsername.addTextChangedListener(textWatcherUsername);
+
+                } else {
+                    validateUsername(etUsername.getText().toString(), tvUsernameError);
+                }
+            }
+        });
 
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = etEmail.getText().toString();
-                String password = etPassword.getText().toString();
-                String displayName = etUsername.getText().toString(); // Assuming you have an EditText for the display name
-
-                mAuth.createUserWithEmailAndPassword(email, password)
+                mAuth.createUserWithEmailAndPassword(etEmail.getText().toString(),
+                        etPassword.getText().toString())
                         .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
-                            @Override
-                            public void onSuccess(AuthResult authResult) {
-                                FirebaseUser user = mAuth.getCurrentUser();
-                                if (user != null) {
-                                    // Set the display name
-                                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                                            .setDisplayName(displayName) // Set the user's display name
-                                            .build();
-
-                                    user.updateProfile(profileUpdates).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void unused) {
-                                            Toast.makeText(getContext(), "You signed up successfully!", Toast.LENGTH_SHORT).show();
-                                            Intent intent = new Intent(getActivity(), IntermediateActivity.class);
-                                            startActivity(intent);
-
-                                        }
-                                    }).addOnFailureListener(new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception e) {
-                                            Toast.makeText(getContext(), "Failed to set display name: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                        }
-                                    });
-                                }
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(getContext(), "Failure: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                    @Override
+                    public void onSuccess(AuthResult authResult) {
+                        Intent intent = new Intent(getActivity(),
+                                IntermediateActivity.class);
+                        startActivity(intent);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getContext(), "Failure: " + e.getMessage(),
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
             }
         });
 
-
-
-
-
         return view;
+    }
+    private boolean validatePassword(String pass, TextView tvPasswordError) {
+        if (pass.length() < 6){
+            tvPasswordError.setText("Password must be at least 6 characters");
+            return false;
+        }
+        tvPasswordError.setText("");
+        return true;
+    }
+
+    private boolean validateEmail(String email, TextView tvEmailError) {
+        Log.d("TAG", "validateEmail: " + email);
+        if (!email.contains("@") || !email.substring(email.indexOf("@")).contains(".com")) {
+            tvEmailError.setText("Invalid Email");
+            return false;
+        }
+        tvEmailError.setText("");
+        return true;
+    }
+
+    private boolean validateUsername(String username, TextView tvUsernameError) {
+        if (username.length() < 3) {
+            tvUsernameError.setText("Username must be at least 3 characters");
+            return false;
+        }
+        tvUsernameError.setText("");
+        return true;
     }
 }

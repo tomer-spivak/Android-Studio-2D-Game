@@ -1,11 +1,15 @@
 package tomer.spivak.androidstudio2dgame.model;
 
 
+import android.util.Log;
+
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 
 public class GameState {
     private final Cell[][] grid; // 2D grid of cells
     private boolean timeOfDay; // true for day, false for night
+    private long accumulatedDayTime;
+    private long timeOfNextRound;
     private GameStatus gameStatus;
 
     public GameState(Cell[][] grid) {
@@ -41,5 +45,19 @@ public class GameState {
 
     public void setGameStatus(GameStatus gameStatus) {
         this.gameStatus = gameStatus;
+    }
+
+    public long getTimeUntilNextRound(){
+        Log.d("debug", String.valueOf(timeOfNextRound));
+        Log.d("debug", String.valueOf(accumulatedDayTime));
+        return timeOfNextRound - accumulatedDayTime;
+    }
+
+    public void setTimeOfNextRound(long timeOfNextRound) {
+        this.timeOfNextRound = timeOfNextRound;
+    }
+
+    public void setAccumulatedDayTime(long accumulatedDayTime) {
+        this.accumulatedDayTime = accumulatedDayTime;
     }
 }

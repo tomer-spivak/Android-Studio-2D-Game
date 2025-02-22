@@ -2,36 +2,42 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="176dp"
-    android:background="#12F033"
     android:gravity="bottom"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="24dp"
+    android:background="@drawable/nav_header_gradient"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
-    <ImageView
+    <!-- Profile Picture with Circular Shape -->
+    <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/header_image"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="12dp"
         android:src="@drawable/logo"
         android:contentDescription="Profile picture"/>
 
+    <!-- Username with enhanced styling -->
     <TextView
+        android:fontFamily="@font/nikea"
         android:id="@+id/header_username"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Username"
-        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-        android:textSize="16sp"
-        android:textStyle="bold"/>
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+    android:layout_marginBottom="4dp" />
 
     <TextView
+        android:fontFamily="@font/ortland"
         android:id="@+id/header_email"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
         android:text="@string/welcome"
-        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-        android:textSize="14sp"/>
+        android:textSize="14sp"
+        android:textColor="#e0d0e0"
+    android:layout_marginTop="4dp"/>
+
 
 </LinearLayout>

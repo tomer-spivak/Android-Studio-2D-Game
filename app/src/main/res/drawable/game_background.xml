@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base gradient background -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="315"
+                android:endColor="#1A237E"
+                android:startColor="#303F9F"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <!-- Geometric pattern created with shapes -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#15FFFFFF"/>
+            <size android:width="4dp" android:height="4dp"/>
+            <corners android:radius="1dp"/>
+        </shape>
+    </item>
+
+    <!-- Optional: Add a subtle overlay gradient for depth -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="90"
+                android:startColor="#00000000"
+                android:endColor="#10000000"
+                android:type="linear" />
+        </shape>
+    </item>
+</layer-list>

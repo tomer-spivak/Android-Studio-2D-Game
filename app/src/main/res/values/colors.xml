@@ -4,4 +4,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="yellow">#FFFFEB3B</color>
     <color name="red">#FFFF0000</color>
+
+        <color name="ripple_color">#80FFFFFF</color>
 </resources>

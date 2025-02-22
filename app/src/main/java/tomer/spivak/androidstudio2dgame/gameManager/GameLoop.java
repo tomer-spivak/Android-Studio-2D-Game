@@ -33,22 +33,18 @@ public class GameLoop implements Runnable {
 
     @Override
     public void run() {
-        // Track the time of the previous frame.
         long previousTime = System.currentTimeMillis();
-
-        // Game loop
         while (isRunning) {
             long currentTime = System.currentTimeMillis();
-            // Calculate delta time (time passed since the last frame in milliseconds)
             long deltaTime = currentTime - previousTime;
-            previousTime = currentTime;  // Update previous time for the next iteration
+            previousTime = currentTime;
 
             Canvas canvas = null;
             try {
                 canvas = surfaceHolder.lockCanvas();
                 synchronized (surfaceHolder) {
-                    // Pass the delta time instead of a growing elapsedTime value.
                     listener.updateGameState(deltaTime);
+                    gameView.updateDeltaTime(deltaTime); // Pass the deltaTime to GameView
                     gameView.draw(canvas);
                 }
             } catch (IllegalArgumentException e) {
@@ -63,8 +59,6 @@ public class GameLoop implements Runnable {
                 }
             }
 
-            // Calculate sleepTime based on your target UPS (updates per second)
-            // (You might want to adjust this logic if necessary.)
             long frameTime = System.currentTimeMillis() - currentTime;
             long sleepTime = (long) (UPS_PERIOD - frameTime);
             if (sleepTime > 0) {
@@ -75,7 +69,8 @@ public class GameLoop implements Runnable {
                 }
             }
         }
-    }    public void stopLoop() {
+    }
+    public void stopLoop() {
         isRunning = false;
         try {
             gameThread.join();

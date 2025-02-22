@@ -1,6 +1,8 @@
 package tomer.spivak.androidstudio2dgame.modelObjects;
 
 
+import android.util.Log;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -59,7 +61,7 @@ public class Enemy extends ModelObject implements IDamager{
 
     @Override
     public void dealDamage(IDamageable target) {
-        //attackComponent.dealDamage(target);
+        attackComponent.dealDamage(target);
     }
 
     public void attack(Building building) {
@@ -83,6 +85,9 @@ public class Enemy extends ModelObject implements IDamager{
     @Override
     public void takeDamage(float damage) {
         super.takeDamage(damage);
+        Log.d("take", String.valueOf(timeSinceLastMove));
+        //timeSinceLastMove = 1000 / movementSpeed;
+        timeSinceLastMove += 1000;
         if (health <= 0){
             onDeath();
             return;
