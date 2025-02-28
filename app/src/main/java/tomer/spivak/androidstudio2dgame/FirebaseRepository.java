@@ -57,7 +57,10 @@ public class FirebaseRepository {
 
     public void loadBoard(OnSuccessListener<DocumentSnapshot> onSuccess,
                           OnFailureListener onFailure) {
-        if (user == null) return;
+        if (user == null) {
+            Log.d("debug", "user is null");
+            return;
+        }
 
         db.collection("users")
                 .document(user.getUid())

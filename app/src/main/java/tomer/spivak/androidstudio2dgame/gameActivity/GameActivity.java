@@ -1,6 +1,5 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
-import android.app.MediaRouteButton;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,7 +9,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -82,6 +80,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     int boardSize;
     boolean gameIsOnGoing = false;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,7 +88,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         //set window to fullscreen (hide status bar)
         setContentView(R.layout.activity_game);
         context = this;
-
 
         init();
 
@@ -253,20 +251,23 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 Toast.makeText(context, "success", Toast.LENGTH_SHORT).show();
-                Log.d("debug", String.valueOf(documentSnapshot.exists()));
+                Log.d("debug", "database exists");
+                Cell[][] board;
                 if (documentSnapshot.exists()) {
-                    Cell[][] board = new Cell[boardSize][boardSize];
+                    board = new Cell[boardSize][boardSize];
                     Map<String, Object> data = documentSnapshot.getData();
 
                     // Log each row and its contents in a more readable format
-                    for (Map.Entry<String, Object> entry : data.entrySet()) {
+                    for (Map.Entry<String, Object> entry : Objects.requireNonNull(data).entrySet()) {
                         Object rowData = entry.getValue();
                         List<Map<String, Object>> rowList = (List<Map<String, Object>>) rowData;
 
                         for (Map<String, Object> col : rowList) {
                             HashMap map = (HashMap) col.get("position");
-                            Position pos = new Position(((Long)(map.get("x"))).intValue(),
-                                    ((Long)(map.get("y"))).intValue());
+                            Position pos = new Position(((Long)(Objects.
+                                    requireNonNull(Objects.requireNonNull(map).get("x"))))
+                                    .intValue(), ((Long)(Objects.requireNonNull(map.get("y"))))
+                                    .intValue());
                             HashMap objectMap = (HashMap)(col.get("object"));
 
                             if (objectMap != null){
@@ -290,6 +291,9 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                                             get("timeSinceLastMove"));
 
                                 }
+                                else{
+                                    btnStartGame.setEnabled(true);
+                                }
 
                                 board[pos.getX()][pos.getY()] = new Cell(pos, object);
 
@@ -299,30 +303,40 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                         }
                     }
                     board = removeNullRowsAndColumns(board);
-                    gameView.setBoard(board);
-                    viewModel.initBoardFromCloud(gameView.getBoard());
-                    dialog.dismiss();
-                } else {
-                    Cell[][] board = new Cell[boardSize][boardSize];
-                    for (int i = 0; i < boardSize; i++) {
-                        for (int j = 0; j < boardSize; j++) {
-                            board[i][j] = new Cell(new Position(i, j));
-                        }
-                    }
-                    gameView.setBoard(board);
-                    viewModel.initBoardFromCloud(gameView.getBoard());
-                    dialog.dismiss();
                 }
+                else {
+                    board = initBoard();
+                }
+                initBoardInViewModel(board, dialog);
             }
         }, new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
+                initBoardInViewModel(initBoard(), dialog);
+                Toast.makeText(context, "failed to fetch board from database", Toast.LENGTH_SHORT).show();
+                Log.d("debug", Objects.requireNonNull(e.getMessage()));
             }
         });
     }
 
+    private void initBoardInViewModel(Cell[][] board, AlertDialog dialog) {
+        gameView.setBoard(board);
+        viewModel.initBoardFromCloud(gameView.getBoard());
+        dialog.dismiss();
+    }
+
+    private Cell[][] initBoard() {
+        Cell[][] board = new Cell[boardSize][boardSize];
+        for (int i = 0; i < boardSize; i++) {
+            for (int j = 0; j < boardSize; j++) {
+                board[i][j] = new Cell(new Position(i, j));
+            }
+        }
+        return board;
+    }
+
     public <T extends Enum<T>> boolean isInEnum(String value, Class<T> enumClass) {
-        for (T enumValue : enumClass.getEnumConstants()) {
+        for (T enumValue : Objects.requireNonNull(enumClass.getEnumConstants())) {
             if (enumValue.name().equals(value)) {
                 return true;
             }
@@ -465,7 +479,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
     @Override
     public void onCellClicked(int row, int col) {
-        viewModel.placeBuilding(row, col);
+        viewModel.onCellClicked(row, col);
         if (!viewModel.isEmptyBuildings()) {
             btnStartGame.setEnabled(true);
         }

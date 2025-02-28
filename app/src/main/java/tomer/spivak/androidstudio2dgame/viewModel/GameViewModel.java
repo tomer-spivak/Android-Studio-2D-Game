@@ -36,6 +36,8 @@ public class GameViewModel extends ViewModel {
     public void initBoardFromCloud(Cell[][] board) {
         gameState.setValue(new GameState(board, NIGHT_THRESHOLD));
         GameState current = gameState.getValue();
+        if (current == null)
+            return;
         current.startTimerForNextRound();
         gameState.postValue(current);
     }
@@ -44,18 +46,28 @@ public class GameViewModel extends ViewModel {
         selectedBuildingType = buildingType;
     }
 
-    public void placeBuilding(int row, int col) {
+
+    public void onCellClicked(int row, int col) {
         GameState current = gameState.getValue();
-        if (current != null) {
-            Cell cell = current.getGrid()[row][col];
-            if (!cell.isOccupied() && selectedBuildingType != null) {
-                Log.d("debug", selectedBuildingType);
-                cell.placeBuilding((Building)ModelObjectFactory.create(selectedBuildingType,
-                        new Position(row, col)));
-                Log.d("debug", String.valueOf(cell.getObject().getClass()));
-                gameState.postValue(current);
+        if (current == null)
+            return;
+        Cell selectedCell = current.getGrid()[row][col];
+        if (!selectedCell.isOccupied()){
+            if (selectedBuildingType != null && current.getTimeOfDay()){
+            placeBuilding(row, col, current);
+            }
+        } else {
+            if (selectedCell.getObject() instanceof Building){
+                selectedCell.removeObject();
             }
         }
+    }
+
+    public void placeBuilding(int row, int col, GameState current) {
+        Cell cell = current.getGrid()[row][col];
+        cell.placeBuilding((Building)ModelObjectFactory.create(selectedBuildingType,
+                new Position(row, col)));
+        gameState.postValue(current);
     }
 
     public void updateGameState(long deltaTime) {
@@ -95,10 +107,10 @@ public class GameViewModel extends ViewModel {
     private void Win(GameState current) {
         current.setGameStatus(GameStatus.WON);
     }
+
     private void Lose(GameState current) {
         current.setGameStatus(GameStatus.LOST);
     }
-
 
     private void checkDeath(GameState current ) {
         Cell[][] grid = current.getGrid();
@@ -231,7 +243,8 @@ public class GameViewModel extends ViewModel {
             }
         }
         for (Enemy enemy : enemies) {
-            if (enemy.getEnemyState() != EnemyState.HURT && enemy.getEnemyState() != EnemyState.ATTACKING)
+            if (enemy.getEnemyState() != EnemyState.HURT && enemy.getEnemyState() !=
+                    EnemyState.ATTACKING)
                 updateEnemyMovement(enemy, current, deltaTime);
         }
     }
@@ -376,17 +389,18 @@ public class GameViewModel extends ViewModel {
                 .isEmpty();
     }
 
-    public long getAccumulatedTime() {
-        return accumulatedTime;
-    }
-
     public LiveData<GameState> getGameState() {
         return gameState;
     }
 
     public void skipToNextRound() {
         GameState current = gameState.getValue();
+        if (current == null)
+            return;
+        current.accumulateRound();
+        current.startTimerForNextRound();
         updateGameState((long) (current.getTimeToNextRound() - 0.1));
         gameState.postValue(current);
     }
+
 }
