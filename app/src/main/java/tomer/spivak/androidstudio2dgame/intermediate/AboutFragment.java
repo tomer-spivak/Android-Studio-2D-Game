@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 import tomer.spivak.androidstudio2dgame.R;
 
@@ -25,10 +26,20 @@ public class AboutFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.setType("message/rfc822"); // Ensures only email apps show
-                intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"spivak.toti@gmail.com"});
-                intent.putExtra(Intent.EXTRA_SUBJECT, "Contact Us");
-                startActivity(Intent.createChooser(intent, "Choose an Email client:"));
+                intent.setType("message/rfc822");
+                intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"TowerLands.contactus@gmail.com"});
+                intent.putExtra(Intent.EXTRA_SUBJECT, "");
+                intent.putExtra(Intent.EXTRA_TEXT, "");
+
+// Set Gmail package
+                intent.setPackage("com.google.android.gm");
+
+                try {
+                    startActivity(intent);
+                } catch (android.content.ActivityNotFoundException e) {
+                    Toast.makeText(getContext(), "You don't have gmail", Toast.LENGTH_SHORT)
+                            .show();
+                }
             }
         });
         return view;

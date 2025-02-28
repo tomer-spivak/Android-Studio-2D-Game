@@ -1,5 +1,6 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
+import android.app.MediaRouteButton;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -59,6 +61,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     private GameViewModel viewModel;
 
     Button btnChooseBuildingsCardView;
+    Button btnStartGame;
+    Button btnSkipRound;
 
     LinearLayout gameLayout;
 
@@ -76,17 +80,30 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
     FirebaseRepository firebaseRepository;
     int boardSize;
+    boolean gameIsOnGoing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         //set window to fullscreen (hide status bar)
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_game);
         context = this;
 
 
         init();
+
+        btnStartGame = findViewById(R.id.btnStartGame);
+        btnSkipRound = findViewById(R.id.btnSkipRound);
+
+        btnStartGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                gameIsOnGoing = true;
+                btnStartGame.setVisibility(View.GONE);
+                btnSkipRound.setVisibility(View.VISIBLE);
+            }
+        });
 
         btnChooseBuildingsCardView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -99,6 +116,14 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             @Override
             public void onClick(View v) {
                 cvSelectBuildingMenu.setVisibility(View.GONE);   
+            }
+        });
+
+        btnSkipRound.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewModel.skipToNextRound();
+                btnSkipRound.setVisibility(View.GONE);
             }
         });
 
@@ -115,6 +140,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
 
         }
+
     }
 
     @Override
@@ -211,9 +237,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         gameLayout = findViewById(R.id.gameView);
         gameView = new GameView(context, boardSize, this);
         gameLayout.addView(gameView);
-
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
-        //viewModel.initGameState(boardSize);
         observeViewModel();
 
         initPlacingBuilding();
@@ -419,6 +443,22 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
                 }
 
+                if (gameState.getTimeOfDay()){
+                    if (btnChooseBuildingsCardView.getVisibility() == View.GONE)
+                        btnChooseBuildingsCardView.setVisibility(View.VISIBLE);
+                    if(btnStartGame.getVisibility() == View.GONE && btnSkipRound.getVisibility()
+                            != View.VISIBLE){
+                        btnSkipRound.setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    if (cvSelectBuildingMenu.getVisibility() == View.VISIBLE)
+                        cvSelectBuildingMenu.setVisibility(View.GONE);
+                    if (btnChooseBuildingsCardView.getVisibility() != View.GONE)
+                        btnChooseBuildingsCardView.setVisibility(View.GONE);
+                    if(btnSkipRound.getVisibility() == View.VISIBLE) {
+                        btnSkipRound.setVisibility(View.GONE);
+                    }
+                }
             }
         });
     }
@@ -426,15 +466,19 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     @Override
     public void onCellClicked(int row, int col) {
         viewModel.placeBuilding(row, col);
+        if (!viewModel.isEmptyBuildings()) {
+            btnStartGame.setEnabled(true);
+        }
     }
-
     @Override
     public void onBuildingSelected(String buildingType) {
         viewModel.selectBuilding(buildingType);
+
     }
 
     @Override
     public void updateGameState(long elapsedTime) {
-        viewModel.updateGameState(elapsedTime);
+        if (gameIsOnGoing)
+            viewModel.updateGameState(elapsedTime);
     }
 }

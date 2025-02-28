@@ -20,16 +20,55 @@
 
         </LinearLayout>
 
-    <TextView
-        android:layout_marginTop="24dp"
-        android:layout_marginStart="20dp"
-        android:fontFamily="@font/nikea"
+    <Button
+        android:enabled="false"
+        android:id="@+id/btnStartGame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Next round"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+        android:background="@drawable/start_game_button_background"
+        android:drawablePadding="8dp"
+        android:elevation="8dp"
+        android:fontFamily="@font/nikea"
+        android:letterSpacing="0.1"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="16dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Light"
+        app:backgroundTint="@null"
+        android:paddingBottom="16dp"
+        android:stateListAnimator="@null"
+        android:text="Start\nGame"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_margin="16dp" />
+    <Button
+        android:visibility="gone"
+        android:id="@+id/btnSkipRound"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/skip_button_background"
+        android:drawableStart="@drawable/game_button_icon"
+        android:drawablePadding="8dp"
+        android:elevation="8dp"
+        android:fontFamily="@font/nikea"
+        android:letterSpacing="0.1"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="16dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Light"
+        app:backgroundTint="@null"
+        android:paddingBottom="16dp"
+        android:stateListAnimator="@null"
+        android:text="SKIP"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_margin="16dp" />
 
     <Button
         android:id="@+id/btnPopUpMenu"
@@ -44,19 +83,16 @@
         android:paddingStart="24dp"
         android:paddingEnd="24dp"
         android:paddingTop="16dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Light"
-        app:backgroundTint="@null"
         android:paddingBottom="16dp"
         android:stateListAnimator="@null"
         android:text="BUILD"
         android:textColor="#FFFFFF"
         android:textSize="18sp"
         android:textStyle="bold"
+        app:backgroundTint="@null"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         android:layout_margin="16dp" />
-
-
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cvSelectBuildingMenu"

@@ -15,7 +15,7 @@ public class ModelObjectFactory {
     static {
         typeMap.put("OBELISK", (position) -> new Ruin(200, position, RuinType.OBELISK));
 
-        typeMap.put("ARCHERTOWER", (position) -> new AOETurret(100, 20, 2,
+        typeMap.put("ARCHERTOWER", (position) -> new AOETurret(100, 20, 4,
                 position, TurretType.ARCHERTOWER, 1100));
 
         typeMap.put("MONSTER", (position) -> new Enemy(80, 30, 3f, position

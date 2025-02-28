@@ -22,6 +22,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
+import javax.mail.MessagingException;
+
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 
@@ -159,6 +161,16 @@ public class SignUpFragment extends Fragment {
                         .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                     @Override
                     public void onSuccess(AuthResult authResult) {
+                        // Replace with your email credentials and recipient
+                        String username = "spivak.toti@gmail.com";
+                        String password = "axzwhdzahfkamgzo";
+                        String recipient = etEmail.getText().toString();
+                        String subject = "TowerLands";
+                        String body = "Thank you for signing up!\nI hope you enjoy th game!";
+
+// Execute the email sender
+                        new EmailSender(username, password, recipient, subject, body).execute();
+
                         Intent intent = new Intent(getActivity(),
                                 IntermediateActivity.class);
                         startActivity(intent);
@@ -166,7 +178,7 @@ public class SignUpFragment extends Fragment {
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(getContext(), "Failure: " + e.getMessage(),
+                        Toast.makeText(getContext(), e.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
                 });

@@ -1,0 +1,40 @@
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#80FFFFFF">
+    <item android:id="@android:id/background">
+        <layer-list>
+            <!-- Bottom shadow -->
+            <item android:top="4dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="#40000000"/>
+                    <corners android:radius="16dp"/>
+                </shape>
+            </item>
+            <!-- Main button body (red gradient) -->
+            <item android:bottom="4dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="16dp"/>
+                    <gradient
+                        android:angle="90"
+                        android:startColor="#FF0000"
+                        android:endColor="#B00000"
+                        android:type="linear"/>
+                    <stroke
+                        android:width="2dp"
+                        android:color="#FF6666"/>  <!-- Light red stroke -->
+                </shape>
+            </item>
+            <!-- Top highlight -->
+            <item android:bottom="4dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="16dp"/>
+                    <gradient
+                        android:angle="90"
+                        android:startColor="#30FFFFFF"
+                        android:centerColor="#10FFFFFF"
+                        android:endColor="#00FFFFFF"
+                        android:type="linear"/>
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</ripple>

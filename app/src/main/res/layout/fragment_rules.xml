@@ -40,6 +40,10 @@
 
         </TextView>
         <TextView
+            android:shadowColor="@color/white"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="5"
             android:padding="10sp"
             android:fontFamily="@font/wosker"
             android:textSize="18sp"
@@ -69,6 +73,10 @@
             android:layout_marginBottom="8dp"/>
 
         <TextView
+            android:shadowColor="@color/white"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="5"
             android:padding="10sp"
             android:fontFamily="@font/wosker"
             android:textSize="18sp"
@@ -80,7 +88,10 @@
 
         <TextView
             android:layout_width="match_parent"
-
+            android:shadowColor="@color/white"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="5"
             android:layout_marginBottom="24dp"
             android:padding="10sp"
             android:fontFamily="@font/wosker"
@@ -112,6 +123,10 @@
 
 
         <TextView
+            android:shadowColor="@color/white"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="5"
             android:padding="10sp"
             android:fontFamily="@font/wosker"
             android:textSize="18sp"

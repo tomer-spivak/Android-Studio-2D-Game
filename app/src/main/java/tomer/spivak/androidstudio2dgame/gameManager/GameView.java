@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -177,12 +178,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         setBoard(gameState.getGrid());
         boolean timeOfDay = gameState.getTimeOfDay();
         if (timeOfDay){
+            timeTillNextRound = gameState.getTimeToNextRound();
             backgroundBitmap = morningBackground;
         } else {
+            timeTillNextRound = -1;
             backgroundBitmap = nightBackground;
         }
-
-        timeTillNextRound = gameState.getTimeUntilNextRound();
 
         if (gameState.getGameStatus() == GameStatus.LOST){
             Toast.makeText(getContext(), "lost", Toast.LENGTH_SHORT).show();
@@ -327,18 +328,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
                 continue;
             gameObject.drawView(canvas);
         }
+        if (timeTillNextRound > 0){
+            printTimeTillNextRound(canvas);
+        }
+    }
 
-
-        String timeText = formatTime(timeTillNextRound);
+    private void printTimeTillNextRound(Canvas canvas) {
+        String timeText = "Next round: " + (timeTillNextRound / 1000) + "." +
+                (timeTillNextRound % 1000) / 100 + "s";
         timerPaint.getTextBounds(timeText, 0, timeText.length(), timerBounds);
-
-        float x = 125;  // Left margin
-        float y = 120 + timerBounds.height();  // Top margin
-
+        int x = getWidth() / 2 - timerBounds.width() / 2;
+        int y = 100; // Adjust as needed
         canvas.drawText(timeText, x, y, timerPaint);
 
 // Debug text - position properly
-
     }
 
     private String formatTime(long millis) {
@@ -375,4 +378,5 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     public void updateDeltaTime(long deltaTime) {
         this.deltaTime = deltaTime;
     }
+
 }

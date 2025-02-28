@@ -87,7 +87,7 @@ public class Enemy extends ModelObject implements IDamager{
         super.takeDamage(damage);
         Log.d("take", String.valueOf(timeSinceLastMove));
         //timeSinceLastMove = 1000 / movementSpeed;
-        timeSinceLastMove += 1000;
+        //timeSinceLastMove += 1000;
         if (health <= 0){
             onDeath();
             return;

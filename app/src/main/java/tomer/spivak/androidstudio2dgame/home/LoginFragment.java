@@ -2,6 +2,7 @@ package tomer.spivak.androidstudio2dgame.home;
 
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
@@ -60,6 +61,7 @@ public class LoginFragment extends Fragment {
             @Override
             public void afterTextChanged(Editable s) {}
         };
+
         TextWatcher textWatcherEmail = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -133,6 +135,32 @@ public class LoginFragment extends Fragment {
                 ;
             }
         });
+
+        Button btnForgotPassword = view.findViewById(R.id.btnForgotPassword);
+
+        btnForgotPassword.setOnClickListener(v -> {
+            EditText editTextEmail = new EditText(v.getContext());
+            AlertDialog.Builder passwordResetDialog = new AlertDialog.Builder(v.getContext());
+            passwordResetDialog.setTitle("Reset Password");
+            passwordResetDialog.setMessage("Enter your email to receive a reset link.");
+            passwordResetDialog.setView(editTextEmail);
+
+            passwordResetDialog.setPositiveButton("Send", (dialog, which) -> {
+                String email = editTextEmail.getText().toString().trim();
+                if (!email.isEmpty()) {
+                    FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                            .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Reset link sent to your email.", Toast.LENGTH_SHORT).show())
+                            .addOnFailureListener(e -> Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                } else {
+                    Toast.makeText(getContext(), "Please enter an email.", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            passwordResetDialog.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+            passwordResetDialog.create().show();
+        });
+
 
         return view;
     }

@@ -1,20 +1,22 @@
 package tomer.spivak.androidstudio2dgame.model;
 
 
-import android.util.Log;
-
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 
 public class GameState {
     private final Cell[][] grid; // 2D grid of cells
+    private final int nightThreshold;
     private boolean timeOfDay; // true for day, false for night
-    private long accumulatedDayTime;
-    private long timeOfNextRound;
+    private long timeToNextRound;
+    //true is morning, false is night
     private GameStatus gameStatus;
+    private int currentRound;
 
-    public GameState(Cell[][] grid) {
+    public GameState(Cell[][] grid, int nightThreshold) {
         this.grid = grid;
         this.timeOfDay = true;
+        this.currentRound = 1;
+        this.nightThreshold = 5000;
     }
 
     public boolean isValidPosition(Position pos) {
@@ -47,17 +49,28 @@ public class GameState {
         this.gameStatus = gameStatus;
     }
 
-    public long getTimeUntilNextRound(){
-        Log.d("debug", String.valueOf(timeOfNextRound));
-        Log.d("debug", String.valueOf(accumulatedDayTime));
-        return timeOfNextRound - accumulatedDayTime;
+    public long getTimeToNextRound() {
+        return timeToNextRound;
     }
 
-    public void setTimeOfNextRound(long timeOfNextRound) {
-        this.timeOfNextRound = timeOfNextRound;
+    public void setTimeToNextRound(long timeOfNextRound) {
+        this.timeToNextRound = timeOfNextRound;
     }
 
-    public void setAccumulatedDayTime(long accumulatedDayTime) {
-        this.accumulatedDayTime = accumulatedDayTime;
+    public void decreaseTimeToNextRound(long delta){
+        this.timeToNextRound -= delta;
+    }
+
+
+    public void accumulateRound() {
+        currentRound++;
+    }
+
+    public void startTimerForNextRound() {
+        this.timeToNextRound = (long) nightThreshold * currentRound;
+    }
+
+    public int getRound() {
+        return currentRound;
     }
 }

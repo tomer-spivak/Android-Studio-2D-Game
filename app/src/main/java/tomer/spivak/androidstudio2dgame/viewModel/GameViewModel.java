@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 
@@ -29,12 +30,14 @@ import tomer.spivak.androidstudio2dgame.modelObjects.Turret;
 public class GameViewModel extends ViewModel {
     private final MutableLiveData<GameState> gameState = new MutableLiveData<>();
     private String selectedBuildingType;
-    private long accumulatedDayTime = 0;
-    private static final long NIGHT_THRESHOLD = 50000;
+    private long accumulatedTime = 0;
+    private static final int NIGHT_THRESHOLD = 5000;
 
     public void initBoardFromCloud(Cell[][] board) {
-        Log.d("debug", String.valueOf(board[0].length));
-        gameState.setValue(new GameState(board));
+        gameState.setValue(new GameState(board, NIGHT_THRESHOLD));
+        GameState current = gameState.getValue();
+        current.startTimerForNextRound();
+        gameState.postValue(current);
     }
 
     public void selectBuilding(String buildingType) {
@@ -56,36 +59,46 @@ public class GameViewModel extends ViewModel {
     }
 
     public void updateGameState(long deltaTime) {
-        accumulatedDayTime += deltaTime;
+        accumulatedTime += deltaTime;
         GameState current = gameState.getValue();
 
         if (current != null) {
-            current.setAccumulatedDayTime(accumulatedDayTime);
-            current.setTimeOfNextRound(NIGHT_THRESHOLD);
-            if (accumulatedDayTime > NIGHT_THRESHOLD) {
-                //night
-                if (current.getTimeOfDay()) {
-                    //init night and raid
-                    startNight(current);
-                }
-
-
+            if (!current.getTimeOfDay()){
                 checkDeath(current);
-
+                if (getEnemies(current).isEmpty()){
+                    //won
+                    Win(current);
+                    current.setTimeOfDay(true);
+                    current.accumulateRound();
+                    current.startTimerForNextRound();
+                }
                 if (!getBuildingPositions(current.getGrid()).isEmpty()){
-                    //raid is still in progress
                     List<Enemy> enemies = getEnemies(current);
                     updateTurrets(current, enemies, deltaTime);
-
                     updateEnemies(current, deltaTime);
                 } else {
                     //raid ended with all buildings destroyed
                     Lose(current);
                 }
             }
+            else {
+                current.decreaseTimeToNextRound(deltaTime);
+                if (current.getTimeToNextRound() <= 0){
+                    current.setTimeOfDay(false);
+                    startNight(current);
+                }
+            }
             gameState.postValue(current); // Use postValue for background thread
         }
     }
+
+    private void Win(GameState current) {
+        current.setGameStatus(GameStatus.WON);
+    }
+    private void Lose(GameState current) {
+        current.setGameStatus(GameStatus.LOST);
+    }
+
 
     private void checkDeath(GameState current ) {
         Cell[][] grid = current.getGrid();
@@ -121,6 +134,7 @@ public class GameViewModel extends ViewModel {
         for (Turret turret : turrets) {
             if (turret instanceof AOETurret){
                 if (((AOETurret) turret).update(enemies, deltaTime)){
+                    ((AOETurret) turret).updateCellsToAttack(current);
                     List<Position> positionsToAttack = ((AOETurret) turret).getCellsToAttack();
                     cellsToAttack(current, (ArrayList<Position>) positionsToAttack);
                 }
@@ -149,15 +163,11 @@ public class GameViewModel extends ViewModel {
         return enemies;
     }
 
-    private void Lose(GameState current) {
-        current.setGameStatus(GameStatus.LOST);
-    }
-
     private void startNight(GameState current) {
         current.setTimeOfDay(false);
 
         //place holder amount
-        int amount = 1;
+        int amount = current.getRound();
         spawnEnemies(current, amount);
     }
 
@@ -361,7 +371,22 @@ public class GameViewModel extends ViewModel {
         return buildingPositions;
     }
 
+    public boolean isEmptyBuildings(){
+        return getBuildingPositions(Objects.requireNonNull(gameState.getValue()).getGrid())
+                .isEmpty();
+    }
+
+    public long getAccumulatedTime() {
+        return accumulatedTime;
+    }
+
     public LiveData<GameState> getGameState() {
         return gameState;
+    }
+
+    public void skipToNextRound() {
+        GameState current = gameState.getValue();
+        updateGameState((long) (current.getTimeToNextRound() - 0.1));
+        gameState.postValue(current);
     }
 }

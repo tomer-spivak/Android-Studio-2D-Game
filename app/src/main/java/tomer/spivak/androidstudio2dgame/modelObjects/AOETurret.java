@@ -5,13 +5,15 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.TurretType;
 
 public class AOETurret extends Turret{
-    List<Position> cellsToAttack = new ArrayList<>();
+    List<Position> positionsToAttack = new ArrayList<>();
 
-    public AOETurret(float health, float attackDamage, float attackRange, Position pos, TurretType type, long attackCooldown) {
+    public AOETurret(float health, float attackDamage, float attackRange, Position pos,
+                     TurretType type, long attackCooldown) {
         super(health, attackDamage, attackRange, pos, type, attackCooldown);
         setCellsToAttack();
     }
@@ -20,7 +22,20 @@ public class AOETurret extends Turret{
     private void setCellsToAttack(){
         if (type == TurretType.ARCHERTOWER){
             //square
-            cellsToAttack = pos.getNeighbors();
+            for (int i = 0; i < attackRange; i++){
+                positionsToAttack.add(new Position(pos.getX() + i + 1, pos.getY()));
+            }
+            for (int i = 0; i < attackRange; i++){
+                positionsToAttack.add(new Position(pos.getX() - i - 1, pos.getY()));
+            }
+
+            for (int i = 0; i < attackRange; i++){
+                positionsToAttack.add(new Position(pos.getX(), pos.getY() + i + 1));
+            }
+
+            for (int i = 0; i < attackRange; i++){
+                positionsToAttack.add(new Position(pos.getX(), pos.getY() - i - 1));
+            }
         }
     }
 
@@ -42,7 +57,7 @@ public class AOETurret extends Turret{
         for (Enemy enemy : enemies){
             Log.d("AOE", "turret pos " + pos.toString());
             Log.d("AOE", "enemy pos" + enemy.getPosition().toString());
-            for (Position pos : cellsToAttack){
+            for (Position pos : positionsToAttack){
                 if (pos.equals(enemy.getPosition())){
                     attack(enemy);
                     attackComponent.resetAttackTimer();
@@ -54,6 +69,11 @@ public class AOETurret extends Turret{
     }
 
     public List<Position> getCellsToAttack() {
-        return cellsToAttack;
+        return positionsToAttack;
+    }
+
+    public void updateCellsToAttack(GameState current) {
+        positionsToAttack.removeIf(pos -> !current.isValidPosition(pos) || current.getCellAt(pos)
+                .getObject() instanceof Building);
     }
 }

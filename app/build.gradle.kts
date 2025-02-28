@@ -71,6 +71,9 @@ dependencies {
     implementation (libs.firebase.auth)
     implementation (libs.cardview)
 
+    implementation (libs.android.mail)
+    implementation (libs.android.activation)
+
 
 
 
