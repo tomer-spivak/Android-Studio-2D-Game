@@ -11,14 +11,14 @@
         android:layout_width="match_parent"
         android:layout_height="75dp"
         android:layout_marginTop="50dp"
-        android:src="@drawable/logo"></ImageView>
+        android:src="@drawable/logo"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <TextView
-            android:textColor="@color/red"
+            android:textColor="@color/white"
             android:textSize="17sp"
             android:id="@+id/tvUsernameError"
             android:layout_width="wrap_content"
@@ -30,43 +30,46 @@
             app:layout_constraintTop_toBottomOf="@+id/etUsername" />
 
         <EditText
-            android:textSize="21sp"
+            android:backgroundTint="@color/white"
+            android:textSize="25sp"
             android:id="@+id/etUsername"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginTop="25dp"
             android:layout_marginEnd="12dp"
-            android:fontFamily="@font/wosker"
+            android:fontFamily="@font/roboto"
             android:hint="@string/prompt_name"
             android:importantForAccessibility="yes"
             android:inputType="text"
             android:padding="8dp"
-            android:textColorHint="#58FF00"
+            android:textColorHint="#FFFFFF"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
-            android:textSize="21sp"
+            android:backgroundTint="@color/white"
+
+            android:textSize="25sp"
             android:id="@+id/etEmail"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginTop="2dp"
             android:layout_marginEnd="12dp"
-            android:fontFamily="@font/wosker"
+            android:fontFamily="@font/roboto"
             android:hint="@string/prompt_email"
             android:inputType="textEmailAddress"
             android:padding="8dp"
             android:selectAllOnFocus="true"
-            android:textColorHint="#58FF00"
+            android:textColorHint="#FFFFFF"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvUsernameError" />
 
         <TextView
-            android:textColor="@color/red"
+            android:textColor="@color/white"
             android:textSize="17sp"
             android:id="@+id/tvEmailError"
             android:layout_width="wrap_content"
@@ -77,28 +80,30 @@
             app:layout_constraintTop_toBottomOf="@+id/etEmail" />
 
         <EditText
-            android:textSize="21sp"
+            android:backgroundTint="@color/white"
+
+            android:textSize="25sp"
             android:id="@+id/etPassword"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginTop="24dp"
             android:layout_marginEnd="12dp"
-            android:fontFamily="@font/wosker"
+            android:fontFamily="@font/roboto"
             android:hint="@string/prompt_password"
             android:imeActionLabel="@string/action_sign_in_short"
             android:imeOptions="actionDone"
             android:inputType="textPassword"
             android:padding="8dp"
-            android:password="true"
+
             android:selectAllOnFocus="true"
-            android:textColorHint="#58FF00"
+            android:textColorHint="#FFFFFF"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvEmailError" />
 
         <TextView
-            android:textColor="@color/red"
+            android:textColor="@color/white"
             android:textSize="17sp"
             android:id="@+id/tvPasswordError"
             android:layout_width="wrap_content"
@@ -109,7 +114,8 @@
             app:layout_constraintTop_toBottomOf="@+id/etPassword" />
 
         <Button
-            android:textColor="#000a90"
+            android:gravity="center_vertical"
+            android:textColor="#000000"
             android:backgroundTint="@color/login_sign_up_button_background"
             android:id="@+id/btnSignUp"
             android:layout_width="wrap_content"

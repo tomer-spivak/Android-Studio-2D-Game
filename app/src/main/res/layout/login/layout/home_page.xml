@@ -14,6 +14,7 @@
         android:padding="24dp">
 
         <TextView
+            android:layout_marginTop="110dp"
             android:textAlignment="center"
             android:id="@+id/app_title"
             android:fontFamily="@font/nikea"
@@ -33,7 +34,7 @@
             android:layout_marginBottom="32dp"/>
 
         <TextView
-            android:fontFamily="@font/ortland"
+            android:fontFamily="@font/roboto"
             android:id="@+id/welcome_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

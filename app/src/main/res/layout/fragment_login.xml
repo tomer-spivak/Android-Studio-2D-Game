@@ -19,9 +19,9 @@
 
         <TextView
             android:textAlignment="center"
-            android:fontFamily="@font/ortland"
+            android:fontFamily="@font/roboto"
             android:layout_marginTop="10dp"
-            android:textColor="#6164A3"
+            android:textColor="#FFFFFF"
             android:textSize="25sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -31,9 +31,11 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
-            android:textSize="21sp"
-            android:textColorHint="#9FFa90"
-            android:fontFamily="@font/wosker"
+            android:backgroundTint="@color/white"
+
+            android:textSize="25sp"
+            android:textColorHint="#FFFFFF"
+            android:fontFamily="@font/roboto"
             android:id="@+id/etUsername"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -48,7 +50,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:textColor="@color/red"
+            android:textColor="@color/white"
             android:textSize="17sp"
             android:id="@+id/tvEmailError"
             android:layout_width="wrap_content"
@@ -58,9 +60,11 @@
             app:layout_constraintTop_toBottomOf="@+id/etUsername" />
 
         <EditText
-            android:textSize="21sp"
-            android:textColorHint="#9FFa90"
-            android:fontFamily="@font/wosker"
+            android:backgroundTint="@color/white"
+
+            android:textSize="25sp"
+            android:textColorHint="#FFFFFF"
+            android:fontFamily="@font/roboto"
             android:id="@+id/etPassword"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -78,7 +82,7 @@
             app:layout_constraintTop_toBottomOf="@+id/tvEmailError" />
 
         <TextView
-            android:textColor="@color/red"
+            android:textColor="@color/white"
             android:textSize="17sp"
             android:id="@+id/tvPasswordError"
             android:layout_width="wrap_content"
@@ -115,7 +119,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="48dp"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="48dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
