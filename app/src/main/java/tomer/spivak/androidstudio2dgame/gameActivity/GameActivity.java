@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -13,8 +12,6 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.lifecycle.Observer;
@@ -22,31 +19,15 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.firestore.DocumentSnapshot;
-
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.FirebaseRepository;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
-import tomer.spivak.androidstudio2dgame.modelEnums.Direction;
-import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
-import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
-import tomer.spivak.androidstudio2dgame.modelEnums.EnemyType;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
-import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
-import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
-import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
-import tomer.spivak.androidstudio2dgame.model.Position;
 
 
 public class GameActivity extends AppCompatActivity implements OnItemClickListener,
@@ -61,7 +42,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     Button btnChooseBuildingsCardView;
     Button btnStartGame;
     Button btnSkipRound;
-
+    Button btnPause;
     LinearLayout gameLayout;
 
     ArrayList<String> buildingImagesURL = new ArrayList<>();
@@ -80,6 +61,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     int boardSize;
     boolean gameIsOnGoing = false;
 
+    DialogHandler dialogHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,13 +73,11 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
         init();
 
-        btnStartGame = findViewById(R.id.btnStartGame);
-        btnSkipRound = findViewById(R.id.btnSkipRound);
-
         btnStartGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 gameIsOnGoing = true;
+                btnPause.setVisibility(View.VISIBLE);
                 btnStartGame.setVisibility(View.GONE);
                 btnSkipRound.setVisibility(View.VISIBLE);
             }
@@ -125,6 +105,16 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             }
         });
 
+        btnPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                gameView.pauseGameLoop();
+                dialogHandler.showPauseAlertDialog(gameView);
+
+           }
+        });
+
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)  {
             backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
                 @Override
@@ -132,7 +122,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
                     // Show the alert dialog and pass a Runnable to be executed when
                     // the dialog is dismissed
-                    showAlertDialog();
+                    dialogHandler.showExitAlertDialog();
                 }
             };
             getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
@@ -157,62 +147,9 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         }
     }
 
-    //checks if user wants to save his base
-    private void showAlertDialog() {
-        LayoutInflater inflater = LayoutInflater.from(this);
-        View dialogView = inflater.inflate(R.layout.alert_dialog, null);
-
-        AlertDialog alertDialog = new AlertDialog.Builder(this)
-                .setView(dialogView)
-                .setCancelable(false)
-                .create();
-
-        Button btnCancel = dialogView.findViewById(R.id.dialog_cancel);
-        Button btnDontSave = dialogView.findViewById(R.id.dialog_exit_without_saving);
-        Button btnSave = dialogView.findViewById(R.id.dialog_exit_with_saving);
-
-        btnCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                alertDialog.dismiss();
-            }
-        });
-
-        btnDontSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                alertDialog.dismiss();
-                finish();
-            }
-        });
-
-        btnSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                alertDialog.dismiss();
-                firebaseRepository.saveBoard(Objects.requireNonNull(viewModel.getGameState().
-                                getValue()).getGrid(), new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void unused) {
-                        finish();
-                        Toast.makeText(context, "success", Toast.LENGTH_SHORT).show();
-                    }
-                }, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-
-                    }
-                });
-            }
-        });
-
-        alertDialog.show();
-    }
-
     private void init(){
         hideSystemUI();
 
-        firebaseRepository = new FirebaseRepository(context);
 
         initViews();
 
@@ -236,159 +173,19 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         gameView = new GameView(context, boardSize, this);
         gameLayout.addView(gameView);
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
+        dialogHandler = new DialogHandler(context, firebaseRepository, viewModel);
+        firebaseRepository = new FirebaseRepository(context, boardSize, viewModel, gameView);
+
+        btnStartGame = findViewById(R.id.btnStartGame);
+        btnSkipRound = findViewById(R.id.btnSkipRound);
+        btnPause = findViewById(R.id.btnPause);
+
         observeViewModel();
 
         initPlacingBuilding();
 
-        AlertDialog dialog = new AlertDialog.Builder(context)
-                .setTitle("Loading board")
-                .setMessage("Please wait...")
-                .setCancelable(false) // Prevents dismissal by tapping outside or pressing back
-                .create();
-
-        dialog.show();
-        firebaseRepository.loadBoard(new OnSuccessListener<DocumentSnapshot>() {
-            @Override
-            public void onSuccess(DocumentSnapshot documentSnapshot) {
-                Toast.makeText(context, "success", Toast.LENGTH_SHORT).show();
-                Log.d("debug", "database exists");
-                Cell[][] board;
-                if (documentSnapshot.exists()) {
-                    board = new Cell[boardSize][boardSize];
-                    Map<String, Object> data = documentSnapshot.getData();
-
-                    // Log each row and its contents in a more readable format
-                    for (Map.Entry<String, Object> entry : Objects.requireNonNull(data).entrySet()) {
-                        Object rowData = entry.getValue();
-                        List<Map<String, Object>> rowList = (List<Map<String, Object>>) rowData;
-
-                        for (Map<String, Object> col : rowList) {
-                            HashMap map = (HashMap) col.get("position");
-                            Position pos = new Position(((Long)(Objects.
-                                    requireNonNull(Objects.requireNonNull(map).get("x"))))
-                                    .intValue(), ((Long)(Objects.requireNonNull(map.get("y"))))
-                                    .intValue());
-                            HashMap objectMap = (HashMap)(col.get("object"));
-
-                            if (objectMap != null){
-                                ModelObject object = ModelObjectFactory.create((String)
-                                                objectMap.get("type"), pos);
-                                String type = (String) objectMap.get("type");
-                                object.setHealth(((Number) Objects.requireNonNull(objectMap.
-                                        get("health"))).floatValue());
-                                if (isInEnum(type, EnemyType.class)) {
-                                    Enemy enemy = (Enemy) object;
-                                    enemy.setState((EnemyState) objectMap.get("enemyState"));
-                                    enemy.setCurrentDirection((Direction) objectMap.
-                                            get("currentDirection"));
-                                    enemy.setPath((List<Position>) objectMap.get("path"));
-                                    enemy.setCurrentTargetIndex(((Number) Objects.
-                                            requireNonNull(objectMap.get("currentTargetIndex")))
-                                            .intValue());
-                                    enemy.setTimeSinceLastAttack((Float) objectMap.
-                                            get("timeSinceLastAttack"));
-                                    enemy.setTimeSinceLastMove((Float) objectMap.
-                                            get("timeSinceLastMove"));
-
-                                }
-                                else{
-                                    btnStartGame.setEnabled(true);
-                                }
-
-                                board[pos.getX()][pos.getY()] = new Cell(pos, object);
-
-                            } else {
-                                board[pos.getX()][pos.getY()] = new Cell(pos);
-                            }
-                        }
-                    }
-                    board = removeNullRowsAndColumns(board);
-                }
-                else {
-                    board = initBoard();
-                }
-                initBoardInViewModel(board, dialog);
-            }
-        }, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                initBoardInViewModel(initBoard(), dialog);
-                Toast.makeText(context, "failed to fetch board from database", Toast.LENGTH_SHORT).show();
-                Log.d("debug", Objects.requireNonNull(e.getMessage()));
-            }
-        });
-    }
-
-    private void initBoardInViewModel(Cell[][] board, AlertDialog dialog) {
-        gameView.setBoard(board);
-        viewModel.initBoardFromCloud(gameView.getBoard());
-        dialog.dismiss();
-    }
-
-    private Cell[][] initBoard() {
-        Cell[][] board = new Cell[boardSize][boardSize];
-        for (int i = 0; i < boardSize; i++) {
-            for (int j = 0; j < boardSize; j++) {
-                board[i][j] = new Cell(new Position(i, j));
-            }
-        }
-        return board;
-    }
-
-    public <T extends Enum<T>> boolean isInEnum(String value, Class<T> enumClass) {
-        for (T enumValue : Objects.requireNonNull(enumClass.getEnumConstants())) {
-            if (enumValue.name().equals(value)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public Cell[][] removeNullRowsAndColumns(Cell[][] array) {
-            if (array == null || array.length == 0) return new Cell[0][0];
-
-            int rows = array.length;
-            int cols = array[0].length;
-
-            // Track valid rows and columns
-            boolean[] validRows = new boolean[rows];
-            boolean[] validCols = new boolean[cols];
-
-            // Identify valid rows and columns
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < cols; j++) {
-                    if (array[i][j] != null) {
-                        validRows[i] = true;
-                        validCols[j] = true;
-                    }
-                }
-            }
-
-            // Count valid rows and columns
-            int validRowCount = 0;
-            for (boolean row : validRows) if (row) validRowCount++;
-
-            int validColCount = 0;
-            for (boolean col : validCols) if (col) validColCount++;
-
-            // Create the new array
-            Cell[][] result = new Cell[validRowCount][validColCount];
-
-            // Fill the new array
-            int newRow = 0;
-            for (int i = 0; i < rows; i++) {
-                if (validRows[i]) {
-                    int newCol = 0;
-                    for (int j = 0; j < cols; j++) {
-                        if (validCols[j]) {
-                            result[newRow][newCol++] = array[i][j];
-                        }
-                    }
-                    newRow++;
-                }
-            }
-
-            return result;
+        firebaseRepository.setDialog(dialogHandler.showLoadingBoardAlertDialog());
+        firebaseRepository.loadBoardFromDataBase(btnStartGame);
 
     }
 
@@ -439,21 +236,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 if (gameState.getGameStatus() == GameStatus.LOST){
                     Toast.makeText(context, "lost", Toast.LENGTH_SHORT).show();
                     Log.d("lost", "lost");
-                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                    builder.setTitle("Title")
-                            .setMessage("This is an alert dialog.")
-                            .setPositiveButton("Go back to menu", (dialog, which) -> {
-                                finish();
-                            })
-                            .setNegativeButton("Exit App", (dialog, which) -> {
-                                finishAffinity();
-                                System.exit(0);
-                            });
-
-                    AlertDialog alertDialog = builder.create();
-                    alertDialog.show();
-
-
+                    dialogHandler.showLostAlertDialog();
 
                 }
 
@@ -480,7 +263,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     @Override
     public void onCellClicked(int row, int col) {
         viewModel.onCellClicked(row, col);
-        if (!viewModel.isEmptyBuildings()) {
+        if (viewModel.isNotEmptyBuildings()) {
             btnStartGame.setEnabled(true);
         }
     }
@@ -489,7 +272,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         viewModel.selectBuilding(buildingType);
 
     }
-
     @Override
     public void updateGameState(long elapsedTime) {
         if (gameIsOnGoing)

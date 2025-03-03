@@ -12,7 +12,6 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -56,7 +55,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     Paint timerPaint = new Paint();
     Rect timerBounds = new Rect();
 
-
     Cell[][] board;
 
     CellState[][] cellStates;
@@ -66,7 +64,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     int boardSize;
 
     GameViewListener listener;
-    private long deltaTime;
 
     public GameView(Context context, int boardSize, GameViewListener listener) {
         super(context);
@@ -341,14 +338,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         int y = 100; // Adjust as needed
         canvas.drawText(timeText, x, y, timerPaint);
 
-// Debug text - position properly
-    }
-
-    private String formatTime(long millis) {
-        long milliseconds = millis % 1000;
-        long seconds = (millis / 1000) % 60;
-        long minutes = (millis / (1000 * 60)) % 60;
-        return String.format("%01d:%02d:%03d", minutes, seconds, milliseconds);
     }
 
     public void pauseGameLoop() {
@@ -375,8 +364,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
             return copy;
     }
 
-    public void updateDeltaTime(long deltaTime) {
-        this.deltaTime = deltaTime;
+    public void resumeGameLoop() {
+        gameLoop.startLoop();
     }
-
 }

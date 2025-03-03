@@ -114,7 +114,6 @@
     <Button
         android:backgroundTint="@color/login_sign_up_button_background"
         android:fontFamily="@font/nikea"
-        android:enabled="true"
         android:id="@+id/btnForgotPassword"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

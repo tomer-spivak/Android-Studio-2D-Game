@@ -21,6 +21,30 @@
         </LinearLayout>
 
     <Button
+        android:id="@+id/btnPause"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="gone"
+        android:background="@drawable/pause_game_button_background"
+        android:drawablePadding="8dp"
+        android:elevation="8dp"
+        android:fontFamily="@font/nikea"
+        android:letterSpacing="0.1"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="16dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Light"
+        app:backgroundTint="@null"
+        android:paddingBottom="16dp"
+        android:stateListAnimator="@null"
+        android:text="Pause"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_margin="16dp" />
+    <Button
         android:enabled="false"
         android:id="@+id/btnStartGame"
         android:layout_width="wrap_content"
