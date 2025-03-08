@@ -39,7 +39,8 @@ public class Enemy extends ModelObject implements IDamager{
     }
 
     public boolean canAttack() {
-        return attackComponent.canAttack() && state != EnemyState.ATTACKING &&
+        return attackComponent.canAttack() && state != EnemyState.ATTACKING1 && state !=
+                EnemyState.ATTACKING2 && state != EnemyState.ATTACKING3 &&
                 state != EnemyState.HURT;
     }
 
@@ -68,19 +69,80 @@ public class Enemy extends ModelObject implements IDamager{
         // Use a Handler to post a delayed task to the main thread (if needed)
         // Use a Handler to post a delayed task to the main thread (if needed)
         dealDamage(building);
-        setState(EnemyState.ATTACKING);
+        setState(EnemyState.ATTACKING1);
 
         // Schedule a task to reset the state after 200ms
+        int dev_time = 150;
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // After 200ms, reset the state and the attack timer.
-                setState(EnemyState.IDLE);
-                resetAttackTimer();
+                Timer timer = new Timer();
+                setState(EnemyState.ATTACKING2);
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        setState(EnemyState.ATTACKING3);
+                        // After 200ms, reset the state and the attack timer.
+                        // Timer timer = new Timer();
+                        timer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                setState(EnemyState.ATTACKING4);
+                                timer.schedule(new TimerTask() {
+                                    @Override
+                                    public void run() {
+                                        setState(EnemyState.ATTACKING3);
+                                        timer.schedule(new TimerTask() {
+                                            @Override
+                                            public void run() {
+                                                setState(EnemyState.ATTACKING4);
+                                                timer.schedule(new TimerTask() {
+                                                    @Override
+                                                    public void run() {
+                                                        setState(EnemyState.ATTACKING3);
+                                                        timer.schedule(new TimerTask() {
+                                                            @Override
+                                                            public void run() {
+                                                                setState(EnemyState.ATTACKING4);
+                                                                timer.schedule(new TimerTask() {
+                                                                    @Override
+                                                                    public void run() {
+                                                                        setState(EnemyState.ATTACKING3);
+                                                                        timer.schedule(new TimerTask() {
+                                                                            @Override
+                                                                            public void run() {
+                                                                                setState(EnemyState.ATTACKING4);
+                                                                                timer.schedule(new TimerTask() {
+                                                                                    @Override
+                                                                                    public void run() {
+                                                                                        setState(EnemyState.IDLE);
+                                                                                        resetAttackTimer();
+                                                                                    }
+                                                                                }, dev_time);
+                                                                            }
+                                                                        }, dev_time);
+                                                                    }
+                                                                }, dev_time);
+                                                            }
+                                                        }, dev_time);
+                                                    }
+                                                }, dev_time);
+                                            }
+                                        }, dev_time);
+                                    }
+                                }, dev_time);
+                            }
+                        }, dev_time);
+                    }
+                }, 200);
             }
         }, 200);
+
     }
+
+
+
 
     @Override
     public void takeDamage(float damage) {
@@ -99,7 +161,7 @@ public class Enemy extends ModelObject implements IDamager{
             public void run() {
                 setState(EnemyState.IDLE);
             }
-        }, 1000);
+        }, 200);
     }
 
     public List<Position> getPath() {
@@ -161,6 +223,7 @@ public class Enemy extends ModelObject implements IDamager{
         return state;
     }
     public void setState(EnemyState enemyState) {
+        Log.d("state", enemyState.toString());
         this.state = enemyState;
     }
 

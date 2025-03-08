@@ -3,7 +3,6 @@ package tomer.spivak.androidstudio2dgame.gameActivity;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -12,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.lifecycle.Observer;
@@ -21,9 +21,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
-import tomer.spivak.androidstudio2dgame.FirebaseRepository;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.model.Cell;
+import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
@@ -31,7 +32,7 @@ import tomer.spivak.androidstudio2dgame.model.GameState;
 
 
 public class GameActivity extends AppCompatActivity implements OnItemClickListener,
-        GameViewListener {
+        GameViewListener{
 
     Context context;
 
@@ -119,10 +120,9 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
                 @Override
                 public void handleOnBackPressed() {
-
                     // Show the alert dialog and pass a Runnable to be executed when
                     // the dialog is dismissed
-                    dialogHandler.showExitAlertDialog();
+                    dialogHandler.showExitAlertDialog(viewModel);
                 }
             };
             getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
@@ -173,8 +173,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         gameView = new GameView(context, boardSize, this);
         gameLayout.addView(gameView);
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
-        dialogHandler = new DialogHandler(context, firebaseRepository, viewModel);
-        firebaseRepository = new FirebaseRepository(context, boardSize, viewModel, gameView);
+        firebaseRepository = new FirebaseRepository(context);
+        dialogHandler = new DialogHandler(context, firebaseRepository);
 
         btnStartGame = findViewById(R.id.btnStartGame);
         btnSkipRound = findViewById(R.id.btnSkipRound);
@@ -184,9 +184,43 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
         initPlacingBuilding();
 
-        firebaseRepository.setDialog(dialogHandler.showLoadingBoardAlertDialog());
-        firebaseRepository.loadBoardFromDataBase(btnStartGame);
+        String difficultyName = getIntent().getStringExtra("difficultyLevel");
+        boolean isContinue = getIntent().getBooleanExtra("isContinue", false);
+        BoardMapper boardMapper;
+        final DifficultyLevel[] difficulty = new DifficultyLevel[1];
+        AlertDialog loadingDialog = dialogHandler.showLoadingBoardAlertDialog();
+        if (!isContinue){
+            //if is continue is false, it means that we are creating a new game
+            //in order to create a new game we need to create a new board because there is no
+            //board in the database
+            //then we need to extract the difficulty level from the intent
+            difficulty[0] = DifficultyLevel.valueOf(difficultyName);
+            boardMapper = new BoardMapper(boardSize, difficulty[0]);
+            boardMapper.createBoard(null);
+            initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0]);
+        } else {
+            //if is continue is true, it means that we are continuing a game
+            //we need to extract the difficulty from the database
+            boardMapper = new BoardMapper(boardSize);
 
+            firebaseRepository.loadBoardFromDataBase(boardMapper, new OnBoardLoadedListener() {
+                @Override
+                public void onBoardLoaded(Cell[][] board) {
+                    Toast.makeText(context, "got board", Toast.LENGTH_SHORT).show();
+                    if (!boardMapper.isBoardEmpty())
+                        btnStartGame.setEnabled(true);
+                    difficulty[0] = boardMapper.getDifficulty();
+                    initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0]);
+                }
+            });
+        }
+
+    }
+    private void initBoardInViewModel(Cell[][] board, AlertDialog dialog,
+                                      DifficultyLevel difficulty) {
+        gameView.setBoard(board);
+        viewModel.initBoardFromCloud(gameView.getBoard(), difficulty);
+        dialog.dismiss();
     }
 
     private void hideSystemUI() {
@@ -222,7 +256,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     //a building has been selected in the card view, sending info to game view
     @Override
     public void onBuildingRecyclerViewItemClick(String buildingImageURL, int position) {
-
         gameView.setSelectedBuilding(buildingImageURL);
         cvSelectBuildingMenu.setVisibility(View.GONE);
     }
@@ -231,11 +264,9 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         viewModel.getGameState().observe(this, new Observer<GameState>() {
             @Override
             public void onChanged(GameState gameState) {
-                Log.d("board", "changed");
                 gameView.unpackGameState(gameState);
                 if (gameState.getGameStatus() == GameStatus.LOST){
-                    Toast.makeText(context, "lost", Toast.LENGTH_SHORT).show();
-                    Log.d("lost", "lost");
+                    Toast.makeText(context, "You Lost", Toast.LENGTH_SHORT).show();
                     dialogHandler.showLostAlertDialog();
 
                 }
@@ -270,7 +301,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     @Override
     public void onBuildingSelected(String buildingType) {
         viewModel.selectBuilding(buildingType);
-
     }
     @Override
     public void updateGameState(long elapsedTime) {

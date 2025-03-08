@@ -11,13 +11,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.Objects;
 
-import tomer.spivak.androidstudio2dgame.FirebaseRepository;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
@@ -25,17 +23,15 @@ import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 public class DialogHandler {
     Context context;
     FirebaseRepository firebaseRepository;
-    GameViewModel viewModel;
 
-    public DialogHandler(Context context, FirebaseRepository firebaseRepository,
-                         GameViewModel viewModel) {
+
+    public DialogHandler(Context context, FirebaseRepository firebaseRepository) {
         this.context = context;
         this.firebaseRepository = firebaseRepository;
-        this.viewModel = viewModel;
     }
 
     //checks if user wants to save his base
-    public void showExitAlertDialog() {
+    public void showExitAlertDialog(GameViewModel viewModel) {
         LayoutInflater inflater = LayoutInflater.from(context);
         View dialogView = inflater.inflate(R.layout.alert_dialog, null);
 
@@ -67,8 +63,12 @@ public class DialogHandler {
             @Override
             public void onClick(View v) {
                 alertDialog.dismiss();
+                if (viewModel.getGameState().getValue() == null ||
+                        viewModel.getGameState().getValue().getGrid() == null)
+                    return;
                 firebaseRepository.saveBoard(Objects.requireNonNull(viewModel.getGameState().
-                        getValue()).getGrid(), new OnSuccessListener<Void>() {
+                        getValue()).getGrid(), viewModel.getGameState().getValue().getDifficulty()
+                        .name(), new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void unused) {
                         finish();
@@ -111,8 +111,6 @@ public class DialogHandler {
         dialog.show();
         return dialog;
     }
-
-
 
     public void showLostAlertDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);

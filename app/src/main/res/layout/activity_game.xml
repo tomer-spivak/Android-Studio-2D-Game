@@ -61,7 +61,7 @@
         app:backgroundTint="@null"
         android:paddingBottom="16dp"
         android:stateListAnimator="@null"
-        android:text="Start\nGame"
+        android:text="Start\nPLAYING"
         android:textColor="#FFFFFF"
         android:textSize="18sp"
         android:textStyle="bold"

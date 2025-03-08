@@ -38,6 +38,9 @@ public class GameBuilding extends GameObject {
         if (this.imageResourceString.equals("obelisk")){
             topLeftY = (int) (imagePoint.y - (double) scaledSize[1] /2 * 1.4);
         }
+        if (this.imageResourceString.equals("archertower")){
+            topLeftY = (int) (imagePoint.y - (double) scaledSize[1] /2 * 1.4);
+        }
 
         canvas.drawBitmap(scaledBitmap, topLeftX, topLeftY, null);
     }

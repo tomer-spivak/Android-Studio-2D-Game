@@ -44,7 +44,6 @@ public class GameLoop implements Runnable {
                 canvas = surfaceHolder.lockCanvas();
                 synchronized (surfaceHolder) {
                     listener.updateGameState(deltaTime);
-                    gameView.updateDeltaTime(deltaTime); // Pass the deltaTime to GameView
                     gameView.draw(canvas);
                 }
             } catch (IllegalArgumentException e) {

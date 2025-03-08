@@ -93,13 +93,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         timerPaint.setTextAlign(Paint.Align.LEFT);  // Align text to the left
         timerPaint.setShadowLayer(5, 0, 0, Color.BLACK);  // Add shadow for visibility
 
-
-    }
-
-    @Override
-    public void surfaceCreated(@NonNull SurfaceHolder holder) {
-        gridView.initInstance(boardSize, boardSize);
-        centerCells = gridView.getCenterCells();
         board = new Cell[boardSize][boardSize];
         cellStates = new CellState[boardSize][boardSize];
         for (int i = 0; i < board.length; i++) {
@@ -108,6 +101,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
                 cellStates[i][j] = CellState.EMPTY;
             }
         }
+
+    }
+
+    @Override
+    public void surfaceCreated(@NonNull SurfaceHolder holder) {
+        gridView.initInstance(boardSize, boardSize);
+        centerCells = gridView.getCenterCells();
         gameLoop.startLoop();
     }
 
@@ -168,7 +168,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
             return;
         Point cellPoint = cellCenterPointArray[1];
         listener.onCellClicked(cellPoint.x, cellPoint.y);
-
     }
 
     public void unpackGameState(GameState gameState) {

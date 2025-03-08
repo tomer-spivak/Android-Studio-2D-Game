@@ -1,6 +1,7 @@
 package tomer.spivak.androidstudio2dgame.intermediate;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.window.OnBackInvokedCallback;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -23,7 +25,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.gameActivity.FirebaseRepository;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
+import tomer.spivak.androidstudio2dgame.gameActivity.GameCheckCallback;
+import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 
 public class IntermediateActivity extends AppCompatActivity {
 
@@ -52,11 +57,74 @@ public class IntermediateActivity extends AppCompatActivity {
                 } else if (id == R.id.nav_Rules) {
                     replaceFragment(new RulesFragment(), true);
                 } else if (id == R.id.go_to_game){
-                    Intent intent = new Intent(context, GameActivity.class);
-                    startActivity(intent);
+                    FirebaseRepository firebaseRepository = new FirebaseRepository(context);
+                    firebaseRepository.checkIfTheresAGame(new GameCheckCallback() {
+                        @Override
+                        public void onCheckCompleted(boolean gameExists) {
+                            if (gameExists) {
+                                AlertDialog dialog = continueOrStartNewGame();
+                                dialog.show();
+                            } else {
+                                createNewGame();
+                            }
+                        }
+                    });
                 }
                 drawerLayout.closeDrawer(navigationView);
                 return true;
+            }
+
+
+            @NonNull
+            private AlertDialog continueOrStartNewGame() {
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setTitle("continue current game or start new one?");
+                builder.setPositiveButton("continue", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(context, GameActivity.class);
+                        intent.putExtra("isContinue", true);
+                        startActivity(intent);
+                    }
+                });
+                builder.setNegativeButton("new game", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        createNewGame();
+                    }
+                });
+                return builder.create();
+            }
+
+            private void createNewGame() {
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                final DifficultyLevel[] difficultyLevel = {DifficultyLevel.EASY};
+                builder.setTitle("select difficulty level")
+                        .setItems(new String[]{"Easy", "Normal", "Hard"},new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                switch (which) {
+                                    case 0:
+                                        difficultyLevel[0] = DifficultyLevel.EASY;
+                                        break;
+                                    case 1:
+                                        difficultyLevel[0] = DifficultyLevel.MEDIUM;
+                                        // Handle Option 2
+                                        break;
+                                    case 2:
+                                        difficultyLevel[0] = DifficultyLevel.HARD;
+                                        // Handle Option 3
+                                        break;
+                                }
+                                Intent intent = new Intent(context, GameActivity.class);
+                                intent.putExtra("difficultyLevel", difficultyLevel[0].name());
+                                intent.putExtra("isContinue", false);
+                                startActivity(intent);
+                            }
+                        });
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         });
 

@@ -18,6 +18,8 @@ public class Ruin extends Building{
         this.ruinState = RuinState.IDLE;
     }
 
+
+
     @Override
     public void takeDamage(float damage) {
         super.takeDamage(damage);

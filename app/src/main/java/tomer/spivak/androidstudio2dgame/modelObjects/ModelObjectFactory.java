@@ -1,10 +1,10 @@
 package tomer.spivak.androidstudio2dgame.modelObjects;
 
-
 import java.util.HashMap;
 import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.EnemyType;
 import tomer.spivak.androidstudio2dgame.modelEnums.RuinType;
 import tomer.spivak.androidstudio2dgame.modelEnums.TurretType;
@@ -13,25 +13,73 @@ public class ModelObjectFactory {
     private static final Map<String, ModelObjectCreator> typeMap = new HashMap<>();
 
     static {
-        typeMap.put("OBELISK", (position) -> new Ruin(200, position, RuinType.OBELISK));
+        typeMap.put("OBELISK", (position, difficulty) ->
+                new Ruin(getBuildingHealthByDifficulty(200, difficulty), position,
+                        RuinType.OBELISK));
 
-        typeMap.put("ARCHERTOWER", (position) -> new AOETurret(100, 20, 4,
-                position, TurretType.ARCHERTOWER, 1100));
+        typeMap.put("ARCHERTOWER", (position, difficulty) ->
+                new AOETurret(getBuildingHealthByDifficulty(100, difficulty),
+                        getTurretDamageByDifficulty(20, difficulty),
+                        4, position, TurretType.ARCHERTOWER, 2000));
 
-        typeMap.put("MONSTER", (position) -> new Enemy(80, 30, 3f, position
-                , EnemyType.MONSTER, 2000));
+        typeMap.put("MONSTER", (position, difficulty) ->
+                new Enemy(getEnemyHealthByDifficulty(80, difficulty),
+                        getEnemyDamageByDifficulty(30, difficulty),
+                        getSpeedByDifficulty(3f, difficulty),
+                        position, EnemyType.MONSTER, 3000));
     }
 
-    public static ModelObject create(String type, Position position) {
+
+
+
+    public static ModelObject create(String type, Position position, DifficultyLevel difficulty) {
         ModelObjectCreator creator = typeMap.get(type);
         if (creator != null) {
-            return creator.create(position);
+            return creator.create(position, difficulty);
         }
         throw new IllegalArgumentException("Unknown type: " + type);
     }
 
     @FunctionalInterface
     interface ModelObjectCreator {
-        ModelObject create(Position position);
+        ModelObject create(Position position, DifficultyLevel difficulty);
+    }
+    private static float getBuildingHealthByDifficulty(int base, DifficultyLevel difficulty) {
+        switch (difficulty) {
+            case EASY: return base * 2;
+            case HARD: return (float) (base * 0.75);
+            default: return base;
+        }
+    }
+    private static float getEnemyDamageByDifficulty(int base, DifficultyLevel difficulty) {
+        switch (difficulty) {
+            case EASY: return (int) (base * 0.75);
+            case HARD: return (int) (base * 1.5);
+            default: return base;
+        }
+    }
+
+    private static float getEnemyHealthByDifficulty(int base, DifficultyLevel difficulty) {
+        switch (difficulty) {
+            case EASY: return (int) (base * 0.75);
+            case HARD: return (int) (base * 1.5);
+            default: return base;
+        }
+    }
+
+    private static float getTurretDamageByDifficulty(int base, DifficultyLevel difficulty) {
+        switch (difficulty) {
+            case EASY: return (int) (base * 1.5);
+            case HARD: return (int) (base * 0.75);
+            default: return base;
+        }
+    }
+
+    private static float getSpeedByDifficulty(float base, DifficultyLevel difficulty) {
+        switch (difficulty) {
+            case EASY: return base * 0.75f;
+            case HARD: return base * 1.4f;
+            default: return base;
+        }
     }
 }

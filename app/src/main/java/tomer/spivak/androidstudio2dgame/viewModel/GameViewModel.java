@@ -1,7 +1,5 @@
 package tomer.spivak.androidstudio2dgame.viewModel;
 
-
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -12,6 +10,7 @@ import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.model.EnemyManager;
 import tomer.spivak.androidstudio2dgame.model.TurretManager;
+import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.model.Cell;
@@ -28,8 +27,8 @@ public class GameViewModel extends ViewModel {
     EnemyManager enemyManager = new EnemyManager();
     TurretManager turretManager = new TurretManager();
 
-    public void initBoardFromCloud(Cell[][] board) {
-        gameState.setValue(new GameState(board, NIGHT_THRESHOLD));
+    public void initBoardFromCloud(Cell[][] board, DifficultyLevel difficulty) {
+        gameState.setValue(new GameState(board, NIGHT_THRESHOLD, difficulty));
         GameState current = gameState.getValue();
         if (current == null)
             return;
@@ -60,7 +59,7 @@ public class GameViewModel extends ViewModel {
     public void placeBuilding(int row, int col, GameState current) {
         Cell cell = current.getGrid()[row][col];
         cell.placeBuilding((Building)ModelObjectFactory.create(selectedBuildingType,
-                new Position(row, col)));
+                new Position(row, col), current.getDifficulty()));
         gameState.postValue(current);
     }
 
@@ -153,7 +152,7 @@ public class GameViewModel extends ViewModel {
         GameState current = gameState.getValue();
         if (current == null)
             return;
-        current.accumulateRound();
+        //current.accumulateRound();
         current.startTimerForNextRound();
         updateGameState((long) (current.getTimeToNextRound() - 0.1));
         gameState.postValue(current);

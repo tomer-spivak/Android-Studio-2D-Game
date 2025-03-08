@@ -29,7 +29,8 @@ public class EnemyManager {
             while(cellToSpawn.isOccupied()){
                 cellToSpawn = getRandomFramePointIndex(gameState.getGrid());
             }
-            Enemy enemy = (Enemy) ModelObjectFactory.create(enemyType, new Position(0, 0));
+            Enemy enemy = (Enemy) ModelObjectFactory.create(enemyType, new Position(0, 0),
+                    gameState.getDifficulty());
             cellToSpawn.spawnEnemy(enemy);
             createPathForEnemy(gameState, enemy);
     }
@@ -77,7 +78,8 @@ public class EnemyManager {
         }
         for (Enemy enemy : enemies) {
             if (enemy.getEnemyState() != EnemyState.HURT && enemy.getEnemyState() !=
-                    EnemyState.ATTACKING)
+                    EnemyState.ATTACKING1 && enemy.getEnemyState() != EnemyState.ATTACKING2 &&
+                    enemy.getEnemyState() != EnemyState.ATTACKING3 && enemy.getEnemyState() != EnemyState.ATTACKING4)
                 updateEnemyMovement(enemy, current, deltaTime);
         }
     }
