@@ -54,4 +54,5 @@ You have to choose where on the board you want to place your first building. The
     <string name="tutorial_basics">The game is based around designing a base that can withstand the waves of enemies which attack you</string>
     <string name="tutorial_placing_buildings">In order to place a building, You neeed to press the button at the right top corner of the screen</string>
     <string name="developer">Developed by Tomer Spivak</string>
+    <string name="default_web_client_id">1234567890-abcde12345.apps.googleusercontent.com</string>
 </resources>

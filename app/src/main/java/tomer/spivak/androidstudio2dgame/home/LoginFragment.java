@@ -1,13 +1,22 @@
 package tomer.spivak.androidstudio2dgame.home;
 
 
+import static android.app.Activity.RESULT_OK;
+
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,8 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
+
 
 
 import tomer.spivak.androidstudio2dgame.R;
@@ -34,9 +42,10 @@ public class LoginFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
 
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
-
+        AuthenticationHelper authHelper = new AuthenticationHelper();
         Button btn = view.findViewById(R.id.btnLogin);
+        Button btnGoogleLogin = view.findViewById(R.id.btnGoogleLogin);
+
 
         EditText etEmail = view.findViewById(R.id.etUsername);
         EditText etPassword = view.findViewById(R.id.etPassword);
@@ -107,21 +116,20 @@ public class LoginFragment extends Fragment {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mAuth.signInWithEmailAndPassword(etEmail.getText().toString(),
-                                (etPassword.getText().toString()))
-                        .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                authHelper.loginWithEmailAndPassword(etEmail.getText().toString(),
+                        etPassword.getText().toString(), new OnSuccessListener() {
                             @Override
-                            public void onSuccess(AuthResult authResult) {
+                            public void onSuccess(Object o) {
                                 Intent intent = new Intent(getActivity(),
                                         IntermediateActivity.class);
                                 startActivity(intent);
                             }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
+                        }, new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 LayoutInflater inflater = LayoutInflater.from(getContext());
-                                View layout = inflater.inflate(R.layout.custom_toast, null); // Use null as the parent
+                                View layout = inflater.inflate(R.layout.custom_toast, null);
+                                // Use null as the parent
 
                                 TextView text = layout.findViewById(R.id.toast_text);
                                 text.setText("Couldn't Log in"); // Set the text properly
@@ -131,8 +139,7 @@ public class LoginFragment extends Fragment {
                                 toast.setView(layout);
                                 toast.show();
                             }
-                        })
-                ;
+                        });
             }
         });
 
@@ -145,20 +152,70 @@ public class LoginFragment extends Fragment {
             passwordResetDialog.setMessage("Enter your email to receive a reset link.");
             passwordResetDialog.setView(editTextEmail);
 
+
             passwordResetDialog.setPositiveButton("Send", (dialog, which) -> {
                 String email = editTextEmail.getText().toString().trim();
                 if (!email.isEmpty()) {
-                    FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-                            .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Reset link sent to your email.", Toast.LENGTH_SHORT).show())
-                            .addOnFailureListener(e -> Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                    authHelper.forgotPassword(email, new OnSuccessListener() {
+                        @Override
+                        public void onSuccess(Object o) {
+                            Toast.makeText(getContext(), "Reset link sent to your email.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }, new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(getContext(), "Error: " + e.getMessage(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 } else {
-                    Toast.makeText(getContext(), "Please enter an email.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Please enter an email.",
+                            Toast.LENGTH_SHORT).show();
                 }
             });
 
-            passwordResetDialog.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+            passwordResetDialog.setNegativeButton("Cancel",
+                    new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
 
             passwordResetDialog.create().show();
+        });
+
+        ActivityResultLauncher<Intent> googleSignInLauncher;
+
+        googleSignInLauncher = registerForActivityResult(new ActivityResultContracts
+                .StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    authHelper.handleGoogleSignInResult(result.getData(), new AuthenticationHelper
+                            .GoogleSignInCallback() {
+                        @Override
+                        public void onSuccess() {
+                            Intent intent = new Intent(getContext(), IntermediateActivity.class);
+                            startActivity(intent);
+                        }
+
+                        @Override
+                        public void onFailure(Exception e) {
+                            Log.w("TAG", "Google sign-in failed", e);
+                        }
+                    });
+                }
+            }
+        });
+
+        btnGoogleLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent signInIntent = authHelper.getGoogleSignInIntent(requireContext());
+                googleSignInLauncher.launch(signInIntent);
+            }
         });
 
 

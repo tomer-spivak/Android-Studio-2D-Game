@@ -12,7 +12,20 @@
           "package_name": "tomer.spivak.androidstudio2dgame"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "784049216384-i3tilp7t7g9f0pk86ao8r8qv1sjrrpsn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "tomer.spivak.androidstudio2dgame",
+            "certificate_hash": "2e3efc2e722837d13710a06326b5ef0544f971ef"
+          }
+        },
+        {
+          "client_id": "784049216384-66lcqlmcbq9l15ku6i6q1iuarbsnj5qs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB8Z-5WU4BQl6NQbaxAiDTZZGp99j7mLu0"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "784049216384-66lcqlmcbq9l15ku6i6q1iuarbsnj5qs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

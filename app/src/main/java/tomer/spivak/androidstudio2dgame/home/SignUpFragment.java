@@ -1,9 +1,14 @@
 package tomer.spivak.androidstudio2dgame.home;
 
+import static android.app.Activity.RESULT_OK;
+
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 
 import android.text.Editable;
@@ -15,14 +20,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
-
-import javax.mail.MessagingException;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
@@ -36,11 +34,11 @@ public class SignUpFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
+        AuthenticationHelper authHelper = new AuthenticationHelper();
 
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
         Button btn = view.findViewById(R.id.btnSignUp);
-
+        Button btnGoogle = view.findViewById(R.id.btnGoogleSignUp);
         EditText etEmail = view.findViewById(R.id.etEmail);
         EditText etPassword = view.findViewById(R.id.etPassword);
         EditText etUsername = view.findViewById(R.id.etUsername);
@@ -153,40 +151,42 @@ public class SignUpFragment extends Fragment {
             }
         });
 
-        btn.setOnClickListener(new View.OnClickListener() {
+
+        ActivityResultLauncher<Intent> googleSignInLauncher;
+
+        googleSignInLauncher = registerForActivityResult(new ActivityResultContracts
+                .StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    authHelper.handleGoogleSignInResult(result.getData(), new AuthenticationHelper
+                            .GoogleSignInCallback() {
+                        @Override
+                        public void onSuccess() {
+                            Intent intent = new Intent(getContext(), IntermediateActivity.class);
+                            startActivity(intent);
+                        }
+
+                        @Override
+                        public void onFailure(Exception e) {
+                            Log.w("TAG", "Google sign-in failed", e);
+                        }
+                    });
+                }
+            }
+        });
+
+        btnGoogle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mAuth.createUserWithEmailAndPassword(etEmail.getText().toString(),
-                        etPassword.getText().toString())
-                        .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
-                    @Override
-                    public void onSuccess(AuthResult authResult) {
-                        // Replace with your email credentials and recipient
-                        String username = "spivak.toti@gmail.com";
-                        String password = "axzwhdzahfkamgzo";
-                        String recipient = etEmail.getText().toString();
-                        String subject = "TowerLands";
-                        String body = "Thank you for signing up!\nI hope you enjoy th game!";
-
-// Execute the email sender
-                        new EmailSender(username, password, recipient, subject, body).execute();
-
-                        Intent intent = new Intent(getActivity(),
-                                IntermediateActivity.class);
-                        startActivity(intent);
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(getContext(), e.getMessage(),
-                                Toast.LENGTH_LONG).show();
-                    }
-                });
+                Intent signInIntent = authHelper.getGoogleSignInIntent(requireContext());
+                googleSignInLauncher.launch(signInIntent);
             }
         });
 
         return view;
     }
+
     private boolean validatePassword(String pass, TextView tvPasswordError) {
         if (pass.length() < 6){
             tvPasswordError.setText("Password must be at least 6 characters");

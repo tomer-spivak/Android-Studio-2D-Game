@@ -1,8 +1,12 @@
 package tomer.spivak.androidstudio2dgame.modelObjects;
 
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -66,82 +70,66 @@ public class Enemy extends ModelObject implements IDamager{
     }
 
     public void attack(Building building) {
-        // Use a Handler to post a delayed task to the main thread (if needed)
-        // Use a Handler to post a delayed task to the main thread (if needed)
+        executeAttackAnimation();
         dealDamage(building);
-        setState(EnemyState.ATTACKING1);
-
-        // Schedule a task to reset the state after 200ms
-        int dev_time = 150;
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Timer timer = new Timer();
-                setState(EnemyState.ATTACKING2);
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        setState(EnemyState.ATTACKING3);
-                        // After 200ms, reset the state and the attack timer.
-                        // Timer timer = new Timer();
-                        timer.schedule(new TimerTask() {
-                            @Override
-                            public void run() {
-                                setState(EnemyState.ATTACKING4);
-                                timer.schedule(new TimerTask() {
-                                    @Override
-                                    public void run() {
-                                        setState(EnemyState.ATTACKING3);
-                                        timer.schedule(new TimerTask() {
-                                            @Override
-                                            public void run() {
-                                                setState(EnemyState.ATTACKING4);
-                                                timer.schedule(new TimerTask() {
-                                                    @Override
-                                                    public void run() {
-                                                        setState(EnemyState.ATTACKING3);
-                                                        timer.schedule(new TimerTask() {
-                                                            @Override
-                                                            public void run() {
-                                                                setState(EnemyState.ATTACKING4);
-                                                                timer.schedule(new TimerTask() {
-                                                                    @Override
-                                                                    public void run() {
-                                                                        setState(EnemyState.ATTACKING3);
-                                                                        timer.schedule(new TimerTask() {
-                                                                            @Override
-                                                                            public void run() {
-                                                                                setState(EnemyState.ATTACKING4);
-                                                                                timer.schedule(new TimerTask() {
-                                                                                    @Override
-                                                                                    public void run() {
-                                                                                        setState(EnemyState.IDLE);
-                                                                                        resetAttackTimer();
-                                                                                    }
-                                                                                }, dev_time);
-                                                                            }
-                                                                        }, dev_time);
-                                                                    }
-                                                                }, dev_time);
-                                                            }
-                                                        }, dev_time);
-                                                    }
-                                                }, dev_time);
-                                            }
-                                        }, dev_time);
-                                    }
-                                }, dev_time);
-                            }
-                        }, dev_time);
-                    }
-                }, 200);
-            }
-        }, 200);
-
     }
 
+    private void executeAttackAnimation() {
+        // Define the initial states
+        final EnemyState[] initialStates = {
+                EnemyState.ATTACKING1,
+                EnemyState.ATTACKING2,
+        };
 
+        // Define the repeated alternating pattern: ATTACKING4 followed by ATTACKING3.
+        // Adjust the repeatCount to match how many times you want the pattern to occur.
+        final int repeatCount = 3;
+        final List<EnemyState> stateSequence = new ArrayList<>();
+        final List<Integer> delays = new ArrayList<>();
+        delays.add(0);
+
+
+        // Add the initial sequence
+        Collections.addAll(stateSequence, initialStates);
+
+        int initDelay = 500;
+        delays.add(initDelay);
+        delays.add(initDelay);
+
+
+        int stepDelay = 150;
+
+        // Add the repeating pattern
+        for (int i = 0; i < repeatCount; i++) {
+            stateSequence.add(EnemyState.ATTACKING3);
+            delays.add(stepDelay);
+            stateSequence.add(EnemyState.ATTACKING4);
+            delays.add(stepDelay);
+        }
+
+        // Finally, add the final state to reset the enemy
+        stateSequence.add(EnemyState.IDLE);
+        delays.add(stepDelay);
+
+        // Define corresponding delays (in milliseconds) between state changes.
+        // You can customize these values as needed.
+
+        // Use a Handler to schedule the state changes on the main thread
+        final Handler handler = new Handler(Looper.getMainLooper());
+        int accumulatedDelay = 0;
+
+        for (int i = 0; i < stateSequence.size(); i++) {
+            final EnemyState state = stateSequence.get(i);
+            accumulatedDelay += delays.get(i);
+            handler.postDelayed(() -> {
+                setState(state);
+                // When reaching the final state, also reset the attack timer.
+                if (state == EnemyState.IDLE) {
+                    resetAttackTimer();
+                }
+            }, accumulatedDelay);
+        }
+    }
 
 
     @Override

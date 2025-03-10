@@ -26,7 +26,7 @@ public class ModelObjectFactory {
                 new Enemy(getEnemyHealthByDifficulty(80, difficulty),
                         getEnemyDamageByDifficulty(30, difficulty),
                         getSpeedByDifficulty(3f, difficulty),
-                        position, EnemyType.MONSTER, 3000));
+                        position, EnemyType.MONSTER, 1000));
     }
 
 
