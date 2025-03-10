@@ -13,7 +13,8 @@ import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 
 
 public class CustomGridView extends GridView {
-    private int numColumns, numRows;
+    private final int numColumns;
+    private final int numRows;
 
     private static final float angle = (float) (PI * 0.18);
 
@@ -25,23 +26,18 @@ public class CustomGridView extends GridView {
 
     private final int baseCellHeight = 150;
 
-    private DrawGridView drawGridView;
+    private final DrawGridView drawGridView;
 
-    private GridPathManager gridPathManager;
+    private final GridPathManager gridPathManager;
 
-    private GridTransformer gridTransformer;
+    private final GridTransformer gridTransformer;
 
-    private final Context context;
     private CellState[][] cellStates;
 
-    public CustomGridView(Context context) {
+    public CustomGridView(Context context, int boardSize) {
         super(context);
-        this.context = context;
-    }
-
-    public void initInstance(int rows, int columns) {
-        this.numRows = rows;
-        this.numColumns = columns;
+        this.numRows = boardSize;
+        this.numColumns = boardSize;
 
         int cellHeight = baseCellHeight;
         int cellWidth = (int) (cellHeight / Math.tan(angle));
@@ -57,7 +53,6 @@ public class CustomGridView extends GridView {
         gridTransformer = new GridTransformer(startX, startY, minScale, maxScale, baseCellHeight);
 
         gridPathManager.calculateCellPaths();
-
     }
 
     public Point[] getSelectedCell(float x, float y) {
@@ -181,6 +176,7 @@ public class CustomGridView extends GridView {
     }
 
     public Point[][] getCenterCells(){
+
         return gridPathManager.getCellCenters();
     }
     @Override

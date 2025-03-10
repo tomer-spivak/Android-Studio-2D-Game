@@ -120,4 +120,8 @@ public abstract class GameObject {
     public Position getPos() {
         return pos;
     }
+
+    public void setImagePoint(Point point) {
+        this.imagePoint = point;
+    }
 }

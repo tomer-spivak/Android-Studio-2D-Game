@@ -73,10 +73,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
 
         gameLoop = new GameLoop(this, surfaceHolder, listener);
         touchHandler = new TouchHandler(context, this);
-
-        gridView = new CustomGridView(context);
-
         this.boardSize = boardSize;
+
+        gridView = new CustomGridView(context, boardSize);
+
 
         this.listener = listener;
         init();
@@ -106,7 +106,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
 
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder holder) {
-        gridView.initInstance(boardSize, boardSize);
         centerCells = gridView.getCenterCells();
         gameLoop.startLoop();
     }
@@ -363,7 +362,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
             return copy;
     }
 
+
     public void resumeGameLoop() {
+        // Recalculate the grid centers in case the board's position has shifted.
+        centerCells = gridView.getCenterCells();
+        updateGameObjectsPositions();
         gameLoop.startLoop();
+    }
+
+    private void updateGameObjectsPositions() {
+        for (GameObject gameObject : gameObjectsViewsArrayList) {
+            // Retrieve the object's current grid position
+            Position pos = gameObject.getPos();
+            // Update the drawing coordinate to match the newly calculated center
+            gameObject.setImagePoint(centerCells[pos.getX()][pos.getY()]);
+        }
     }
 }

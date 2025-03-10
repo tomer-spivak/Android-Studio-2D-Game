@@ -132,6 +132,14 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (gameView != null) {
+            gameView.resumeGameLoop(); // implement this method to start the thread
+        }
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         if (gameView != null) {
@@ -168,7 +176,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     }
 
     private void initGame() {
-        boardSize = 12;
+        boardSize = 14;
         gameLayout = findViewById(R.id.gameView);
         gameView = new GameView(context, boardSize, this);
         gameLayout.addView(gameView);

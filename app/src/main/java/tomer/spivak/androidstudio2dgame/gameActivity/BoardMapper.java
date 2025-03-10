@@ -56,6 +56,8 @@ public class BoardMapper {
                             requireNonNull(Objects.requireNonNull(map).get("x"))))
                             .intValue(), ((Long)(Objects.requireNonNull(map.get("y"))))
                             .intValue());
+                    if (pos.getX() >= boardSize || pos.getY() >= boardSize)
+                        continue;
                     HashMap objectMap = (HashMap)(col.get("object"));
 
                     if (objectMap != null){
@@ -87,7 +89,8 @@ public class BoardMapper {
 
                         board[pos.getX()][pos.getY()] = new Cell(pos, object);
 
-                    } else {
+                    }
+                    else {
                         board[pos.getX()][pos.getY()] = new Cell(pos);
                     }
                 }
