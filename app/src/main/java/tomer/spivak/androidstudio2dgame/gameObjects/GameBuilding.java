@@ -6,12 +6,19 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.util.Log;
 
 import tomer.spivak.androidstudio2dgame.model.Position;
 
 public class GameBuilding extends GameObject {
-    public GameBuilding(Context context, Point point, String name, float scale, Position pos) {
+    public GameBuilding(Context context, Point point, String name, float scale, Position pos,
+                        String building_state) {
         super(context, point, name, scale, pos);
+        Log.d("building", name);
+        Log.d("building", "building state: " + building_state);
+        Log.d("building", imageResourceString);
+        imageResourceString = imageResourceString + "_" + building_state;
+        Log.d("building", imageResourceString);
         createView();
         setScaledSize();
     }

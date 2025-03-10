@@ -98,7 +98,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
                 board[i][j] = new Cell(new Position(i, j));
-                cellStates[i][j] = CellState.EMPTY;
+                cellStates[i][j] = CellState.NORMAL;
             }
         }
 
@@ -260,19 +260,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         if (object instanceof Enemy){
             Enemy enemy = (Enemy) object;
             gameObject = GameObjectFactory.create(getContext(), centerCells[centerX][centerY],
-                    enemy.getType().name(), scale,
+                    enemy.getType().name().toLowerCase(), scale,
                     new Position(centerX, centerY),
-                    enemy.getCurrentDirection().ordinal(), enemy.getEnemyState().ordinal());
+                    enemy.getCurrentDirection().name().toLowerCase(), enemy.getEnemyState().
+                            name().toLowerCase());
         } else if (object instanceof Ruin){
             Ruin ruin = (Ruin) object;
             gameObject = GameObjectFactory.create(getContext(),
-                    centerCells[centerX][centerY], ruin.getType().name(), scale,
-                    new Position(centerX, centerY), -1, -1);
+                    centerCells[centerX][centerY], ruin.getType().name().toLowerCase(), scale,
+                    new Position(centerX, centerY), ruin.getState().name().toLowerCase(), "");
         } else if (object instanceof Turret) {
             Turret turret = (Turret) object;
             gameObject = GameObjectFactory.create(getContext(),
-                    centerCells[centerX][centerY], turret.getType().name(), scale,
-                    new Position(centerX, centerY), -1, -1);
+                    centerCells[centerX][centerY], turret.getType().name().toLowerCase(), scale,
+                    new Position(centerX, centerY), turret.getState().name().toLowerCase(), "");
         }
         addGameObject(gameObject);
     }

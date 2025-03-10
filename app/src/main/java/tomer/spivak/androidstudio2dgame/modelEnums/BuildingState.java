@@ -1,7 +1,7 @@
 package tomer.spivak.androidstudio2dgame.modelEnums;
 
-public enum TurretState {
+public enum BuildingState {
     IDLE,
-    ATTACKING,
-    HURT
+    HURT,
+    ATTACKING
 }

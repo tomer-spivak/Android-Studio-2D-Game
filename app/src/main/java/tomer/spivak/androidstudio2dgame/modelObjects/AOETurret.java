@@ -7,14 +7,16 @@ import java.util.List;
 
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.modelEnums.AttackType;
 import tomer.spivak.androidstudio2dgame.modelEnums.TurretType;
 
 public class AOETurret extends Turret{
     List<Position> positionsToAttack = new ArrayList<>();
 
     public AOETurret(float health, float attackDamage, float attackRange, Position pos,
-                     TurretType type, long attackCooldown) {
-        super(health, attackDamage, attackRange, pos, type, attackCooldown);
+                     TurretType type, long attackCooldown,
+                     AttackType attackType) {
+        super(health, attackDamage, attackRange, pos, type, attackCooldown, attackType);
         setCellsToAttack();
     }
 

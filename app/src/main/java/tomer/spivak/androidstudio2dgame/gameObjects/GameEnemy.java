@@ -14,9 +14,10 @@ import tomer.spivak.androidstudio2dgame.model.Position;
 public class GameEnemy extends GameObject{
 
     public GameEnemy(Context context, Point point, String name, float scale, Position pos,
-                     int direction, int enemyState){
+                     String enemyState, String direction){
         super(context, point, name, scale, pos);
-        imageResourceString = imageResourceString + "_" + (direction + 1) + "_" + (enemyState + 1);
+        imageResourceString = imageResourceString + "_" + enemyState + "_" + direction;
+        Log.d("enemy", imageResourceString);
         createView();
         setScaledSize();
     }

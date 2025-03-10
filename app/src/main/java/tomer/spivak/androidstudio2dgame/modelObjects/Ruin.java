@@ -5,17 +5,15 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import tomer.spivak.androidstudio2dgame.model.Position;
-import tomer.spivak.androidstudio2dgame.modelEnums.RuinState;
+import tomer.spivak.androidstudio2dgame.modelEnums.BuildingState;
 import tomer.spivak.androidstudio2dgame.modelEnums.RuinType;
 
 public class Ruin extends Building{
     private final RuinType type;
-    private RuinState ruinState;
 
     public Ruin(float health, Position pos, RuinType type) {
         super(health, pos);
         this.type = type;
-        this.ruinState = RuinState.IDLE;
     }
 
 
@@ -23,12 +21,12 @@ public class Ruin extends Building{
     @Override
     public void takeDamage(float damage) {
         super.takeDamage(damage);
-        setRuinState(RuinState.HURT);
+        setState(BuildingState.HURT);
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                setRuinState(RuinState.IDLE);
+                setState(BuildingState.IDLE);
             }
         }, 200);
     }
@@ -37,9 +35,7 @@ public class Ruin extends Building{
         return type;
     }
 
-    public void setRuinState(RuinState ruinState) {
-        this.ruinState = ruinState;
-    }
+
 
     @Override
     public Object toMap() {

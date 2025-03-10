@@ -6,11 +6,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
+import tomer.spivak.androidstudio2dgame.modelEnums.AttackType;
 import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
+import tomer.spivak.androidstudio2dgame.modelAnimations.CellAnimationManager;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 
@@ -21,7 +21,7 @@ public class Cell {
 
     public Cell(Position position) {
         this.position = position;
-        cellState = CellState.EMPTY;
+        cellState = CellState.NORMAL;
     }
 
     public Cell(Position position, ModelObject object) {
@@ -104,17 +104,9 @@ public class Cell {
         this.object = null;
     }
 
-    public void cellAttacked() {
-        setState(CellState.HURT);
+    public void cellAttacked(AttackType attackType) {
+        CellAnimationManager.executeAttackedAnimation(this, attackType);
         // Schedule a task to reset the state after 200ms
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                // After 200ms, reset the state and the attack timer.
-                setState(CellState.EMPTY);
-            }
-        }, 200);
     }
 }
 

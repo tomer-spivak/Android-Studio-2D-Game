@@ -3,7 +3,9 @@ package tomer.spivak.androidstudio2dgame.modelObjects;
 
 import tomer.spivak.androidstudio2dgame.model.AttackComponent;
 import tomer.spivak.androidstudio2dgame.model.Position;
-import tomer.spivak.androidstudio2dgame.modelEnums.TurretState;
+import tomer.spivak.androidstudio2dgame.modelAnimations.TurretAnimationManager;
+import tomer.spivak.androidstudio2dgame.modelEnums.AttackType;
+import tomer.spivak.androidstudio2dgame.modelEnums.BuildingState;
 import tomer.spivak.androidstudio2dgame.modelEnums.TurretType;
 
 import java.util.Map;
@@ -14,52 +16,36 @@ public abstract class Turret extends Building implements IDamager{
     protected final AttackComponent attackComponent;
     protected final float attackRange;
     protected final TurretType type;
-    protected TurretState state;
+    protected AttackType attackType;
 
     public Turret(float health, float attackDamage, float attackRange, Position pos,
-                  TurretType type, long attackCooldown) {
+                  TurretType type, long attackCooldown, AttackType attackType) {
         super(health, pos);
         this.attackRange = attackRange;
         this.type = type;
         attackComponent = new AttackComponent(attackDamage, attackCooldown);
-        this.state = TurretState.IDLE;
+        this.attackType = attackType;
     }
 
     public void attack(Enemy target) {
-        // Use a Handler to post a delayed task to the main thread (if needed)
-        // Use a Handler to post a delayed task to the main thread (if needed)
-        dealDamage(target);
-        setState(TurretState.ATTACKING);
-
-
-        // Schedule a task to reset the state after 200ms
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                // After 200ms, reset the state and the attack timer.
-                setState(TurretState.IDLE);
-                attackComponent.resetAttackTimer();
-            }
-        }, 200);
-
+        TurretAnimationManager.executeAttackAnimation(this, target);
     }
 
     // This method should be called in the main game loop.
     protected boolean canAttack() {
-        return attackComponent.canAttack() && state != TurretState.ATTACKING &&
-                state != TurretState.HURT;
+        return attackComponent.canAttack() && state != BuildingState.ATTACKING &&
+                state != BuildingState.HURT;
     }
 
     @Override
     public void takeDamage(float damage) {
         super.takeDamage(damage);
-        setState(TurretState.HURT);
+        setState(BuildingState.HURT);
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                setState(TurretState.IDLE);
+                setState(BuildingState.IDLE);
             }
         }, 200);
     }
@@ -73,9 +59,11 @@ public abstract class Turret extends Building implements IDamager{
         return type;
     }
 
-    public void setState(TurretState turretState) {
-        this.state = turretState;
+
+    public AttackType getAttackType() {
+        return attackType;
     }
+
 
     @Override
     public Object toMap() {
@@ -86,5 +74,9 @@ public abstract class Turret extends Building implements IDamager{
         turretData.put("attackDamage", attackComponent.getAttackDamage());
         turretData.put("attackRange", attackRange);
         return turretData;
+    }
+
+    public void resetAttackTimer() {
+        attackComponent.resetAttackTimer();
     }
 }

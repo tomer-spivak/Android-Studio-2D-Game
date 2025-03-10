@@ -15,7 +15,6 @@ import tomer.spivak.androidstudio2dgame.model.Position;
 
 
 public abstract class GameObject {
-
     protected ImageView view;
     protected Point imagePoint;
     protected Context context;

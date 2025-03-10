@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.modelAnimations.BreatheFire;
+import tomer.spivak.androidstudio2dgame.modelEnums.AttackType;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.EnemyType;
 import tomer.spivak.androidstudio2dgame.modelEnums.RuinType;
@@ -20,13 +22,13 @@ public class ModelObjectFactory {
         typeMap.put("ARCHERTOWER", (position, difficulty) ->
                 new AOETurret(getBuildingHealthByDifficulty(100, difficulty),
                         getTurretDamageByDifficulty(20, difficulty),
-                        4, position, TurretType.ARCHERTOWER, 2000));
+                        4, position, TurretType.ARCHERTOWER, 2000, AttackType.LIGHTNING));
 
         typeMap.put("MONSTER", (position, difficulty) ->
                 new Enemy(getEnemyHealthByDifficulty(80, difficulty),
                         getEnemyDamageByDifficulty(30, difficulty),
                         getSpeedByDifficulty(3f, difficulty),
-                        position, EnemyType.MONSTER, 1000));
+                        position, EnemyType.MONSTER, 1000, new BreatheFire()));
     }
 
 
