@@ -4,7 +4,6 @@ package tomer.spivak.androidstudio2dgame.home;
 import android.content.Context;
 import android.content.Intent;
 
-
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -14,6 +13,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
 
@@ -21,9 +21,6 @@ import tomer.spivak.androidstudio2dgame.R;
 
 public class AuthenticationHelper {
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
-
-
-
 
     public void loginWithEmailAndPassword(String email, String password,
                                           OnSuccessListener onSuccessListener,
@@ -65,7 +62,8 @@ public class AuthenticationHelper {
             callback.onFailure(e);
         }
     }
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct, final GoogleSignInCallback callback) {
+    private void firebaseAuthWithGoogle(GoogleSignInAccount acct,
+                                        final GoogleSignInCallback callback) {
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(task -> {
@@ -75,5 +73,12 @@ public class AuthenticationHelper {
                         callback.onFailure(task.getException());
                     }
                 });
+    }
+
+    public void signUpWithEmailPassword(String email, String password, OnSuccessListener
+            onSuccessListener, OnFailureListener onFailureListener){
+        mAuth.createUserWithEmailAndPassword(email, password)
+                        .addOnSuccessListener(onSuccessListener)
+                .addOnFailureListener(onFailureListener);
     }
 }

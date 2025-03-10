@@ -9,6 +9,7 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.text.Editable;
@@ -20,7 +21,11 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
@@ -59,7 +64,7 @@ public class SignUpFragment extends Fragment {
                 String name = ((EditText)(view.findViewById(R.id.etUsername))).getText().toString();
                 boolean isValid = validatePassword(pass, tvPasswordError) &&
                         validateEmail(email, tvEmailError)
-                         && validateUsername(name, tvUsernameError);
+                        && validateUsername(name, tvUsernameError);
                 Log.d("TAG", "onTextChanged: " + isValid);
                 btn.setEnabled(isValid);
             }
@@ -118,7 +123,7 @@ public class SignUpFragment extends Fragment {
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
                     Log.d("TAG", "onFocusChange:" + tvEmailError.getText().toString());
-                        etEmail.addTextChangedListener(textWatcherEmail);
+                    etEmail.addTextChangedListener(textWatcherEmail);
 
                 } else {
                     Log.d("TAG", "onFocusChange:" + tvEmailError.getText().toString());
@@ -131,7 +136,7 @@ public class SignUpFragment extends Fragment {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus){
-                        etPassword.addTextChangedListener(textWatcherPassword);
+                    etPassword.addTextChangedListener(textWatcherPassword);
 
                 } else {
                     validatePassword(etPassword.getText().toString(), tvPasswordError);
@@ -143,14 +148,13 @@ public class SignUpFragment extends Fragment {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus){
-                        etUsername.addTextChangedListener(textWatcherUsername);
+                    etUsername.addTextChangedListener(textWatcherUsername);
 
                 } else {
                     validateUsername(etUsername.getText().toString(), tvUsernameError);
                 }
             }
         });
-
 
         ActivityResultLauncher<Intent> googleSignInLauncher;
 
@@ -183,6 +187,38 @@ public class SignUpFragment extends Fragment {
                 googleSignInLauncher.launch(signInIntent);
             }
         });
+
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                authHelper.signUpWithEmailPassword(etEmail.getText().toString(),
+                        etPassword.getText().toString(), new OnSuccessListener() {
+                            @Override
+                            public void onSuccess(Object o) {
+                                // Replace with your email credentials and recipient
+                                String username = "spivak.toti@gmail.com";
+                                String password = "axzwhdzahfkamgzo";
+                                String recipient = etEmail.getText().toString();
+                                String subject = "TowerLands";
+                                String body = "Thank you for signing up!\nI hope you enjoy th game!";
+
+// Execute the email sender
+                                new EmailSender(username, password, recipient, subject, body).execute();
+
+                                Intent intent = new Intent(getActivity(),
+                                        IntermediateActivity.class);
+                                startActivity(intent);
+                            }
+                        }, new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(getContext(), e.getMessage(),
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        });
+            }
+        });
+
 
         return view;
     }
