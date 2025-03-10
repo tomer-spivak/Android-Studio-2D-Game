@@ -26,6 +26,9 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
@@ -192,7 +195,8 @@ public class SignUpFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 authHelper.signUpWithEmailPassword(etEmail.getText().toString(),
-                        etPassword.getText().toString(), new OnSuccessListener() {
+                        etPassword.getText().toString(),
+                        new OnSuccessListener() {
                             @Override
                             public void onSuccess(Object o) {
                                 // Replace with your email credentials and recipient
@@ -205,9 +209,24 @@ public class SignUpFragment extends Fragment {
 // Execute the email sender
                                 new EmailSender(username, password, recipient, subject, body).execute();
 
-                                Intent intent = new Intent(getActivity(),
-                                        IntermediateActivity.class);
-                                startActivity(intent);
+                                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                                UserProfileChangeRequest profileUpdates =
+                                        new UserProfileChangeRequest.Builder().setDisplayName(
+                                                etUsername.getText().toString())
+                                                .build();
+                                user.updateProfile(profileUpdates).addOnSuccessListener(
+                                        new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void unused) {
+
+                                        Intent intent = new Intent(getActivity(),
+                                                IntermediateActivity.class);
+                                        startActivity(intent);
+                                    }
+                                });
+
+
+
                             }
                         }, new OnFailureListener() {
                             @Override

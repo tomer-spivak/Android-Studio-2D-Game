@@ -24,6 +24,7 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameActivity.FirebaseRepository;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
@@ -161,7 +162,7 @@ public class IntermediateActivity extends AppCompatActivity {
 
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-         tvUsername.setText(currentUser.getDisplayName());
+        tvUsername.setText(currentUser.getDisplayName());
 
         //tvUsername.setText();
     }
