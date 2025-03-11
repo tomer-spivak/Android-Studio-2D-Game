@@ -4,8 +4,6 @@ package tomer.spivak.androidstudio2dgame.gameManager;
 import android.graphics.Canvas;
 import android.view.SurfaceHolder;
 
-import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
-
 public class GameLoop implements Runnable {
     private static final double MAX_UPS = 120.0;
     private static final double UPS_PERIOD = 1E+3/MAX_UPS;

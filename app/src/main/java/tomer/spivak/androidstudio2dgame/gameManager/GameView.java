@@ -33,7 +33,6 @@ import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelObjects.Ruin;
 import tomer.spivak.androidstudio2dgame.modelObjects.Turret;
-import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         TouchHandler.TouchHandlerListener {
@@ -150,13 +149,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         }
     }
 
-
-    //prepares the building the user picked to be placed by user with a click
-    public void setSelectedBuilding(String buildingImageURL) {
-        listener.onBuildingSelected(buildingImageURL.
-                substring(buildingImageURL.lastIndexOf("/") + 1));
-
-    }
 
     //the user clicked on a cell, adding the selected building(if there is one) to drawn buildings
     // setting the dynamic center cell to it

@@ -24,6 +24,7 @@ public class EnemyManager {
                 spawnEnemy(gameState, enemyType);
             }
     }
+
     private void spawnEnemy(GameState gameState, String enemyType) {
             Cell cellToSpawn = getRandomFramePointIndex(gameState.getGrid());
             while(cellToSpawn.isOccupied()){
@@ -96,10 +97,8 @@ public class EnemyManager {
         enemy.accumulateTime(deltaTime);
 
         float timePerStep = 1000 / enemy.getMovementSpeed(); // ms per cell
-        boolean hasMoved = false;
 
         while (enemy.getAccumulatedTime() >= timePerStep && targetIndex < path.size()) {
-            hasMoved = true;
             Position nextPos = path.get(targetIndex);
             Cell nextCell = current.getCellAt(nextPos);
             if (nextCell.getObject() != null) {
@@ -114,8 +113,6 @@ public class EnemyManager {
         if (path.isEmpty() || targetIndex >= path.size()){
             fixDirectionToBuilding(enemy, current);
         }
-        if (!hasMoved)
-            enemy.setState(EnemyState.MOVING);
     }
     private void finishedPath(GameState current, Enemy enemy, long deltaTime) {
         // After movement logic, check for adjacent buildings and attack

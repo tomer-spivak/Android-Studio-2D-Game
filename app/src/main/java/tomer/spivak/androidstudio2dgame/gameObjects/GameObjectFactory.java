@@ -15,7 +15,7 @@ public class GameObjectFactory {
     static {
         // Register types that match the five-parameter constructor signature.
         typeMap.put("obelisk", GameBuilding::new);
-        typeMap.put("archertower", GameBuilding::new);
+        typeMap.put("lightningtower", GameBuilding::new);
         // Do not register "monster" here since GameEnemy requires an extra parameter.
     }
 

@@ -46,8 +46,7 @@ public class Enemy extends ModelObject implements IDamager{
 
     public boolean canAttack() {
         Log.d("enemy", "attack time: " + attackComponent.getAttackTime());
-        return attackComponent.canAttack() && (state == EnemyState.IDLE || state ==
-                EnemyState.MOVING);
+        return attackComponent.canAttack() && (state == EnemyState.IDLE);
     }
 
     public void updateDirection(Position prevPos) {
@@ -81,6 +80,8 @@ public class Enemy extends ModelObject implements IDamager{
         super.takeDamage(damage);
         Log.d("take", String.valueOf(timeSinceLastMove));
 
+
+        //stun lock:
         //if (attackAnimation != null) {
             //attackAnimation.cancelAnimation();
         //}
@@ -89,16 +90,15 @@ public class Enemy extends ModelObject implements IDamager{
             onDeath();
             return;
         }
-        EnemyState state = getEnemyState();
+        EnemyState currentState = getEnemyState();
         setState(EnemyState.HURT);
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                setState(state);
-                //setState(EnemyState.IDLE);
+                setState(currentState);
             }
-        }, 200);
+        }, 100);
     }
 
     public List<Position> getPath() {
@@ -160,7 +160,7 @@ public class Enemy extends ModelObject implements IDamager{
         return state;
     }
     public void setState(EnemyState enemyState) {
-        Log.d("state", enemyState.toString());
+        Log.d("enemyState", enemyState.toString());
         this.state = enemyState;
     }
 

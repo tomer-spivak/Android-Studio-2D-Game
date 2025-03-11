@@ -27,7 +27,7 @@ import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
-import tomer.spivak.androidstudio2dgame.viewModel.GameViewListener;
+import tomer.spivak.androidstudio2dgame.gameManager.GameViewListener;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 
 
@@ -224,6 +224,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         }
 
     }
+
     private void initBoardInViewModel(Cell[][] board, AlertDialog dialog,
                                       DifficultyLevel difficulty) {
         gameView.setBoard(board);
@@ -242,7 +243,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         );
     }
-    //prepares the recycler view
 
     private void initPlacingBuilding() {
         initBuildingToChoose();
@@ -255,7 +255,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     //pop the options for user (need to add more buildings later)
     private void initBuildingToChoose() {
         String obelisk = "OBELISK";
-        String archerTower = "ARCHERTOWER";
+        String archerTower = "LIGHTNING0TOWER";
 
         buildingImagesURL.add(obelisk);
         buildingImagesURL.add(archerTower);
@@ -264,7 +264,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     //a building has been selected in the card view, sending info to game view
     @Override
     public void onBuildingRecyclerViewItemClick(String buildingImageURL, int position) {
-        gameView.setSelectedBuilding(buildingImageURL);
+        onBuildingSelected(buildingImageURL.replace("0", ""));
         cvSelectBuildingMenu.setVisibility(View.GONE);
     }
 

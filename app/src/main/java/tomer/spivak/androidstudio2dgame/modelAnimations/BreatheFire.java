@@ -20,7 +20,7 @@ public class BreatheFire implements EnemyAttackAnimation {
     public void execute(Enemy enemy, IDamageable target) {
         enemy.resetAttackTimer();
         final EnemyState[] initialStates = { EnemyState.ATTACKING1, EnemyState.ATTACKING2 };
-        final int repeatCount = 3;
+        final int repeatCount = 10;
         final List<EnemyState> stateSequence = new ArrayList<>();
         final List<Integer> delays = new ArrayList<>();
         delays.add(0);

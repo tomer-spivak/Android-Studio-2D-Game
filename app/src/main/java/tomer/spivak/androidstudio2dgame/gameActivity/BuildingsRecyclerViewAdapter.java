@@ -17,7 +17,8 @@ import java.util.ArrayList;
 
 import tomer.spivak.androidstudio2dgame.R;
 
-public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<BuildingsRecyclerViewAdapter.BuildingViewHolder>{
+public class BuildingsRecyclerViewAdapter extends
+        RecyclerView.Adapter<BuildingsRecyclerViewAdapter.BuildingViewHolder>{
 
     private final Context context;
 
@@ -47,15 +48,20 @@ public class BuildingsRecyclerViewAdapter extends RecyclerView.Adapter<Buildings
         int resourceId = context.getResources().getIdentifier(imageUrl,
                 "drawable", context.getPackageName());
         Log.d("debug", imageUrl);
-        // Load image with Glide
         Glide.with(context)
                 .load(resourceId)
                 .placeholder(R.drawable.placeholder_building)
-//                .error(R.drawable.error_image)
                 .into(holder.imageView);
 
-        // Optional: Set title if you want captions
-        holder.tvName.setText(imageUrl);
+        String title = imageUrl.replace("0", " ");
+        String[] words = title.split(" ");
+        for (int i = 0; i < words.length; i++) {
+            String word = words[i];
+            word = word.substring(0, 1).toUpperCase() + word.substring(1);
+            words[i] = word;
+        }
+        title = String.join(" ", words);
+        holder.tvName.setText(title);
 
         holder.bind(buildingArrayList.get(position), position);
     }

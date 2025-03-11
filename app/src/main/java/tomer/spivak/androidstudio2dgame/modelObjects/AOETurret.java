@@ -22,7 +22,7 @@ public class AOETurret extends Turret{
 
 
     private void setCellsToAttack(){
-        if (type == TurretType.ARCHERTOWER){
+        if (type == TurretType.LIGHTNINGTOWER){
             //square
             for (int i = 0; i < attackRange; i++){
                 positionsToAttack.add(new Position(pos.getX() + i + 1, pos.getY()));
