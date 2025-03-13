@@ -70,6 +70,8 @@ public abstract class Turret extends Building implements IDamager{
         Map turretData = (Map) super.toMap();
         // Store the type of object
         turretData.put("type", type.name());
+        turretData.put("attackType", attackType.name());
+        turretData.put("timeSinceLastAttack", attackComponent.getTimeSinceLastAttack());
 
         turretData.put("attackDamage", attackComponent.getAttackDamage());
         turretData.put("attackRange", attackRange);

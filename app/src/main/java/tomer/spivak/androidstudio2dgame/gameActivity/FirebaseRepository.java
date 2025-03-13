@@ -2,6 +2,7 @@ package tomer.spivak.androidstudio2dgame.gameActivity;
 
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -42,7 +43,7 @@ public class FirebaseRepository {
 
 
 
-    public void saveBoard(Cell[][] board, String difficulty,
+    public void saveBoard(Cell[][] board, String difficulty, Long gameTime,
                           OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
         if (user == null) return;
 
@@ -68,6 +69,13 @@ public class FirebaseRepository {
                 .document("difficulty level")
                 .set(new HashMap<String, Object>() {{
                     put("level", difficulty);
+                }});
+        db.collection("users")
+                .document(user.getUid())
+                .collection("board")
+                .document("time of game")
+                .set(new HashMap<String, Object>() {{
+                    put("millis from start of the game", gameTime);
                 }});
     }
 
@@ -101,33 +109,36 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
-    // Modify your repository method to accept the listener
     public void loadBoardFromDataBase(BoardMapper boardMapper,
                                       OnBoardLoadedListener listener) {
         //if difficulty is null, it means that its in the database,
         // and that we are currently in a game
 
-
         loadDifficultyLevel(new OnSuccessListener<DocumentSnapshot>() {
                 @Override
                 public void onSuccess(DocumentSnapshot documentSnapshot) {
-
                     String difficultyName = (String) documentSnapshot.get("level");
                     DifficultyLevel difficultyLevel = DifficultyLevel
                             .valueOf(difficultyName);
                     boardMapper.setDifficulty(difficultyLevel);
+                    Log.d("debug", "data: " + documentSnapshot.getData());
 
-                    loadBoard(new OnSuccessListener<DocumentSnapshot>() {
+                    loadTimeOfGame(new OnSuccessListener<DocumentSnapshot>() {
                         @Override
                         public void onSuccess(DocumentSnapshot documentSnapshot) {
-                            createBoardInBoardMapper(boardMapper, documentSnapshot, listener);
-                        }
-                    }, new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
+                            Long timeOfGame =
+                                    (Long) documentSnapshot.get("millis from start of the game");
+                            boardMapper.setTimeSinceStartOfGame(timeOfGame);
 
+                            loadBoard(new OnSuccessListener<DocumentSnapshot>() {
+                                @Override
+                                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                    createBoardInBoardMapper(boardMapper, documentSnapshot, listener);
+                                }
+                            }, null);
                         }
                     });
+
 
                 }
             }, new OnFailureListener() {
@@ -141,6 +152,18 @@ public class FirebaseRepository {
 
 
 
+    }
+    private void loadTimeOfGame(OnSuccessListener<DocumentSnapshot> onSuccess) {
+        if (user == null) {
+            return;
+        }
+
+        db.collection("users")
+                .document(user.getUid())
+                .collection("board")
+                .document("time of game")
+                .get()
+                .addOnSuccessListener(onSuccess);
     }
 
     private void createBoardInBoardMapper(BoardMapper boardMapper,
@@ -176,4 +199,24 @@ public class FirebaseRepository {
                         callback.onCheckCompleted(false);
                     }
                 });
-    }}
+    }
+
+    public void removeBoard() {
+        if (user == null) return;
+        db.collection("users")
+                .document(user.getUid())
+                .collection("board")
+                .document("board objects")
+                .delete();
+        db.collection("users")
+                .document(user.getUid())
+                .collection("board")
+                .document("difficulty level")
+                .delete();
+        db.collection("users")
+                .document(user.getUid())
+                .collection("board")
+                .document("time of game")
+                .delete();
+    }
+}

@@ -67,8 +67,9 @@ public class GameViewModel extends ViewModel {
         GameState current = gameState.getValue();
 
         if (current != null) {
+            current.addTime(deltaTime);
             if (!current.getTimeOfDay()){
-                checkDeath(current);
+                clearDeadObjects(current);
                 if (enemyManager.getEnemies(current).isEmpty()){
                     //won
                     Win(current);
@@ -104,7 +105,7 @@ public class GameViewModel extends ViewModel {
         current.setGameStatus(GameStatus.LOST);
     }
 
-    private void checkDeath(GameState current ) {
+    private void clearDeadObjects(GameState current ) {
         Cell[][] grid = current.getGrid();
         for (Cell[] cellRow : grid){
             for (Cell cell: cellRow){

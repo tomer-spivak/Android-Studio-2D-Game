@@ -167,8 +167,12 @@ public class Enemy extends ModelObject implements IDamager{
     @Override
     public Object toMap() {
         Map enemyData = (Map) super.toMap();
-        enemyData.put("attackDamage", attackComponent.getAttackDamage());
-        enemyData.put("movementSpeed", movementSpeed);
+        enemyData.put("currentDirection", currentDirection.name());
+        enemyData.put("enemyState", state.name());
+        enemyData.put("currentTargetIndex", currentTargetIndex);
+        enemyData.put("timeSinceLastAttack", attackComponent.getTimeSinceLastAttack());
+        enemyData.put("timeSinceLastMove", timeSinceLastMove);
+        enemyData.put("damage", attackComponent.getAttackDamage());
         enemyData.put("type", type.name());
         return enemyData;
     }

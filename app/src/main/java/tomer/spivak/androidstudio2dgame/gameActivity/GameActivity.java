@@ -60,6 +60,9 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
     FirebaseRepository firebaseRepository;
     int boardSize;
+
+    boolean canStartGame = false;
+
     boolean gameIsOnGoing = false;
 
     DialogHandler dialogHandler;
@@ -77,10 +80,16 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         btnStartGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                gameIsOnGoing = true;
-                btnPause.setVisibility(View.VISIBLE);
-                btnStartGame.setVisibility(View.GONE);
-                btnSkipRound.setVisibility(View.VISIBLE);
+                if (canStartGame) {
+                    gameIsOnGoing = true;
+                    btnPause.setVisibility(View.VISIBLE);
+                    btnStartGame.setVisibility(View.GONE);
+                    btnSkipRound.setVisibility(View.VISIBLE);
+                }
+                else {
+                    Toast.makeText(context, "In order to start a game\n" +
+                            "you need to build something", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -110,8 +119,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             @Override
             public void onClick(View v) {
                 gameView.pauseGameLoop();
-                dialogHandler.showPauseAlertDialog(gameView);
-
+                dialogHandler.showPauseAlertDialog(gameView, viewModel);
            }
         });
 
@@ -120,8 +128,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
                 @Override
                 public void handleOnBackPressed() {
-                    // Show the alert dialog and pass a Runnable to be executed when
-                    // the dialog is dismissed
                     dialogHandler.showExitAlertDialog(viewModel);
                 }
             };
@@ -205,8 +211,11 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             difficulty[0] = DifficultyLevel.valueOf(difficultyName);
             boardMapper = new BoardMapper(boardSize, difficulty[0]);
             boardMapper.createBoard(null);
-            initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0]);
-        } else {
+            initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0],
+                    0L);
+        }
+
+        else {
             //if is continue is true, it means that we are continuing a game
             //we need to extract the difficulty from the database
             boardMapper = new BoardMapper(boardSize);
@@ -216,9 +225,11 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 public void onBoardLoaded(Cell[][] board) {
                     Toast.makeText(context, "got board", Toast.LENGTH_SHORT).show();
                     if (!boardMapper.isBoardEmpty())
-                        btnStartGame.setEnabled(true);
+                        canStartGame = true;
                     difficulty[0] = boardMapper.getDifficulty();
-                    initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0]);
+                    Long timeSinceStartOfGame = boardMapper.getTimeSinceStartOfGame();
+                    initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0],
+                            timeSinceStartOfGame);
                 }
             });
         }
@@ -226,9 +237,10 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     }
 
     private void initBoardInViewModel(Cell[][] board, AlertDialog dialog,
-                                      DifficultyLevel difficulty) {
+                                      DifficultyLevel difficulty, Long timeSinceStartOfGame) {
         gameView.setBoard(board);
         viewModel.initBoardFromCloud(gameView.getBoard(), difficulty);
+        viewModel.updateGameState(timeSinceStartOfGame);
         dialog.dismiss();
     }
 
@@ -275,8 +287,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 gameView.unpackGameState(gameState);
                 if (gameState.getGameStatus() == GameStatus.LOST){
                     Toast.makeText(context, "You Lost", Toast.LENGTH_SHORT).show();
+                    firebaseRepository.removeBoard();
                     dialogHandler.showLostAlertDialog();
-
                 }
 
                 if (gameState.getTimeOfDay()){
@@ -303,7 +315,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     public void onCellClicked(int row, int col) {
         viewModel.onCellClicked(row, col);
         if (viewModel.isNotEmptyBuildings()) {
-            btnStartGame.setEnabled(true);
+            canStartGame = true;
         }
     }
     @Override

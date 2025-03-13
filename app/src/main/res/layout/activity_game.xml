@@ -45,7 +45,6 @@
         android:textStyle="bold"
         android:layout_margin="16dp" />
     <Button
-        android:enabled="false"
         android:id="@+id/btnStartGame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

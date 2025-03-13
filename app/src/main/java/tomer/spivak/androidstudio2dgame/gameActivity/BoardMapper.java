@@ -19,6 +19,7 @@ import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 
 public class BoardMapper {
     final int boardSize;
+    Long timeSinceStartOfGame;
     DifficultyLevel difficulty;
     Cell[][] board;
     boolean isBoardEmpty = true;
@@ -68,19 +69,31 @@ public class BoardMapper {
                         object.setHealth(((Number) Objects.requireNonNull(objectMap.
                                 get("health"))).floatValue());
                         if (isInEnum(type, EnemyType.class)) {
-                            Enemy enemy = (Enemy) object;
-                            enemy.setState((EnemyState) Objects.requireNonNull(objectMap
-                                    .get("enemyState")));
-                            enemy.setCurrentDirection((Direction) objectMap.
-                                    get("currentDirection"));
-                            enemy.setPath((List<Position>) objectMap.get("path"));
+                            Enemy enemy = (Enemy) ModelObjectFactory.create(type, pos, difficulty);
+
+                            String stateString = Objects.requireNonNull(objectMap.get("enemyState"))
+                                    .toString();
+                            EnemyState state = EnemyState.valueOf(stateString);
+                            enemy.setState(state);
+
+                            String directionString = Objects.requireNonNull(objectMap.
+                                    get("currentDirection")).toString();
+                            Direction direction = Direction.valueOf(directionString);
+                            enemy.setCurrentDirection(direction);
+
+
                             enemy.setCurrentTargetIndex(((Number) Objects.
                                     requireNonNull(objectMap.get("currentTargetIndex")))
                                     .intValue());
-                            enemy.setTimeSinceLastAttack((Float) objectMap.
-                                    get("timeSinceLastAttack"));
-                            enemy.setTimeSinceLastMove((Float) objectMap.
-                                    get("timeSinceLastMove"));
+
+                            enemy.setTimeSinceLastAttack(((Double) Objects.requireNonNull(objectMap.
+                                    get("timeSinceLastAttack"))).floatValue());
+
+                            enemy.setTimeSinceLastMove(((Double) Objects.requireNonNull(objectMap.
+                                    get("timeSinceLastMove"))).floatValue());
+
+
+
 
                         }
                         else {
@@ -179,5 +192,13 @@ public class BoardMapper {
 
     public void setDifficulty(DifficultyLevel difficulty) {
         this.difficulty = difficulty;
+    }
+
+    public Long getTimeSinceStartOfGame() {
+        return timeSinceStartOfGame;
+    }
+
+    public void setTimeSinceStartOfGame(long l) {
+        this.timeSinceStartOfGame = l;
     }
 }

@@ -39,5 +39,9 @@ public class AttackComponent {
     public float getAttackTime() {
         return timeSinceLastAttack;
     }
+
+    public float getTimeSinceLastAttack() {
+        return timeSinceLastAttack;
+    }
 }
 

@@ -4,6 +4,7 @@ import static androidx.core.app.ActivityCompat.finishAffinity;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -18,6 +19,7 @@ import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
+import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
 public class DialogHandler {
@@ -66,27 +68,36 @@ public class DialogHandler {
                 if (viewModel.getGameState().getValue() == null ||
                         viewModel.getGameState().getValue().getGrid() == null)
                     return;
-                firebaseRepository.saveBoard(Objects.requireNonNull(viewModel.getGameState().
-                        getValue()).getGrid(), viewModel.getGameState().getValue().getDifficulty()
-                        .name(), new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void unused) {
-                        finish();
-                        Toast.makeText(context, "success", Toast.LENGTH_SHORT).show();
-                    }
-                }, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
 
-                    }
-                });
+                saveBoard(viewModel);
             }
         });
 
         alertDialog.show();
     }
 
-    public void showPauseAlertDialog(GameView gameView) {
+    public void saveBoard(GameViewModel viewModel) {
+        GameState gameState = viewModel.getGameState().getValue();
+        if (gameState == null || gameState.getGrid() == null)
+            return;
+        Log.d("time", String.valueOf(gameState.getCurrentTimeOfGame()));
+        firebaseRepository.saveBoard(Objects.requireNonNull(gameState.getGrid()),
+                gameState.getDifficulty().name(), gameState.getCurrentTimeOfGame(),
+                new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                finish();
+                Toast.makeText(context, "success", Toast.LENGTH_SHORT).show();
+            }
+        }, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });
+    }
+
+    public void showPauseAlertDialog(GameView gameView, GameViewModel viewModel) {
         new AlertDialog.Builder(context)
                 .setTitle("Game Paused")
                 .setPositiveButton("Resume", (dialog, which) -> {
@@ -94,6 +105,7 @@ public class DialogHandler {
                     dialog.dismiss();
                 })
                 .setNegativeButton("Exit", (dialog, which) -> {
+                    saveBoard(viewModel);
                     gameView.stopGameLoop();
                     finish();
                     dialog.dismiss();
