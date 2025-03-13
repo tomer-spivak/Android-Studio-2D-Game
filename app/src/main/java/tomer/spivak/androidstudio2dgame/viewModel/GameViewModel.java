@@ -1,5 +1,6 @@
 package tomer.spivak.androidstudio2dgame.viewModel;
 
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -47,11 +48,14 @@ public class GameViewModel extends ViewModel {
         Cell selectedCell = current.getGrid()[row][col];
         if (!selectedCell.isOccupied()){
             if (selectedBuildingType != null && current.getTimeOfDay()){
-            placeBuilding(row, col, current);
+                placeBuilding(row, col, current);
+                selectedBuildingType = null;
+                gameState.postValue(current);
             }
         } else {
             if (selectedCell.getObject() instanceof Building){
                 selectedCell.removeObject();
+                gameState.postValue(current);
             }
         }
     }
@@ -60,7 +64,6 @@ public class GameViewModel extends ViewModel {
         Cell cell = current.getGrid()[row][col];
         cell.placeBuilding((Building)ModelObjectFactory.create(selectedBuildingType,
                 new Position(row, col), current.getDifficulty()));
-        gameState.postValue(current);
     }
 
     public void updateGameState(long deltaTime) {
