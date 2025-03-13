@@ -61,7 +61,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     FirebaseRepository firebaseRepository;
     int boardSize;
 
-    boolean canStartGame = false;
+
 
     boolean gameIsOnGoing = false;
 
@@ -80,7 +80,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         btnStartGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (canStartGame) {
+                if (canStartGame()) {
                     gameIsOnGoing = true;
                     btnPause.setVisibility(View.VISIBLE);
                     btnStartGame.setVisibility(View.GONE);
@@ -135,6 +135,10 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
         }
 
+    }
+
+    private boolean canStartGame() {
+        return viewModel.isNotEmptyBuildings();
     }
 
     @Override
@@ -224,8 +228,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 @Override
                 public void onBoardLoaded(Cell[][] board) {
                     Toast.makeText(context, "got board", Toast.LENGTH_SHORT).show();
-                    if (!boardMapper.isBoardEmpty())
-                        canStartGame = true;
                     difficulty[0] = boardMapper.getDifficulty();
                     Long timeSinceStartOfGame = boardMapper.getTimeSinceStartOfGame();
                     initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0],
@@ -314,9 +316,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     @Override
     public void onCellClicked(int row, int col) {
         viewModel.onCellClicked(row, col);
-        if (viewModel.isNotEmptyBuildings()) {
-            canStartGame = true;
-        }
     }
     @Override
     public void onBuildingSelected(String buildingType) {
