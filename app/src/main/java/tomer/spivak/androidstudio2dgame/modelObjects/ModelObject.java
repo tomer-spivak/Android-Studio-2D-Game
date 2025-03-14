@@ -1,7 +1,4 @@
 package tomer.spivak.androidstudio2dgame.modelObjects;
-
-
-
 import androidx.annotation.NonNull;
 
 import java.util.HashMap;
@@ -12,8 +9,10 @@ import tomer.spivak.androidstudio2dgame.model.Position;
 public abstract class ModelObject implements IDamageable {
     protected Position pos;
     protected float health;
+    protected float maxHealth;
 
     public ModelObject(float health, Position pos) {
+        this.maxHealth = health;
         this.health = health;
         this.pos = pos;
     }
@@ -38,10 +37,10 @@ public abstract class ModelObject implements IDamageable {
 
     }
 
-
     public void setHealth(float health) {
         this.health = health;
     }
+
     public float getHealth() {
         return health;
     }
@@ -62,4 +61,9 @@ public abstract class ModelObject implements IDamageable {
                 ", health=" + health +
                 '}';
     }
+
+    public float getMaxHealth() {
+        return maxHealth;
+    }
+
 }

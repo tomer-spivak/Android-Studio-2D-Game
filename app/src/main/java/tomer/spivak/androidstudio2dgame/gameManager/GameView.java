@@ -314,11 +314,39 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         for (GameObject gameObject : objectsToDraw) {
             if (gameObject == null)
                 continue;
+            drawHealthBar(gameObject, canvas);
             gameObject.drawView(canvas);
         }
         if (timeTillNextRound > 0){
             printTimeTillNextRound(canvas);
         }
+    }
+
+    private void drawHealthBar(GameObject gameObject, Canvas canvas) {
+        Point pos = gameObject.getImagePoint();
+        Position position = gameObject.getPos();
+        float health = getBoard()[position.getX()][position.getY()].getObject().getHealth();
+        float maxHealth = getBoard()[position.getX()][position.getY()].getObject().getMaxHealth();
+
+
+        // Define health bar dimensions
+        int barWidth = (int) (80 * scale);
+        int barHeight = (int) (15 * scale);
+        int x = pos.x - barWidth / 2;
+        int y = (int) (pos.y - 90 * scale); // Position above the object
+
+        // Background bar (gray)
+        Paint bgPaint = new Paint();
+        bgPaint.setColor(Color.GRAY);
+        bgPaint.setStyle(Paint.Style.FILL);
+        canvas.drawRect(x, y, x + barWidth, y + barHeight, bgPaint);
+
+        // Health bar (red)
+        Paint healthPaint = new Paint();
+        healthPaint.setColor(Color.RED);
+        healthPaint.setStyle(Paint.Style.FILL);
+        int healthWidth = (int) ((health / maxHealth) * barWidth);
+        canvas.drawRect(x, y, x + healthWidth, y + barHeight, healthPaint);
     }
 
     private void printTimeTillNextRound(Canvas canvas) {
