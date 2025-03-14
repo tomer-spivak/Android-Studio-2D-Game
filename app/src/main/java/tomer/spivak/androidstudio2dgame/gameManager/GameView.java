@@ -23,16 +23,11 @@ import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchHandler;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
-import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
-import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
-import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
-import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.model.Position;
-import tomer.spivak.androidstudio2dgame.modelObjects.Ruin;
-import tomer.spivak.androidstudio2dgame.modelObjects.Turret;
+
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         TouchHandler.TouchHandlerListener {
@@ -43,7 +38,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
 
     private final TouchHandler touchHandler;
 
-    private final ArrayList<GameObject> gameObjectsViewsArrayList = new ArrayList<>();
+    GameObjectManager gameObjectManager;
 
     private Float scale = 1F;
     private Bitmap morningBackground;
@@ -54,18 +49,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     Paint timerPaint = new Paint();
     Rect timerBounds = new Rect();
 
-    Cell[][] board;
-
-    CellState[][] cellStates;
-
-    Point[][] centerCells;
-
     int boardSize;
 
     GameViewListener listener;
 
+    Context context;
+
     public GameView(Context context, int boardSize, GameViewListener listener) {
         super(context);
+
+        this.context = context;
 
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
@@ -80,6 +73,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         this.listener = listener;
         init();
     }
+
     void init(){
         morningBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_morning);
         nightBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_night);
@@ -91,21 +85,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         timerPaint.setAntiAlias(true);
         timerPaint.setTextAlign(Paint.Align.LEFT);  // Align text to the left
         timerPaint.setShadowLayer(5, 0, 0, Color.BLACK);  // Add shadow for visibility
-
-        board = new Cell[boardSize][boardSize];
-        cellStates = new CellState[boardSize][boardSize];
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board[i].length; j++) {
-                board[i][j] = new Cell(new Position(i, j));
-                cellStates[i][j] = CellState.NORMAL;
-            }
-        }
-
+        gameObjectManager = new GameObjectManager(context, boardSize,
+                gridView.getCenterCells());
     }
 
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder holder) {
-        centerCells = gridView.getCenterCells();
         gameLoop.startLoop();
     }
 
@@ -123,13 +108,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     @Override
     public void onScale(float scaleFactor, float focusX, float focusY) {
         scale = gridView.updateScale(scaleFactor, focusX, focusY);
-        updateScaleForGameObjects();
-    }
-
-    private void updateScaleForGameObjects() {
-        for (GameObject gameObject : gameObjectsViewsArrayList) {
-            gameObject.setScale(scale);
-        }
+        gameObjectManager.updateScaleForGameObjects(scale);
     }
 
     @Override
@@ -162,7 +141,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     }
 
     public void unpackGameState(GameState gameState) {
-        setBoard(gameState.getGrid());
+        updateBoard(gameState.getGrid());
         boolean timeOfDay = gameState.getTimeOfDay();
         if (timeOfDay){
             timeTillNextRound = gameState.getTimeToNextRound();
@@ -173,112 +152,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         }
 
         if (gameState.getGameStatus() == GameStatus.LOST){
-            Toast.makeText(getContext(), "lost", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "lost", Toast.LENGTH_SHORT).show();
             Log.d("lost", "lost");
             gameLoop.stopLoop();
         }
     }
 
-    public void setBoard(Cell[][] board) {
-        updateGameBoardFromBoard(board);
-    }
-
-    //takes everything in the model board into the game one
-    void updateGameBoardFromBoard(Cell[][] newBoard){
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board.length; j++) {
-                //if both of them dont have anything, it doesnt matter to us
-                if (i >= newBoard.length || j >= newBoard[0].length)
-                    continue;
-
-                Log.d("broad", newBoard.length + ", " + newBoard[0].length);
-                Log.d("broad", board.length + ", " + board[0].length);
-                Log.d("broad", i + ", " + j);
-                if ((!newBoard[i][j].isOccupied() && !board[i][j].isOccupied())){
-                    CellState cellState = newBoard[i][j].getCellState();
-                    board[i][j] = new Cell(newBoard[i][j].getPosition(), cellState);
-                    cellStates[i][j] = cellState;
-                    continue;
-                }
-
-                 if (newBoard[i][j].isOccupied() && !board[i][j].isOccupied()){
-                    Log.d("board", newBoard[i][j].getObject().toString());
-                    addObjectFromModelToView(newBoard[i][j].getObject(), i, j);
-                    CellState cellState = newBoard[i][j].getCellState();
-                    board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject(),
-                            cellState);
-                     cellStates[i][j] = cellState;
-                     continue;
-                 }
-
-                //if the old board has it but the new one doesnt,
-                //we need to remove it.
-                if (!newBoard[i][j].isOccupied() && board[i][j].isOccupied()){
-                    removeGameObject(i, j);
-                    CellState cellState = newBoard[i][j].getCellState();
-                    board[i][j] = new Cell(newBoard[i][j].getPosition(), cellState);
-                    cellStates[i][j] = cellState;
-                    continue;
-                }
-
-                if (newBoard[i][j].isOccupied() && board[i][j].isOccupied()){
-                    CellState cellState = newBoard[i][j].getCellState();
-                    board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject()
-                            , cellState);
-                    cellStates[i][j] = cellState;
-                    updateGameObject(newBoard[i][j], i, j);
-                }
-            }
-        }
-    }
-
-    private void updateGameObject(Cell cell, int i, int j) {
-        removeGameObject(i, j);
-        addObjectFromModelToView(cell.getObject(), i, j);
-    }
-
-    private void removeGameObject(int i, int j) {
-        for (int k = 0; k < gameObjectsViewsArrayList.size(); k++) {
-            GameObject gameObject = gameObjectsViewsArrayList.get(k);
-            if (gameObject.getPos().getX() == i && gameObject.getPos().getY() == j) {
-                gameObjectsViewsArrayList.remove(k);
-                break;
-            }
-        }
-    }
-
-    private void addObjectFromModelToView(ModelObject object, int centerX, int centerY) {
-        GameObject gameObject = null;
-        if (object instanceof Enemy){
-            Enemy enemy = (Enemy) object;
-            gameObject = GameObjectFactory.create(getContext(), centerCells[centerX][centerY],
-                    enemy.getType().name().toLowerCase(), scale,
-                    new Position(centerX, centerY),
-                    enemy.getCurrentDirection().name().toLowerCase(), enemy.getEnemyState().
-                            name().toLowerCase());
-        } else if (object instanceof Ruin){
-            Ruin ruin = (Ruin) object;
-            gameObject = GameObjectFactory.create(getContext(),
-                    centerCells[centerX][centerY], ruin.getType().name().toLowerCase(), scale,
-                    new Position(centerX, centerY), ruin.getState().name().toLowerCase(), "");
-        } else if (object instanceof Turret) {
-            Turret turret = (Turret) object;
-            gameObject = GameObjectFactory.create(getContext(),
-                    centerCells[centerX][centerY], turret.getType().name().toLowerCase(), scale,
-                    new Position(centerX, centerY), turret.getState().name().toLowerCase(), "");
-        }
-        addGameObject(gameObject);
-    }
-
-    //adds a building to the drawn buildings in order
-    public void addGameObject(GameObject gameObject) {
-        int i = 0;
-        int size = gameObjectsViewsArrayList.size();
-        while (i < size && gameObjectsViewsArrayList.get(i).getImagePoint().y <
-                gameObject.getImagePoint().y) {
-            i++;
-        }
-        gameObjectsViewsArrayList.add(i, gameObject); // Insert at the correct position
+    public void updateBoard(Cell[][] board) {
+        gameObjectManager.updateGameBoardFromBoard(board, scale);
     }
 
     @Override
@@ -303,11 +184,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         canvas.drawBitmap(scaledBackBitmap, 0, 0, paint);
 
         //draws basic grid with grass
-        gridView.setCellsState(cellStates);
+        gridView.setCellsState(gameObjectManager.getCellStates());
         gridView.draw(canvas);
 
         //draws buildings
         List<GameObject> objectsToDraw;
+        ArrayList<GameObject> gameObjectsViewsArrayList = gameObjectManager
+                .getGameObjectsViewsArrayList();
         synchronized (gameObjectsViewsArrayList) {
             objectsToDraw = new ArrayList<>(gameObjectsViewsArrayList);
         }
@@ -325,8 +208,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     private void drawHealthBar(GameObject gameObject, Canvas canvas) {
         Point pos = gameObject.getImagePoint();
         Position position = gameObject.getPos();
-        float health = getBoard()[position.getX()][position.getY()].getObject().getHealth();
-        float maxHealth = getBoard()[position.getX()][position.getY()].getObject().getMaxHealth();
+        float health = gameObjectManager.getBoard()[position.getX()][position.getY()].getObject()
+                .getHealth();
+        float maxHealth = gameObjectManager.getBoard()[position.getX()][position.getY()].getObject()
+                .getMaxHealth();
 
 
         // Define health bar dimensions
@@ -367,36 +252,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         gameLoop.stopLoop();
     }
 
-    public Cell[][] getBoard() {
-        Cell[][] original = board;
-        if (original == null) {
-                return null;
-        }
-
-        Cell[][] copy = new Cell[original.length][];
-        for (int i = 0; i < original.length; i++) {
-                if (original[i] != null) {
-                    copy[i] = new Cell[original[i].length];
-                    System.arraycopy(original[i], 0, copy[i], 0, original[i].length);
-                }
-            }
-            return copy;
-    }
-
-
     public void resumeGameLoop() {
         // Recalculate the grid centers in case the board's position has shifted.
-        centerCells = gridView.getCenterCells();
-        updateGameObjectsPositions();
+        gameObjectManager.setCenterCells(gridView.getCenterCells());
+        gameObjectManager.updateGameObjectsPositions();
         gameLoop.startLoop();
     }
 
-    private void updateGameObjectsPositions() {
-        for (GameObject gameObject : gameObjectsViewsArrayList) {
-            // Retrieve the object's current grid position
-            Position pos = gameObject.getPos();
-            // Update the drawing coordinate to match the newly calculated center
-            gameObject.setImagePoint(centerCells[pos.getX()][pos.getY()]);
-        }
-    }
+
 }

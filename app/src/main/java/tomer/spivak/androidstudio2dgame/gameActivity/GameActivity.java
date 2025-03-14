@@ -240,8 +240,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
     private void initBoardInViewModel(Cell[][] board, AlertDialog dialog,
                                       DifficultyLevel difficulty, Long timeSinceStartOfGame) {
-        gameView.setBoard(board);
-        viewModel.initBoardFromCloud(gameView.getBoard(), difficulty);
+        gameView.updateBoard(board);
+        viewModel.initBoardFromCloud(board.clone(), difficulty);
         viewModel.updateGameState(timeSinceStartOfGame);
         dialog.dismiss();
     }
