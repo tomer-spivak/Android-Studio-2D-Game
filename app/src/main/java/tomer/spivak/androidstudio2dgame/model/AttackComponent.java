@@ -3,7 +3,7 @@ package tomer.spivak.androidstudio2dgame.model;
 import tomer.spivak.androidstudio2dgame.modelObjects.IDamageable;
 
 public class AttackComponent {
-    private final float attackDamage;
+    private float attackDamage;
     private final float attackCooldown;
     private float timeSinceLastAttack = 0;
 
@@ -30,6 +30,10 @@ public class AttackComponent {
 
     public void setTimeSinceLastAttack(float timeSinceLastAttack) {
         this.timeSinceLastAttack = timeSinceLastAttack;
+    }
+
+    public void setAttackDamage(float attackDamage) {
+        this.attackDamage = attackDamage;
     }
 
     public float getAttackDamage() {

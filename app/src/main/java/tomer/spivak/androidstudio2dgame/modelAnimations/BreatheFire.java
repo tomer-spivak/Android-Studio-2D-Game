@@ -15,12 +15,13 @@ public class BreatheFire implements EnemyAttackAnimation {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final List<Runnable> animationRunnables = new ArrayList<>();
+    private final int repeatCount = 10;
+
 
     @Override
     public void execute(Enemy enemy, IDamageable target) {
         enemy.resetAttackTimer();
         final EnemyState[] initialStates = { EnemyState.ATTACKING1, EnemyState.ATTACKING2 };
-        final int repeatCount = 10;
         final List<EnemyState> stateSequence = new ArrayList<>();
         final List<Integer> delays = new ArrayList<>();
         delays.add(0);
@@ -44,17 +45,27 @@ public class BreatheFire implements EnemyAttackAnimation {
         int accumulatedDelay = 0;
         for (int i = 0; i < stateSequence.size(); i++) {
             final EnemyState state = stateSequence.get(i);
+            final EnemyState prevState = (i > 0) ? stateSequence.get(i - 1) : null;
+
             accumulatedDelay += delays.get(i);
-            Runnable runnable = () -> {
-                enemy.setState(state);
-                if (state == EnemyState.IDLE) {
-                    enemy.dealDamage(target);
-                    enemy.resetAttackTimer();
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    enemy.setState(state);
+                    if (prevState == EnemyState.ATTACKING3 && state == EnemyState.ATTACKING4) {
+                        enemy.dealDamage(target);
+                    } else if (prevState == EnemyState.ATTACKING4 && state == EnemyState.ATTACKING3)
+                        enemy.dealDamage(target);
+                    if (state == EnemyState.IDLE) {
+                        enemy.resetAttackTimer();
+                    }
                 }
             };
+
             animationRunnables.add(runnable);
             handler.postDelayed(runnable, accumulatedDelay);
         }
+
     }
 
 
@@ -63,5 +74,9 @@ public class BreatheFire implements EnemyAttackAnimation {
             handler.removeCallbacks(runnable);
         }
         animationRunnables.clear();
+    }
+
+    public int getRepeatCount() {
+        return repeatCount;
     }
 }

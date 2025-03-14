@@ -162,4 +162,7 @@ public class GameViewModel extends ViewModel {
         gameState.postValue(current);
     }
 
+    public int getRound() {
+        return Objects.requireNonNull(gameState.getValue()).getRound();
+    }
 }

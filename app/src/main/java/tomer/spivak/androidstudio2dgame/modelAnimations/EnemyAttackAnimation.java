@@ -7,4 +7,6 @@ public interface EnemyAttackAnimation {
     void execute(Enemy enemy, IDamageable target);
 
     void cancelAnimation();
+
+    int getRepeatCount();
 }

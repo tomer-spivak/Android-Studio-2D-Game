@@ -21,6 +21,7 @@ import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
+import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
 public class FirebaseRepository {
     private final FirebaseFirestore db;
@@ -94,8 +95,7 @@ public class FirebaseRepository {
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
-    private void loadDifficultyLevel(OnSuccessListener<DocumentSnapshot> onSuccess,
-                                     OnFailureListener onFailure) {
+    private void loadDifficultyLevel(OnSuccessListener<DocumentSnapshot> onSuccess) {
         if (user == null) {
             return;
         }
@@ -106,7 +106,7 @@ public class FirebaseRepository {
                 .document("difficulty level")
                 .get()
                 .addOnSuccessListener(onSuccess)
-                .addOnFailureListener(onFailure);
+                .addOnFailureListener(null);
     }
 
     public void loadBoardFromDataBase(BoardMapper boardMapper,
@@ -141,17 +141,7 @@ public class FirebaseRepository {
 
 
                 }
-            }, new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-
-                }
             });
-
-
-
-
-
     }
     private void loadTimeOfGame(OnSuccessListener<DocumentSnapshot> onSuccess) {
         if (user == null) {
@@ -218,5 +208,48 @@ public class FirebaseRepository {
                 .collection("board")
                 .document("time of game")
                 .delete();
+    }
+
+    public void logResults(GameViewModel viewModel) {
+        if (user == null) return;
+
+        int round = viewModel.getRound();
+        db.collection("users")
+                .document(user.getUid())
+                .collection("board")
+                .document("leaderboard")
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                        if (documentSnapshot.exists() && documentSnapshot.getData() != null) {
+                            if (documentSnapshot.get("max round") == null){
+                                Log.d("debug", "roundd: " + round);
+                                saveRound(round);
+                            }
+                            else {
+                                Long maxRound = (Long) documentSnapshot.get("max round");
+                                if (round > maxRound) {
+                                    saveRound(round);
+                                }
+                            }
+                        } else{
+                            Log.d("debug", "roundd: " + round);
+                            saveRound(round);
+
+                        }
+                    }
+
+                    private void saveRound(int round) {
+                        db.collection("users")
+                                .document(user.getUid())
+                                .collection("board")
+                                .document("leaderboard")
+                                .set(new HashMap<String, Object>() {{
+                                    put("max round", round);
+                                }});
+                    }
+                });
     }
 }

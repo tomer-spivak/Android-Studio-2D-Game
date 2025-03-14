@@ -57,7 +57,10 @@ public class IntermediateActivity extends AppCompatActivity {
                     replaceFragment(new AboutFragment(), true);
                 } else if (id == R.id.nav_Rules) {
                     replaceFragment(new RulesFragment(), true);
-                } else if (id == R.id.go_to_game){
+                } else if (id == R.id.nav_leaderboard) {
+                    replaceFragment(new LeaderboardFragment(), true);
+                }
+                else if (id == R.id.go_to_game){
                     FirebaseRepository firebaseRepository = new FirebaseRepository(context);
                     firebaseRepository.checkIfTheresAGame(new GameCheckCallback() {
                         @Override

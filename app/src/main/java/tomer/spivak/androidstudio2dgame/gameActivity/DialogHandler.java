@@ -64,6 +64,8 @@ public class DialogHandler {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                firebaseRepository.logResults(viewModel);
+
                 alertDialog.dismiss();
                 if (viewModel.getGameState().getValue() == null ||
                         viewModel.getGameState().getValue().getGrid() == null)
@@ -124,7 +126,10 @@ public class DialogHandler {
         return dialog;
     }
 
-    public void showLostAlertDialog() {
+    public void showLostAlertDialog(GameViewModel viewModel) {
+        Log.d("debug", "tried to save");
+        firebaseRepository.logResults(viewModel);
+
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Title")
                 .setMessage("This is an alert dialog.")

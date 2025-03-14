@@ -21,8 +21,8 @@ public class ModelObjectFactory {
 
         typeMap.put("LIGHTNINGTOWER", (position, difficulty) ->
                 new AOETurret(getBuildingHealthByDifficulty(100, difficulty),
-                        getTurretDamageByDifficulty(2, difficulty), 4, position,
-                        TurretType.LIGHTNINGTOWER, 500, AttackType.LIGHTNING));
+                        getTurretDamageByDifficulty(20, difficulty), 4, position,
+                        TurretType.LIGHTNINGTOWER, 1000, AttackType.LIGHTNING));
 
         typeMap.put("MONSTER", (position, difficulty) ->
                 new Enemy(getEnemyHealthByDifficulty(80, difficulty),

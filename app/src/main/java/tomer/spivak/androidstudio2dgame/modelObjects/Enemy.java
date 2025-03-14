@@ -36,6 +36,7 @@ public class Enemy extends ModelObject implements IDamager{
         this.currentDirection = Direction.UPLEFT;
         this.state = EnemyState.IDLE;
         this.attackAnimation = attackAnimation;
+        attackComponent.setAttackDamage(damage/attackAnimation.getRepeatCount());
     }
 
     public void accumulateAttackTime(long deltaTime) {
@@ -67,6 +68,7 @@ public class Enemy extends ModelObject implements IDamager{
 
     @Override
     public void dealDamage(IDamageable target) {
+
         attackComponent.dealDamage(target);
     }
 
@@ -99,6 +101,12 @@ public class Enemy extends ModelObject implements IDamager{
                 setState(currentState);
             }
         }, 100);
+    }
+
+    @Override
+    void onDeath() {
+        super.onDeath();
+        attackAnimation.cancelAnimation();
     }
 
     public List<Position> getPath() {

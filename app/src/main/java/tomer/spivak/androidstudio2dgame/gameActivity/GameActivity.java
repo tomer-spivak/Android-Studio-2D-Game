@@ -290,7 +290,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 if (gameState.getGameStatus() == GameStatus.LOST){
                     Toast.makeText(context, "You Lost", Toast.LENGTH_SHORT).show();
                     firebaseRepository.removeBoard();
-                    dialogHandler.showLostAlertDialog();
+                    dialogHandler.showLostAlertDialog(viewModel);
                 }
 
                 if (gameState.getTimeOfDay()){
