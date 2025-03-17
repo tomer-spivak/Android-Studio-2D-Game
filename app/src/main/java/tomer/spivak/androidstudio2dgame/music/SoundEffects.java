@@ -1,8 +1,10 @@
-package tomer.spivak.androidstudio2dgame;
+package tomer.spivak.androidstudio2dgame.music;
 
 import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
+
+import tomer.spivak.androidstudio2dgame.R;
 
 public class SoundEffects {
         private SoundPool soundPool;

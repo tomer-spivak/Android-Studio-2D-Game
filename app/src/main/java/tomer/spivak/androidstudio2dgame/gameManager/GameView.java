@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchHandler;
-import tomer.spivak.androidstudio2dgame.MusicService;
+import tomer.spivak.androidstudio2dgame.music.MusicService;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectManager;

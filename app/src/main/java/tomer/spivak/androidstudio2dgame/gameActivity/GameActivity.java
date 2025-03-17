@@ -26,7 +26,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
 
-import tomer.spivak.androidstudio2dgame.NotificationReceiver;
+import tomer.spivak.androidstudio2dgame.music.NotificationReceiver;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.model.Cell;
@@ -35,7 +35,7 @@ import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 import tomer.spivak.androidstudio2dgame.gameManager.GameViewListener;
 import tomer.spivak.androidstudio2dgame.model.GameState;
-import tomer.spivak.androidstudio2dgame.SoundEffects;
+import tomer.spivak.androidstudio2dgame.music.SoundEffects;
 
 public class GameActivity extends AppCompatActivity implements OnItemClickListener,
         GameViewListener {

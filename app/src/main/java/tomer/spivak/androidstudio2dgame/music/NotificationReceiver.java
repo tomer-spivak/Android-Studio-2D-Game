@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame;
+package tomer.spivak.androidstudio2dgame.music;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+
+import tomer.spivak.androidstudio2dgame.R;
 
 public class NotificationReceiver extends BroadcastReceiver {
     @Override
