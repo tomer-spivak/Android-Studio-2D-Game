@@ -4,6 +4,7 @@ import static androidx.core.app.ActivityCompat.finishAffinity;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -126,19 +127,26 @@ public class DialogHandler {
         return dialog;
     }
 
-    public void showLostAlertDialog(GameViewModel viewModel) {
+    public void showLostAlertDialog(GameViewModel viewModel, GameView gameView) {
         Log.d("debug", "tried to save");
         firebaseRepository.logResults(viewModel);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Title")
                 .setMessage("This is an alert dialog.")
-                .setPositiveButton("Go back to menu", (dialog, which) -> {
-                    finish();
+                .setPositiveButton("Go back to menu", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
                 })
-                .setNegativeButton("Exit App", (dialog, which) -> {
-                    finishAffinity((Activity) context);
-                    System.exit(0);
+                .setNegativeButton("Exit App", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        gameView.stopGameLoop();
+                        finishAffinity((Activity) context);
+                        System.exit(0);
+                    }
                 });
 
         AlertDialog alertDialog = builder.create();

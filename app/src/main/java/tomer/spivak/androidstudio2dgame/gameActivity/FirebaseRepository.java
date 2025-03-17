@@ -255,7 +255,8 @@ public class FirebaseRepository {
                     if (task.isSuccessful()) {
                         for (DocumentSnapshot document : task.getResult()) {
                             // Assuming "leaderboard" is stored as a map inside each user document
-                            Map<String, Object> leaderboard = (Map<String, Object>) document.get("leaderboard");
+                            Map<String, Object> leaderboard = (Map<String, Object>) document
+                                    .get("leaderboard");
                             if (leaderboard != null && leaderboard.get("max round") != null) {
                                 // Cast the value to a Number then convert to int
                                 int maxRound = ((Number) Objects.requireNonNull(leaderboard.

@@ -15,8 +15,6 @@ import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 
 public class EnemyManager {
-    // File: EnemyManager.java
-
 
     public void spawnEnemies(GameState gameState, int amount) {
         String enemyType = "MONSTER";
@@ -35,6 +33,7 @@ public class EnemyManager {
             cellToSpawn.spawnEnemy(enemy);
             createPathForEnemy(gameState, enemy);
     }
+
     public Cell getRandomFramePointIndex(Cell[][] centerCells) {
             int rows = centerCells.length;
             int cols = centerCells[0].length;
@@ -65,8 +64,9 @@ public class EnemyManager {
             }
         }
 
+    public boolean updateEnemies(GameState current, long deltaTime) {
+        boolean attack = false;
 
-    public void updateEnemies(GameState current, long deltaTime) {
         List<Enemy> enemies = new ArrayList<>();
         Cell[][] grid = current.getGrid();
         for (Cell[] row : grid) {
@@ -78,19 +78,20 @@ public class EnemyManager {
             }
         }
         for (Enemy enemy : enemies) {
-            if (enemy.getEnemyState() != EnemyState.HURT && enemy.getEnemyState() !=
-                    EnemyState.ATTACKING1 && enemy.getEnemyState() != EnemyState.ATTACKING2 &&
-                    enemy.getEnemyState() != EnemyState.ATTACKING3 && enemy.getEnemyState() != EnemyState.ATTACKING4)
-                updateEnemyMovement(enemy, current, deltaTime);
+            if (enemy.getEnemyState() == EnemyState.IDLE)
+                if (updateEnemyMovement(enemy, current, deltaTime))
+                    attack = true;
         }
+
+        return attack;
     }
-    private void updateEnemyMovement(Enemy enemy, GameState current, long deltaTime) {
+
+    private boolean updateEnemyMovement(Enemy enemy, GameState current, long deltaTime) {
         List<Position> path = createPathForEnemy(current, enemy);
         int targetIndex = enemy.getCurrentTargetIndex();
 
         if (path == null || path.isEmpty() || targetIndex >= path.size()){
-            finishedPath(current, enemy, deltaTime);
-            return;
+            return finishedPath(current, enemy, deltaTime);
         }
 
         enemy.updateDirection(enemy.getPosition(), path.get(0));
@@ -113,9 +114,11 @@ public class EnemyManager {
         if (path.isEmpty() || targetIndex >= path.size()){
             fixDirectionToBuilding(enemy, current);
         }
+        return false;
     }
-    private void finishedPath(GameState current, Enemy enemy, long deltaTime) {
-        // After movement logic, check for adjacent buildings and attack
+
+    private boolean finishedPath(GameState current, Enemy enemy, long deltaTime) {
+        boolean attack = false;
 
         Cell currentEnemyCell = current.getCellAt(enemy.getPosition());
         List<Cell> neighbors = currentEnemyCell.getNeighbors(current);
@@ -134,11 +137,12 @@ public class EnemyManager {
 
             for (Building building : adjacentBuildings) {
                 if (enemy.canAttack()) {
-                    // Attack immediately without delay
+                    attack = true;
                     enemy.attack(building);
                 }
             }
         }
+        return attack;
     }
 
     private void fixDirectionToBuilding(Enemy enemy, GameState current) {
@@ -150,6 +154,7 @@ public class EnemyManager {
             }
         }
     }
+
     private int moveEnemy(Cell currentCell, Cell nextCell, Enemy enemy, float timePerStep){
         currentCell.removeObject();
         Position prevPos = enemy.getPosition();
@@ -160,8 +165,6 @@ public class EnemyManager {
         return enemy.getCurrentTargetIndex();
 
     }
-
-
 
     public List<Enemy> getEnemies(GameState gameState) {
             List<Enemy> enemies = new ArrayList<>();
@@ -185,6 +188,7 @@ public class EnemyManager {
         enemy.setPath(path);
         return enemy.getPath();
     }
+
     private Position getClosetBuildingToEnemy(GameState current, Enemy enemy,
                                               Pathfinder pathfinder) {
 
@@ -226,9 +230,5 @@ public class EnemyManager {
         }
         return buildingPositions;
     }
-
-
-
-
 
 }

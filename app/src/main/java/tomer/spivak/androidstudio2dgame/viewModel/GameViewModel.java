@@ -1,6 +1,5 @@
 package tomer.spivak.androidstudio2dgame.viewModel;
 
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -15,7 +14,6 @@ import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.model.Cell;
-import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
@@ -23,6 +21,9 @@ import tomer.spivak.androidstudio2dgame.model.Position;
 
 public class GameViewModel extends ViewModel {
     private final MutableLiveData<GameState> gameState = new MutableLiveData<>();
+    // New LiveData for sound events.
+    private final MutableLiveData<String> soundEvent = new MutableLiveData<>();
+
     private String selectedBuildingType;
     private static final int NIGHT_THRESHOLD = 5000;
     EnemyManager enemyManager = new EnemyManager();
@@ -62,7 +63,7 @@ public class GameViewModel extends ViewModel {
 
     public void placeBuilding(int row, int col, GameState current) {
         Cell cell = current.getGrid()[row][col];
-        cell.placeBuilding((Building)ModelObjectFactory.create(selectedBuildingType,
+        cell.placeBuilding((Building) ModelObjectFactory.create(selectedBuildingType,
                 new Position(row, col), current.getDifficulty()));
     }
 
@@ -81,9 +82,13 @@ public class GameViewModel extends ViewModel {
                     current.startTimerForNextRound();
                 }
                 if (isNotEmptyBuildings()){
-                    List<Enemy> enemies = enemyManager.getEnemies(current);
-                    turretManager.updateTurrets(current, enemies, deltaTime);
-                    enemyManager.updateEnemies(current, deltaTime);
+                    // Example: Trigger turret attack sound if a turret fires.
+                    if (turretManager.updateTurrets(current, enemyManager.getEnemies(current),
+                            deltaTime))
+                        triggerTurretAttackSound();  // <-- Call this when a turret attack happens
+
+                    if(enemyManager.updateEnemies(current, deltaTime))
+                        triggerEnemyAttackSound();
                 } else {
                     //raid ended with all buildings destroyed
                     Lose(current);
@@ -120,13 +125,11 @@ public class GameViewModel extends ViewModel {
                 }
             }
         }
-
     }
 
     private void startNight(GameState current) {
         current.setTimeOfDay(false);
-
-        //place holder amount
+        // Place holder amount
         int amount = current.getRound();
         enemyManager.spawnEnemies(current, amount);
     }
@@ -150,6 +153,20 @@ public class GameViewModel extends ViewModel {
 
     public LiveData<GameState> getGameState() {
         return gameState;
+    }
+
+    // Expose the sound event LiveData
+    public LiveData<String> getSoundEvent() {
+        return soundEvent;
+    }
+
+    // Public methods to trigger sound events. Call these from within your game logic.
+    public void triggerEnemyAttackSound() {
+        soundEvent.postValue("enemyAttack");
+    }
+
+    public void triggerTurretAttackSound() {
+        soundEvent.postValue("turretAttack");
     }
 
     public void skipToNextRound() {

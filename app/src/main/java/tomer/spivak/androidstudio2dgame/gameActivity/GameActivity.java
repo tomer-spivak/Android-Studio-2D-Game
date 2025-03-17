@@ -1,8 +1,12 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -21,6 +25,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
+
+import tomer.spivak.androidstudio2dgame.NotificationReceiver;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.model.Cell;
@@ -29,16 +35,15 @@ import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 import tomer.spivak.androidstudio2dgame.gameManager.GameViewListener;
 import tomer.spivak.androidstudio2dgame.model.GameState;
-
+import tomer.spivak.androidstudio2dgame.SoundEffects;
 
 public class GameActivity extends AppCompatActivity implements OnItemClickListener,
-        GameViewListener{
+        GameViewListener {
 
     Context context;
-
     GameView gameView;
-
     private GameViewModel viewModel;
+    private SoundEffects soundEffects; // Instance of SoundEffects
 
     Button btnChooseBuildingsCardView;
     Button btnStartGame;
@@ -61,17 +66,17 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     FirebaseRepository firebaseRepository;
     int boardSize;
 
-
-
     boolean gameIsOnGoing = false;
 
     DialogHandler dialogHandler;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        //set window to fullscreen (hide status bar)
+        // Set window to fullscreen (hide status bar)
         setContentView(R.layout.activity_game);
         context = this;
 
@@ -85,8 +90,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                     btnPause.setVisibility(View.VISIBLE);
                     btnStartGame.setVisibility(View.GONE);
                     btnSkipRound.setVisibility(View.VISIBLE);
-                }
-                else {
+                } else {
                     Toast.makeText(context, "In order to start a game\n" +
                             "you need to build something", Toast.LENGTH_SHORT).show();
                 }
@@ -103,7 +107,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         btnCloseMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cvSelectBuildingMenu.setVisibility(View.GONE);   
+                cvSelectBuildingMenu.setVisibility(View.GONE);
             }
         });
 
@@ -120,9 +124,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             public void onClick(View v) {
                 gameView.pauseGameLoop();
                 dialogHandler.showPauseAlertDialog(gameView, viewModel);
-           }
+            }
         });
-
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)  {
             backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
@@ -132,9 +135,24 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 }
             };
             getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
-
         }
 
+        // Initialize SoundEffects using this Activity's context
+        soundEffects = new SoundEffects(this);
+
+        // Observe sound events from the ViewModel
+        viewModel.getSoundEvent().observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(String event) {
+                if (event != null) {
+                    if ("enemyAttack".equals(event)) {
+                        soundEffects.playEnemyAttackSound();
+                    } else if ("turretAttack".equals(event)) {
+                        soundEffects.playTurretAttackSound();
+                    }
+                }
+            }
+        });
     }
 
     private boolean canStartGame() {
@@ -145,43 +163,58 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     protected void onResume() {
         super.onResume();
         if (gameView != null) {
-            gameView.resumeGameLoop(); // implement this method to start the thread
+            gameView.resumeGameLoop(); // Implement this method to start the thread
         }
     }
 
     @Override
     protected void onPause() {
-        super.onPause();
         if (gameView != null) {
-            gameView.pauseGameLoop(); // implement this method to stop the thread
+            gameView.pauseGameLoop(); // Implement this method to stop the thread
         }
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, NotificationReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        long triggerTime = System.currentTimeMillis() + 4 * 1000; // 1 minute later
+        Log.d("AlarmManager", "Setting alarm for 4 seconds from now");
+        if (alarmManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                Log.d("AlarmManager", "Setting alarm for 4 seconds from right now");
+                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+            }
+
+        }
+        super.onStop();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         if (gameView != null) {
-            gameView.stopGameLoop(); // if needed, ensure complete shutdown of the thread
+            gameView.stopGameLoop(); // Ensure complete shutdown of the thread
+        }
+        // Release SoundEffects resources
+        if (soundEffects != null) {
+            soundEffects.onDestroy();
         }
     }
 
     private void init(){
         hideSystemUI();
-
-
         initViews();
-
         initGame();
-
     }
 
     private void initViews() {
         btnChooseBuildingsCardView = findViewById(R.id.btnPopUpMenu);
-
         cvSelectBuildingMenu = findViewById(R.id.cvSelectBuildingMenu);
-
         btnCloseMenu = findViewById(R.id.btnCloseMenu);
-
         buildingRecyclerView = findViewById(R.id.buildingRecyclerView);
     }
 
@@ -199,8 +232,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         btnPause = findViewById(R.id.btnPause);
 
         observeViewModel();
-
         initPlacingBuilding();
+
 
         String difficultyName = getIntent().getStringExtra("difficultyLevel");
         boolean isContinue = getIntent().getBooleanExtra("isContinue", false);
@@ -208,34 +241,24 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         final DifficultyLevel[] difficulty = new DifficultyLevel[1];
         AlertDialog loadingDialog = dialogHandler.showLoadingBoardAlertDialog();
         if (!isContinue){
-            //if is continue is false, it means that we are creating a new game
-            //in order to create a new game we need to create a new board because there is no
-            //board in the database
-            //then we need to extract the difficulty level from the intent
+            // Create a new game – there is no board in the database
             difficulty[0] = DifficultyLevel.valueOf(difficultyName);
             boardMapper = new BoardMapper(boardSize, difficulty[0]);
             boardMapper.createBoard(null);
-            initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0],
-                    0L);
-        }
-
-        else {
-            //if is continue is true, it means that we are continuing a game
-            //we need to extract the difficulty from the database
+            initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0], 0L);
+        } else {
+            // Continue a game – load the board from the database
             boardMapper = new BoardMapper(boardSize);
-
             firebaseRepository.loadBoardFromDataBase(boardMapper, new OnBoardLoadedListener() {
                 @Override
                 public void onBoardLoaded(Cell[][] board) {
                     Toast.makeText(context, "got board", Toast.LENGTH_SHORT).show();
                     difficulty[0] = boardMapper.getDifficulty();
                     Long timeSinceStartOfGame = boardMapper.getTimeSinceStartOfGame();
-                    initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0],
-                            timeSinceStartOfGame);
+                    initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0], timeSinceStartOfGame);
                 }
             });
         }
-
     }
 
     private void initBoardInViewModel(Cell[][] board, AlertDialog dialog,
@@ -266,16 +289,15 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         buildingRecyclerView.setAdapter(adapter);
     }
 
-    //pop the options for user (need to add more buildings later)
+    // Pop the options for user (need to add more buildings later)
     private void initBuildingToChoose() {
         String obelisk = "OBELISK";
         String archerTower = "LIGHTNING0TOWER";
-
         buildingImagesURL.add(obelisk);
         buildingImagesURL.add(archerTower);
     }
 
-    //a building has been selected in the card view, sending info to game view
+    // A building has been selected in the card view, sending info to game view
     @Override
     public void onBuildingRecyclerViewItemClick(String buildingImageURL, int position) {
         onBuildingSelected(buildingImageURL.replace("0", ""));
@@ -287,17 +309,15 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             @Override
             public void onChanged(GameState gameState) {
                 gameView.unpackGameState(gameState);
-                if (gameState.getGameStatus() == GameStatus.LOST){
+                if (gameState.getGameStatus() == GameStatus.LOST) {
                     Toast.makeText(context, "You Lost", Toast.LENGTH_SHORT).show();
                     firebaseRepository.removeBoard();
-                    dialogHandler.showLostAlertDialog(viewModel);
+                    dialogHandler.showLostAlertDialog(viewModel, gameView);
                 }
-
-                if (gameState.getTimeOfDay()){
+                if (gameState.getTimeOfDay()) {
                     if (btnChooseBuildingsCardView.getVisibility() == View.GONE)
                         btnChooseBuildingsCardView.setVisibility(View.VISIBLE);
-                    if(btnStartGame.getVisibility() == View.GONE && btnSkipRound.getVisibility()
-                            != View.VISIBLE){
+                    if (btnStartGame.getVisibility() == View.GONE && btnSkipRound.getVisibility() != View.VISIBLE) {
                         btnSkipRound.setVisibility(View.VISIBLE);
                     }
                 } else {
@@ -305,7 +325,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                         cvSelectBuildingMenu.setVisibility(View.GONE);
                     if (btnChooseBuildingsCardView.getVisibility() != View.GONE)
                         btnChooseBuildingsCardView.setVisibility(View.GONE);
-                    if(btnSkipRound.getVisibility() == View.VISIBLE) {
+                    if (btnSkipRound.getVisibility() == View.VISIBLE) {
                         btnSkipRound.setVisibility(View.GONE);
                     }
                 }
@@ -317,10 +337,12 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     public void onCellClicked(int row, int col) {
         viewModel.onCellClicked(row, col);
     }
+
     @Override
     public void onBuildingSelected(String buildingType) {
         viewModel.selectBuilding(buildingType);
     }
+
     @Override
     public void updateGameState(long elapsedTime) {
         if (gameIsOnGoing)

@@ -1,6 +1,9 @@
 package tomer.spivak.androidstudio2dgame.gameManager;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -8,68 +11,71 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchHandler;
+import tomer.spivak.androidstudio2dgame.MusicService;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
+import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectManager;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
-import tomer.spivak.androidstudio2dgame.model.Position;
-
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         TouchHandler.TouchHandlerListener {
 
     private final GameLoop gameLoop;
-
     private final CustomGridView gridView;
-
     private final TouchHandler touchHandler;
-
     GameObjectManager gameObjectManager;
-
     private Float scale = 1F;
     private Bitmap morningBackground;
     private Bitmap nightBackground;
-    private Bitmap backgroundBitmap; // This will point to one of the above.
+    private Bitmap backgroundBitmap;
     private Paint paint;
     long timeTillNextRound = 0;
     Paint timerPaint = new Paint();
     Rect timerBounds = new Rect();
-
     int boardSize;
-
     GameViewListener listener;
-
     Context context;
+
+    // Reference to the MusicService and its intent.
+    private MusicService musicService;
+    private Intent musicIntent;
+
+    // ServiceConnection to bind to the MusicService
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicService.LocalBinder binder = (MusicService.LocalBinder) service;
+            musicService = binder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            musicService = null;
+        }
+    };
 
     public GameView(Context context, int boardSize, GameViewListener listener) {
         super(context);
-
         this.context = context;
-
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
-
         gameLoop = new GameLoop(this, surfaceHolder, listener);
         touchHandler = new TouchHandler(context, this);
         this.boardSize = boardSize;
-
         gridView = new CustomGridView(context, boardSize);
-
-
         this.listener = listener;
         init();
     }
@@ -77,16 +83,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     void init(){
         morningBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_morning);
         nightBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_night);
-        // Set the initial background (assuming morning is default)
         backgroundBitmap = morningBackground;
         paint = new Paint();
         timerPaint.setColor(Color.WHITE);
         timerPaint.setTextSize(60);
         timerPaint.setAntiAlias(true);
-        timerPaint.setTextAlign(Paint.Align.LEFT);  // Align text to the left
-        timerPaint.setShadowLayer(5, 0, 0, Color.BLACK);  // Add shadow for visibility
-        gameObjectManager = new GameObjectManager(context, boardSize,
-                gridView.getCenterCells());
+        timerPaint.setTextAlign(Paint.Align.LEFT);
+        timerPaint.setShadowLayer(5, 0, 0, Color.BLACK);
+        gameObjectManager = new GameObjectManager(context, boardSize, gridView.getCenterCells());
+
+        // Start and bind the MusicService
+        musicIntent = new Intent(getContext(), MusicService.class);
+        context.startService(musicIntent);
+        context.bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -116,7 +125,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         gridView.updatePosition(deltaX, deltaY);
     }
 
-
     @Override
     public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
     }
@@ -126,11 +134,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         if (gameLoop != null) {
             gameLoop.stopLoop();
         }
+        // Unbind the service when the view is destroyed
+        context.unbindService(serviceConnection);
     }
 
-
-    //the user clicked on a cell, adding the selected building(if there is one) to drawn buildings
-    // setting the dynamic center cell to it
     @Override
     public void onBoxClick(float x, float y) {
         Point[] cellCenterPointArray = gridView.getSelectedCell(x, y);
@@ -150,7 +157,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
             timeTillNextRound = -1;
             backgroundBitmap = nightBackground;
         }
-
         if (gameState.getGameStatus() == GameStatus.LOST){
             Toast.makeText(context, "lost", Toast.LENGTH_SHORT).show();
             Log.d("lost", "lost");
@@ -163,34 +169,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     }
 
     @Override
-    //draw method
     public void draw(Canvas canvas) {
         if (canvas == null)
             return;
         super.draw(canvas);
-
-        // Get the screen width and height
         int screenWidth = getWidth();
         int screenHeight = getHeight();
-
-        Bitmap scaledBackBitmap = Bitmap.createScaledBitmap(
-                backgroundBitmap,
-                screenWidth,
-                screenHeight,
-                true
-        );
-
-        // Draws the background image
+        Bitmap scaledBackBitmap = Bitmap.createScaledBitmap(backgroundBitmap, screenWidth, screenHeight, true);
         canvas.drawBitmap(scaledBackBitmap, 0, 0, paint);
-
-        //draws basic grid with grass
         gridView.setCellsState(gameObjectManager.getCellStates());
         gridView.draw(canvas);
-
-        //draws buildings
         List<GameObject> objectsToDraw;
-        ArrayList<GameObject> gameObjectsViewsArrayList = gameObjectManager
-                .getGameObjectsViewsArrayList();
+        ArrayList<GameObject> gameObjectsViewsArrayList = gameObjectManager.getGameObjectsViewsArrayList();
         synchronized (gameObjectsViewsArrayList) {
             objectsToDraw = new ArrayList<>(gameObjectsViewsArrayList);
         }
@@ -207,26 +197,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
 
     private void drawHealthBar(GameObject gameObject, Canvas canvas) {
         Point pos = gameObject.getImagePoint();
-        Position position = gameObject.getPos();
-        float health = gameObjectManager.getBoard()[position.getX()][position.getY()].getObject()
-                .getHealth();
-        float maxHealth = gameObjectManager.getBoard()[position.getX()][position.getY()].getObject()
-                .getMaxHealth();
-
-
-        // Define health bar dimensions
+        tomer.spivak.androidstudio2dgame.model.Position position = gameObject.getPos();
+        float health = gameObjectManager.getBoard()[position.getX()][position.getY()].getObject().getHealth();
+        float maxHealth = gameObjectManager.getBoard()[position.getX()][position.getY()].getObject().getMaxHealth();
         int barWidth = (int) (80 * scale);
         int barHeight = (int) (15 * scale);
         int x = pos.x - barWidth / 2;
-        int y = (int) (pos.y - 90 * scale); // Position above the object
-
-        // Background bar (gray)
+        int y = (int) (pos.y - 90 * scale);
         Paint bgPaint = new Paint();
         bgPaint.setColor(Color.GRAY);
         bgPaint.setStyle(Paint.Style.FILL);
         canvas.drawRect(x, y, x + barWidth, y + barHeight, bgPaint);
-
-        // Health bar (red)
         Paint healthPaint = new Paint();
         healthPaint.setColor(Color.RED);
         healthPaint.setStyle(Paint.Style.FILL);
@@ -239,25 +220,28 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
                 (timeTillNextRound % 1000) / 100 + "s";
         timerPaint.getTextBounds(timeText, 0, timeText.length(), timerBounds);
         int x = getWidth() / 2 - timerBounds.width() / 2;
-        int y = 100; // Adjust as needed
+        int y = 100;
         canvas.drawText(timeText, x, y, timerPaint);
-
     }
 
     public void pauseGameLoop() {
+        if (musicService != null) {
+            musicService.pauseMusic();
+        }
         gameLoop.stopLoop();
     }
 
     public void stopGameLoop() {
+        context.stopService(musicIntent);
         gameLoop.stopLoop();
     }
 
     public void resumeGameLoop() {
-        // Recalculate the grid centers in case the board's position has shifted.
         gameObjectManager.setCenterCells(gridView.getCenterCells());
         gameObjectManager.updateGameObjectsPositions();
+        if (musicService != null) {
+            musicService.resumeMusic();
+        }
         gameLoop.startLoop();
     }
-
-
 }

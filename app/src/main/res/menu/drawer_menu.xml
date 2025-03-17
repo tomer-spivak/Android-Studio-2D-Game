@@ -15,19 +15,20 @@
             android:title="About" />
     </group>
 
-    <group android:id="@+id/group_3">
-    <!-- Second group of items -->
-        <item
-            android:id="@+id/go_to_game"
-            android:icon="@drawable/baseline_fort_24"
-            android:title="continue to game"
-            />
-    </group>
+
     <group android:id="@+id/group_4">
         <item
             android:id="@+id/nav_leaderboard"
             android:icon="@drawable/baseline_leaderboard_24"
             android:title="leaderboard"
+            />
+    </group>
+    <group android:id="@+id/group_3">
+        <!-- Second group of items -->
+        <item
+            android:id="@+id/go_to_game"
+            android:icon="@drawable/baseline_fort_24"
+            android:title="continue to game"
             />
     </group>
     </menu>
