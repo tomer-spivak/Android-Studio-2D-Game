@@ -54,11 +54,27 @@ public class GameViewModel extends ViewModel {
                 gameState.postValue(current);
             }
         } else {
-            if (selectedCell.getObject() instanceof Building){
+            if (selectedCell.getObject() instanceof Building && current.getTimeOfDay() &&
+                    canRemoveBuilding(current)){
                 selectedCell.removeObject();
                 gameState.postValue(current);
             }
         }
+    }
+
+    private boolean canRemoveBuilding(GameState current) {
+        int num = 0;
+        Cell[][] grid = current.getGrid();
+        for (Cell[] cells : grid) {
+            for (Cell value : cells) {
+                if (value.isOccupied() && value.getObject() instanceof Building) {
+                    num++;
+                }
+                if (num == 2)
+                    return true;
+            }
+        }
+        return false;
     }
 
     public void placeBuilding(int row, int col, GameState current) {
