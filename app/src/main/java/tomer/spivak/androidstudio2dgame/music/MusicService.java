@@ -1,15 +1,11 @@
 package tomer.spivak.androidstudio2dgame.music;
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
-import androidx.core.app.NotificationCompat;
 import java.util.Random;
 
 import tomer.spivak.androidstudio2dgame.R;
@@ -24,6 +20,8 @@ public class MusicService extends Service {
 
     // Binder given to clients
     private final IBinder binder = new LocalBinder();
+
+
 
     // Class used for the client Binder.
     public class LocalBinder extends Binder {
@@ -61,10 +59,10 @@ public class MusicService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        startForeground(1, createNotification()); // Start as a foreground service
         Log.d("music", "MusicService onStartCommand");
         return START_STICKY;
     }
+
 
     @Override
     public void onDestroy() {
@@ -77,21 +75,11 @@ public class MusicService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        Log.d("music", "MusicService onBind called");
         return binder;
     }
 
-    private Notification createNotification() {
-        String channelId = "music_service_channel";
-        NotificationChannel channel = new NotificationChannel(channelId, "Music Service",
-                NotificationManager.IMPORTANCE_LOW);
-        getSystemService(NotificationManager.class).createNotificationChannel(channel);
 
-        return new NotificationCompat.Builder(this, channelId)
-                .setContentTitle("Music Playing")
-                .setContentText("Your music is playing in the background.")
-                .setSmallIcon(R.drawable.logo) // Your icon in res/drawable
-                .build();
-    }
 
     public void pauseMusic() {
         Log.d("music", mediaPlayer != null ? "MediaPlayer exists" : "MediaPlayer is null");
@@ -105,4 +93,21 @@ public class MusicService extends Service {
             mediaPlayer.start();
         }
     }
+    public void stopMusic() {
+        if (mediaPlayer != null) {
+            try {
+                // Check if MediaPlayer is playing or in a valid state
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.stop();
+                }
+            } catch (IllegalStateException e) {
+                // Optionally log or handle the exception
+                Log.e("music", "MediaPlayer stop failed: " + e.getMessage());
+            } finally {
+                mediaPlayer.release();
+                mediaPlayer = null;
+            }
+        }
+    }
+
 }

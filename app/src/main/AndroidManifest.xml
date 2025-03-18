@@ -5,8 +5,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <application
         android:allowBackup="true"
@@ -20,10 +18,8 @@
         android:theme="@style/Theme.AndroidStudio2DGame"
         tools:targetApi="31">
         <receiver android:name=".music.NotificationReceiver"/>
-        <service
-            android:name=".music.MusicService"
-            android:foregroundServiceType="mediaPlayback"
-            android:exported="false" />
+        <service android:name=".music.MusicService" android:exported="false"/>
+
         <activity
 
             android:name=".intermediate.IntermediateActivity"

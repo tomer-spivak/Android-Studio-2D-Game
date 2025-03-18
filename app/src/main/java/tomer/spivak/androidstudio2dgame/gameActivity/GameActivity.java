@@ -220,7 +220,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
     private void initGame() {
         boardSize = 14;
-        gameLayout = findViewById(R.id.gameView);
+        gameLayout = findViewById(R.id.gameLinearLayout);
         gameView = new GameView(context, boardSize, this);
         gameLayout.addView(gameView);
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);

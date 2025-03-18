@@ -29,6 +29,8 @@ import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectManager;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
+import android.os.Handler;
+import android.os.Looper;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         TouchHandler.TouchHandlerListener {
@@ -57,15 +59,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d("music", "connected");
             MusicService.LocalBinder binder = (MusicService.LocalBinder) service;
             musicService = binder.getService();
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            Log.d("music", "disconnected");
             musicService = null;
         }
     };
+
 
     public GameView(Context context, int boardSize, GameViewListener listener) {
         super(context);
@@ -95,6 +100,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         // Start and bind the MusicService
         musicIntent = new Intent(getContext(), MusicService.class);
         context.startService(musicIntent);
+        Log.d("music", "started");
         context.bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -160,7 +166,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         if (gameState.getGameStatus() == GameStatus.LOST){
             Toast.makeText(context, "lost", Toast.LENGTH_SHORT).show();
             Log.d("lost", "lost");
-            gameLoop.stopLoop();
+            stopGameLoop();
         }
     }
 
@@ -225,14 +231,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     }
 
     public void pauseGameLoop() {
+        Log.d("music", String.valueOf(musicService));
         if (musicService != null) {
             musicService.pauseMusic();
+        } else {
+            new Handler(Looper.getMainLooper()).postDelayed(this::pauseGameLoop, 100);
         }
         gameLoop.stopLoop();
     }
 
     public void stopGameLoop() {
+        if (musicService != null) {
+            musicService.stopMusic();
+        }
         context.stopService(musicIntent);
+
+
         gameLoop.stopLoop();
     }
 
