@@ -13,8 +13,11 @@ import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
+import tomer.spivak.androidstudio2dgame.music.SoundEffects;
 
 public class EnemyManager {
+    SoundEffects soundEffects;
+
 
     public void spawnEnemies(GameState gameState, int amount) {
         String enemyType = "MONSTER";
@@ -30,6 +33,7 @@ public class EnemyManager {
             }
             Enemy enemy = (Enemy) ModelObjectFactory.create(enemyType, new Position(0, 0),
                     gameState.getDifficulty());
+            enemy.setSoundEffects(soundEffects);
             cellToSpawn.spawnEnemy(enemy);
             createPathForEnemy(gameState, enemy);
     }
@@ -64,9 +68,7 @@ public class EnemyManager {
             }
         }
 
-    public boolean updateEnemies(GameState current, long deltaTime) {
-        boolean attack = false;
-
+    public void updateEnemies(GameState current, long deltaTime) {
         List<Enemy> enemies = new ArrayList<>();
         Cell[][] grid = current.getGrid();
         for (Cell[] row : grid) {
@@ -78,20 +80,20 @@ public class EnemyManager {
             }
         }
         for (Enemy enemy : enemies) {
-            if (enemy.getEnemyState() == EnemyState.IDLE)
-                if (updateEnemyMovement(enemy, current, deltaTime))
-                    attack = true;
+            if (enemy.getEnemyState() == EnemyState.IDLE) {
+                updateEnemyMovement(enemy, current, deltaTime);
+            }
         }
 
-        return attack;
     }
 
-    private boolean updateEnemyMovement(Enemy enemy, GameState current, long deltaTime) {
+    private void updateEnemyMovement(Enemy enemy, GameState current, long deltaTime) {
         List<Position> path = createPathForEnemy(current, enemy);
         int targetIndex = enemy.getCurrentTargetIndex();
 
         if (path == null || path.isEmpty() || targetIndex >= path.size()){
-            return finishedPath(current, enemy, deltaTime);
+            finishedPath(current, enemy, deltaTime);
+            return;
         }
 
         enemy.updateDirection(enemy.getPosition(), path.get(0));
@@ -114,12 +116,9 @@ public class EnemyManager {
         if (path.isEmpty() || targetIndex >= path.size()){
             fixDirectionToBuilding(enemy, current);
         }
-        return false;
     }
 
-    private boolean finishedPath(GameState current, Enemy enemy, long deltaTime) {
-        boolean attack = false;
-
+    private void finishedPath(GameState current, Enemy enemy, long deltaTime) {
         Cell currentEnemyCell = current.getCellAt(enemy.getPosition());
         List<Cell> neighbors = currentEnemyCell.getNeighbors(current);
 
@@ -137,12 +136,10 @@ public class EnemyManager {
 
             for (Building building : adjacentBuildings) {
                 if (enemy.canAttack()) {
-                    attack = true;
                     enemy.attack(building);
                 }
             }
         }
-        return attack;
     }
 
     private void fixDirectionToBuilding(Enemy enemy, GameState current) {
@@ -231,4 +228,7 @@ public class EnemyManager {
         return buildingPositions;
     }
 
+    public void setSoundEffects(SoundEffects soundEffects) {
+        this.soundEffects = soundEffects;
+    }
 }

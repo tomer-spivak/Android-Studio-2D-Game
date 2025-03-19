@@ -26,7 +26,6 @@ public class Enemy extends ModelObject implements IDamager{
     private final AttackComponent attackComponent;
     private final EnemyAttackAnimation attackAnimation;
 
-
     public Enemy(float health, float damage, float movementSpeed, Position pos,
                  EnemyType enemyType, float attackCooldown, EnemyAttackAnimation attackAnimation) {
         super(health, pos); // Call base constructor
@@ -74,6 +73,7 @@ public class Enemy extends ModelObject implements IDamager{
 
     public void attack(Building building) {
         Log.d("enemy", "enemy is attacking");
+        setSoundStreamId(soundEffects.playEnemyAttackSound());
         attackAnimation.execute(this, building);
     }
 

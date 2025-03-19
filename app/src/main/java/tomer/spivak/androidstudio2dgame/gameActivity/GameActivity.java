@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
 
+import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.music.NotificationReceiver;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
@@ -138,21 +139,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         }
 
         // Initialize SoundEffects using this Activity's context
-        soundEffects = new SoundEffects(this);
 
         // Observe sound events from the ViewModel
-        viewModel.getSoundEvent().observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(String event) {
-                if (event != null) {
-                    if ("enemyAttack".equals(event)) {
-                        soundEffects.playEnemyAttackSound();
-                    } else if ("turretAttack".equals(event)) {
-                        soundEffects.playTurretAttackSound();
-                    }
-                }
-            }
-        });
     }
 
     private boolean canStartGame() {
@@ -224,6 +212,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         gameView = new GameView(context, boardSize, this);
         gameLayout.addView(gameView);
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
+        soundEffects = new SoundEffects(this);
+        viewModel.setSoundEffects(soundEffects);
         firebaseRepository = new FirebaseRepository(context);
         dialogHandler = new DialogHandler(context, firebaseRepository);
 
@@ -329,8 +319,24 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                         btnSkipRound.setVisibility(View.GONE);
                     }
                 }
+
+                checkDeadObjects(gameState);
             }
         });
+    }
+
+    private void checkDeadObjects(GameState gameState) {
+        Cell[][] grid = gameState.getGrid();
+        for (Cell[] row : grid) {
+            for (Cell cell : row) {
+                ModelObject object = cell.getObject();
+                if (object == null)
+                    continue;
+                boolean dead = object.getHealth() <= 0;
+                Log.d("dead", "Object health: " + object.getHealth());
+                Log.d("dead", "Object is dead: " + dead);
+            }
+        }
     }
 
     @Override

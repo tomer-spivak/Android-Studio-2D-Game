@@ -10,9 +10,7 @@ import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.Turret;
 
 public class TurretManager {
-
-    public boolean updateTurrets(GameState current, List<Enemy> enemies, long deltaTime) {
-        boolean attack = false;
+    public void updateTurrets(GameState current, List<Enemy> enemies, long deltaTime) {
         List<Turret> turrets = getTurrets(current);
         for (Turret turret : turrets) {
             if (turret instanceof AOETurret){
@@ -22,13 +20,9 @@ public class TurretManager {
                     List<Position> positionsToAttack = aoeTurret.getCellsToAttack();
                     createCellsToAttack(current, (ArrayList<Position>) positionsToAttack,
                             turret.getAttackType());
-                    if (!positionsToAttack.isEmpty()){
-                        attack = true;
-                    }
                 }
             }
         }
-        return attack;
     }
     private List<Turret> getTurrets(GameState current) {
         List<Turret> turrets = new ArrayList<>();

@@ -1,5 +1,6 @@
 package tomer.spivak.androidstudio2dgame.viewModel;
 
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -18,16 +19,18 @@ import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.music.SoundEffects;
 
 public class GameViewModel extends ViewModel {
     private final MutableLiveData<GameState> gameState = new MutableLiveData<>();
     // New LiveData for sound events.
-    private final MutableLiveData<String> soundEvent = new MutableLiveData<>();
 
     private String selectedBuildingType;
     private static final int NIGHT_THRESHOLD = 5000;
     EnemyManager enemyManager = new EnemyManager();
     TurretManager turretManager = new TurretManager();
+    boolean deadObjectsExist = false;
+    SoundEffects soundEffects;
 
     public void initBoardFromCloud(Cell[][] board, DifficultyLevel difficulty) {
         gameState.setValue(new GameState(board, NIGHT_THRESHOLD, difficulty));
@@ -79,17 +82,27 @@ public class GameViewModel extends ViewModel {
 
     public void placeBuilding(int row, int col, GameState current) {
         Cell cell = current.getGrid()[row][col];
-        cell.placeBuilding((Building) ModelObjectFactory.create(selectedBuildingType,
-                new Position(row, col), current.getDifficulty()));
+        Building building = (Building) ModelObjectFactory.create(selectedBuildingType,
+                new Position(row, col), current.getDifficulty());
+        building.setSoundEffects(soundEffects);
+        cell.placeBuilding(building);
     }
 
     public void updateGameState(long deltaTime) {
         GameState current = gameState.getValue();
-
         if (current != null) {
             current.addTime(deltaTime);
             if (!current.getTimeOfDay()){
-                clearDeadObjects(current);
+                //clearDeadObjects(current);
+
+                if (deadObjectsExist) {
+                    clearDeadObjects(current);
+                    deadObjectsExist = false;
+                }
+                if (checkDeadObjects(current)){
+                    deadObjectsExist = true;
+                }
+
                 if (enemyManager.getEnemies(current).isEmpty()){
                     //won
                     Win(current);
@@ -97,14 +110,13 @@ public class GameViewModel extends ViewModel {
                     current.accumulateRound();
                     current.startTimerForNextRound();
                 }
+
                 if (isNotEmptyBuildings()){
                     // Example: Trigger turret attack sound if a turret fires.
-                    if (turretManager.updateTurrets(current, enemyManager.getEnemies(current),
-                            deltaTime))
-                        triggerTurretAttackSound();  // <-- Call this when a turret attack happens
+                    turretManager.updateTurrets(current, enemyManager.getEnemies(current),
+                            deltaTime);
+                    enemyManager.updateEnemies(current, deltaTime);
 
-                    if(enemyManager.updateEnemies(current, deltaTime))
-                        triggerEnemyAttackSound();
                 } else {
                     //raid ended with all buildings destroyed
                     Lose(current);
@@ -119,6 +131,21 @@ public class GameViewModel extends ViewModel {
             }
             gameState.postValue(current); // Use postValue for background thread
         }
+    }
+
+    private boolean checkDeadObjects(GameState gameState) {
+        Cell[][] grid = gameState.getGrid();
+        for (Cell[] row : grid) {
+            for (Cell cell : row) {
+                ModelObject object = cell.getObject();
+                if (object == null)
+                    continue;
+                boolean dead = object.getHealth() <= 0;
+               if (dead)
+                   return true;
+            }
+        }
+        return false;
     }
 
     private void Win(GameState current) {
@@ -172,18 +199,8 @@ public class GameViewModel extends ViewModel {
     }
 
     // Expose the sound event LiveData
-    public LiveData<String> getSoundEvent() {
-        return soundEvent;
-    }
 
-    // Public methods to trigger sound events. Call these from within your game logic.
-    public void triggerEnemyAttackSound() {
-        soundEvent.postValue("enemyAttack");
-    }
 
-    public void triggerTurretAttackSound() {
-        soundEvent.postValue("turretAttack");
-    }
 
     public void skipToNextRound() {
         GameState current = gameState.getValue();
@@ -197,5 +214,10 @@ public class GameViewModel extends ViewModel {
 
     public int getRound() {
         return Objects.requireNonNull(gameState.getValue()).getRound();
+    }
+
+    public void setSoundEffects(SoundEffects soundEffects) {
+        this.soundEffects = soundEffects;
+        enemyManager.setSoundEffects(soundEffects);
     }
 }

@@ -1,0 +1,50 @@
+[33m5fc17e0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m fixed deleting buildings
+[33m8c58526[m fixed music
+[33m48f2889[m fixed rules page
+[33m7cdc2ca[m changed icon
+[33mfd6c8b6[m added music
+[33m56b5c98[m added leaderboard
+[33m03d9417[m fixed enemy animation
+[33me168bb5[m fixed gameview
+[33mdf9baf8[m added health bar
+[33m2d268f7[m fixed startPlaying
+[33mf20bc7e[m fixed remove building
+[33m3150bf8[m fixed saving and loading games from firebase
+[33ma7b7e87[m fixed pictures in cardview
+[33m00e375f[m fixed animation
+[33mb972592[m fixed closing app mid game
+[33m79669e4[m fixed name not appearing
+[33me859bd0[m fixed sign up
+[33me6a033d[m added auth helper class and google sign in and up
+[33m033ac48[m added difficulty, fixed firebase
+[33mdef7a1a[m split game activity and game view model
+[33mc0a7191[m fixed design of home
+[33m346dac7[m fixed placing building at night bug
+[33m7f57ac0[m fixed about page
+[33ma816540[m fixed about page
+[33m14bb432[m added to home and intermediate
+[33m4bbb9bb[m added next round timer
+[33maa5a9a8[m added turrets
+[33m09d95af[m prototype
+[33m4ec4f73[m finished pathing, started damage
+[33ma0a709c[m added pathing for enemy to closet building
+[33m01b9d6f[m added closet building to enemy
+[33mcb04a81[m added MVVM
+[33m374fe26[m saving board and fetching from firebase
+[33mf26bec2[m fixed back pressing
+[33mcd43056[m back press doesnt work
+[33mcc013c8[m added GameObject
+[33maef668a[m before fixing graphics rendering
+[33m8b2eb19[m fixed cardview
+[33m52c8a32[m added intermediate activity
+[33m2865dae[m added home page drawer menu
+[33mabfe6d7[m added home page drawer menu
+[33m8974bab[m base grass grid ready
+[33m4890916[m scroll not work
+[33m583b8fa[m grid with correct oop
+[33mbe3e9e4[m grid
+[33m1e345d1[m[33m ([m[1;31morigin/grid[m[33m, [m[1;32mgrid[m[33m)[m grid
+[33m1b547b4[m grid
+[33ma3f0538[m[33m ([m[1;31morigin/baseGameLoop[m[33m, [m[1;32mbaseGameLoop[m[33m)[m base game loop
+[33mfa18f96[m Game loop
+[33mbe7b31e[m Setup
