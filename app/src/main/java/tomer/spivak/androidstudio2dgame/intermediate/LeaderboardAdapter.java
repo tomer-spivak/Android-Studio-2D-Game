@@ -10,7 +10,7 @@ import java.util.List;
 import tomer.spivak.androidstudio2dgame.R;
 
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.LeaderboardViewHolder> {
-    private List<LeaderboardEntry> leaderboardList;
+    private final List<LeaderboardEntry> leaderboardList;
 
     public LeaderboardAdapter(List<LeaderboardEntry> leaderboardList) {
         this.leaderboardList = leaderboardList;
@@ -27,8 +27,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     @Override
     public void onBindViewHolder(@NonNull LeaderboardViewHolder holder, int position) {
         LeaderboardEntry entry = leaderboardList.get(position);
-        holder.uidTextView.setText(entry.getUid());
-        holder.roundTextView.setText(String.valueOf(entry.getMaxRound()));
+        holder.tvDisplayName.setText(entry.getDisplayName());
+        holder.tvRound.setText(String.valueOf(entry.getMaxRound()));
     }
 
     @Override
@@ -37,12 +37,12 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     }
 
     static class LeaderboardViewHolder extends RecyclerView.ViewHolder {
-        TextView uidTextView, roundTextView;
+        TextView tvDisplayName, tvRound;
 
         public LeaderboardViewHolder(@NonNull View itemView) {
             super(itemView);
-            uidTextView = itemView.findViewById(R.id.tvUsername);
-            roundTextView = itemView.findViewById(R.id.tvRound);
+            tvDisplayName = itemView.findViewById(R.id.tvUsername);
+            tvRound = itemView.findViewById(R.id.tvRound);
         }
     }
 }

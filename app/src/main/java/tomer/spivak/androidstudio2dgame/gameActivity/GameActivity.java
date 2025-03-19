@@ -209,11 +209,10 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     private void initGame() {
         boardSize = 14;
         gameLayout = findViewById(R.id.gameLinearLayout);
-        gameView = new GameView(context, boardSize, this);
+        soundEffects = new SoundEffects(this);
+        gameView = new GameView(context, boardSize, this, soundEffects);
         gameLayout.addView(gameView);
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
-        soundEffects = new SoundEffects(this);
-        viewModel.setSoundEffects(soundEffects);
         firebaseRepository = new FirebaseRepository(context);
         dialogHandler = new DialogHandler(context, firebaseRepository);
 
@@ -257,6 +256,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         viewModel.initBoardFromCloud(board.clone(), difficulty);
         viewModel.updateGameState(timeSinceStartOfGame);
         dialog.dismiss();
+        viewModel.setSoundEffects(soundEffects);
     }
 
     private void hideSystemUI() {

@@ -25,6 +25,8 @@ public class Enemy extends ModelObject implements IDamager{
     protected float timeSinceLastMove = 0;
     private final AttackComponent attackComponent;
     private final EnemyAttackAnimation attackAnimation;
+    private EnemyAttackAnimation activeAttackAnimation = null;
+
 
     public Enemy(float health, float damage, float movementSpeed, Position pos,
                  EnemyType enemyType, float attackCooldown, EnemyAttackAnimation attackAnimation) {
@@ -35,6 +37,7 @@ public class Enemy extends ModelObject implements IDamager{
         this.currentDirection = Direction.UPLEFT;
         this.state = EnemyState.IDLE;
         this.attackAnimation = attackAnimation;
+
         attackComponent.setAttackDamage(damage/attackAnimation.getRepeatCount());
     }
 
@@ -74,7 +77,18 @@ public class Enemy extends ModelObject implements IDamager{
     public void attack(Building building) {
         Log.d("enemy", "enemy is attacking");
         setSoundStreamId(soundEffects.playEnemyAttackSound());
-        attackAnimation.execute(this, building);
+        activeAttackAnimation = attackAnimation;
+        activeAttackAnimation.execute(this, building);
+    }
+
+    public void update(long deltaTime){
+        updateAnimation(deltaTime);
+    }
+
+    public void updateAnimation(long deltaTime) {
+        if (activeAttackAnimation != null && activeAttackAnimation.isRunning()) {
+            activeAttackAnimation.update(deltaTime);
+        }
     }
 
     @Override
@@ -84,8 +98,9 @@ public class Enemy extends ModelObject implements IDamager{
 
 
         //stun lock:
-        //if (attackAnimation != null) {
-            //attackAnimation.cancelAnimation();
+        //if (activeAttackAnimation != null) {
+          //  activeAttackAnimation.cancelAnimation();
+            //activeAttackAnimation = null;
         //}
 
         if (health <= 0){
@@ -106,7 +121,10 @@ public class Enemy extends ModelObject implements IDamager{
     @Override
     void onDeath() {
         super.onDeath();
-        attackAnimation.cancelAnimation();
+        if (activeAttackAnimation != null) {
+            activeAttackAnimation.cancelAnimation();
+            activeAttackAnimation = null;
+        }
     }
 
     public List<Position> getPath() {

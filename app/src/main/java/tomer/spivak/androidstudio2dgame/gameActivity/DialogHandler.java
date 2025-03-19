@@ -65,21 +65,20 @@ public class DialogHandler {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                firebaseRepository.logResults(viewModel);
 
                 alertDialog.dismiss();
                 if (viewModel.getGameState().getValue() == null ||
                         viewModel.getGameState().getValue().getGrid() == null)
                     return;
 
-                saveBoard(viewModel);
+                saveBoard(viewModel, null);
             }
         });
 
         alertDialog.show();
     }
 
-    public void saveBoard(GameViewModel viewModel) {
+    public void saveBoard(GameViewModel viewModel, GameView gameView) {
         GameState gameState = viewModel.getGameState().getValue();
         if (gameState == null || gameState.getGrid() == null)
             return;
@@ -89,15 +88,17 @@ public class DialogHandler {
                 new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void unused) {
+                gameView.stopGameLoop();
                 finish();
                 Toast.makeText(context, "success", Toast.LENGTH_SHORT).show();
             }
         }, new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-
+                Log.d("save", Objects.requireNonNull(e.getMessage()));
             }
         });
+        firebaseRepository.logResults(viewModel);
     }
 
     public void showPauseAlertDialog(GameView gameView, GameViewModel viewModel) {
@@ -108,9 +109,7 @@ public class DialogHandler {
                     dialog.dismiss();
                 })
                 .setNegativeButton("Exit", (dialog, which) -> {
-                    saveBoard(viewModel);
-                    gameView.stopGameLoop();
-                    finish();
+                    saveBoard(viewModel, gameView);
                     dialog.dismiss();
                 })
                 .setCancelable(false)

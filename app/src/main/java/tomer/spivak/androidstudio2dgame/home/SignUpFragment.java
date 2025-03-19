@@ -23,27 +23,28 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 
-
 public class SignUpFragment extends Fragment {
-
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
         AuthenticationHelper authHelper = new AuthenticationHelper();
-
 
         Button btn = view.findViewById(R.id.btnSignUp);
         Button btnGoogle = view.findViewById(R.id.btnGoogleSignUp);
@@ -54,37 +55,34 @@ public class SignUpFragment extends Fragment {
         TextView tvPasswordError = view.findViewById(R.id.tvPasswordError);
         TextView tvUsernameError = view.findViewById(R.id.tvUsernameError);
 
+        // TextWatchers for validation (unchanged)…
         TextWatcher textWatcherPassword = new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String email = ((EditText)view.findViewById(R.id.etEmail)).getText()
-                        .toString().trim();
-                String pass = ((EditText)(view.findViewById(R.id.etPassword))).getText()
-                        .toString().trim();
-                String name = ((EditText)(view.findViewById(R.id.etUsername))).getText().toString();
+                String email = etEmail.getText().toString().trim();
+                String pass = etPassword.getText().toString().trim();
+                String name = etUsername.getText().toString();
                 boolean isValid = validatePassword(pass, tvPasswordError) &&
-                        validateEmail(email, tvEmailError)
-                        && validateUsername(name, tvUsernameError);
+                        validateEmail(email, tvEmailError) &&
+                        validateUsername(name, tvUsernameError);
                 Log.d("TAG", "onTextChanged: " + isValid);
                 btn.setEnabled(isValid);
             }
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) { }
         };
         TextWatcher textWatcherEmail = new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String email = ((EditText)view.findViewById(R.id.etEmail)).getText()
-                        .toString().trim();
-                String pass = ((EditText)(view.findViewById(R.id.etPassword))).getText()
-                        .toString().trim();
-                String name = ((EditText)(view.findViewById(R.id.etUsername))).getText().toString();
+                String email = etEmail.getText().toString().trim();
+                String pass = etPassword.getText().toString().trim();
+                String name = etUsername.getText().toString();
                 boolean isValid = validateEmail(email, tvEmailError) &&
                         validatePassword(pass, tvPasswordError) &&
                         validateUsername(name, tvUsernameError);
@@ -93,21 +91,17 @@ public class SignUpFragment extends Fragment {
             }
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) { }
         };
         TextWatcher textWatcherUsername = new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String email = ((EditText)view.findViewById(R.id.etEmail)).getText()
-                        .toString().trim();
-                String pass = ((EditText)(view.findViewById(R.id.etPassword))).getText()
-                        .toString().trim();
-                String name = ((EditText)(view.findViewById(R.id.etUsername))).getText().toString();
+                String email = etEmail.getText().toString().trim();
+                String pass = etPassword.getText().toString().trim();
+                String name = etUsername.getText().toString();
                 boolean isValid = validateUsername(name, tvUsernameError) &&
                         validateEmail(email, tvEmailError) &&
                         validatePassword(pass, tvPasswordError);
@@ -116,134 +110,153 @@ public class SignUpFragment extends Fragment {
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
-
-            }
+            public void afterTextChanged(Editable s) { }
         };
 
-        etEmail.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    Log.d("TAG", "onFocusChange:" + tvEmailError.getText().toString());
-                    etEmail.addTextChangedListener(textWatcherEmail);
-
-                } else {
-                    Log.d("TAG", "onFocusChange:" + tvEmailError.getText().toString());
-                    validateEmail(etEmail.getText().toString(), tvEmailError);
-                }
+        etEmail.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                etEmail.addTextChangedListener(textWatcherEmail);
+            } else {
+                validateEmail(etEmail.getText().toString(), tvEmailError);
             }
         });
 
-        etPassword.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus){
-                    etPassword.addTextChangedListener(textWatcherPassword);
-
-                } else {
-                    validatePassword(etPassword.getText().toString(), tvPasswordError);
-                }
+        etPassword.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                etPassword.addTextChangedListener(textWatcherPassword);
+            } else {
+                validatePassword(etPassword.getText().toString(), tvPasswordError);
             }
         });
 
-        etUsername.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus){
-                    etUsername.addTextChangedListener(textWatcherUsername);
-
-                } else {
-                    validateUsername(etUsername.getText().toString(), tvUsernameError);
-                }
+        etUsername.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                etUsername.addTextChangedListener(textWatcherUsername);
+            } else {
+                validateUsername(etUsername.getText().toString(), tvUsernameError);
             }
         });
 
-        ActivityResultLauncher<Intent> googleSignInLauncher;
+        ActivityResultLauncher<Intent> googleSignInLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                            authHelper.handleGoogleSignInResult(result.getData(), new AuthenticationHelper.GoogleSignInCallback() {
+                                @Override
+                                public void onSuccess() {
+                                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                                    FirebaseFirestore db = FirebaseFirestore.getInstance();
+                                    Map<String, Object> userData = new HashMap<>();
+                                    String displayName = user.getDisplayName();
+                                    userData.put("displayName", displayName);
+                                    db.collection("users").document(user.getUid())
+                                            .set(userData, SetOptions.merge())
+                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                @Override
+                                                public void onSuccess(Void aVoid) {
+                                                    // Now that the display name is stored both in Firebase Auth and Firestore,
+                                                    // proceed to the next activity.
+                                                    Intent intent = new Intent(getActivity(), IntermediateActivity.class);
+                                                    startActivity(intent);
+                                                }
+                                            })
+                                            .addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    Log.d("displayName",
+                                                            Objects.requireNonNull(e
+                                                                    .getMessage()));
+                                                }
+                                            });
+                                }
 
-        googleSignInLauncher = registerForActivityResult(new ActivityResultContracts
-                .StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
-            @Override
-            public void onActivityResult(ActivityResult result) {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    authHelper.handleGoogleSignInResult(result.getData(), new AuthenticationHelper
-                            .GoogleSignInCallback() {
-                        @Override
-                        public void onSuccess() {
-                            Intent intent = new Intent(getContext(), IntermediateActivity.class);
-                            startActivity(intent);
+                                @Override
+                                public void onFailure(Exception e) {
+                                    Log.w("TAG", "Google sign-in failed", e);
+                                }
+                            });
                         }
+                    }
+                }
+        );
 
+        btnGoogle.setOnClickListener(v -> {
+            Intent signInIntent = authHelper.getGoogleSignInIntent(requireContext());
+            googleSignInLauncher.launch(signInIntent);
+        });
+
+        btn.setOnClickListener(v -> {
+            authHelper.signUpWithEmailPassword(etEmail.getText().toString(),
+                    etPassword.getText().toString(),
+                    new OnSuccessListener() {
                         @Override
-                        public void onFailure(Exception e) {
-                            Log.w("TAG", "Google sign-in failed", e);
+                        public void onSuccess(Object o) {
+                            // Send welcome email
+                            String usernameEmail = "spivak.toti@gmail.com";
+                            String passwordEmail = "axzwhdzahfkamgzo";
+                            String recipient = etEmail.getText().toString();
+                            String subject = "TowerLands";
+                            String body = "Thank you for signing up!\nI hope you enjoy the game!";
+                            new EmailSender(usernameEmail, passwordEmail, recipient, subject, body).execute();
+
+                            // Get the current Firebase user and update the profile with the display name
+                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                            if (user != null) {
+                                UserProfileChangeRequest profileUpdates =
+                                        new UserProfileChangeRequest.Builder()
+                                                .setDisplayName(etUsername.getText().toString())
+                                                .build();
+                                user.updateProfile(profileUpdates)
+                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                            @Override
+                                            public void onSuccess(Void unused) {
+                                                // Also update the Firestore "users" document with the display name
+                                                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                                                Map<String, Object> userData = new HashMap<>();
+                                                userData.put("displayName", etUsername.getText().toString());
+                                                db.collection("users").document(user.getUid())
+                                                        .set(userData, SetOptions.merge())
+                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                            @Override
+                                                            public void onSuccess(Void aVoid) {
+                                                                // Now that the display name is stored both in Firebase Auth and Firestore,
+                                                                // proceed to the next activity.
+                                                                Intent intent = new Intent(getActivity(), IntermediateActivity.class);
+                                                                startActivity(intent);
+                                                            }
+                                                        })
+                                                        .addOnFailureListener(new OnFailureListener() {
+                                                            @Override
+                                                            public void onFailure(@NonNull Exception e) {
+                                                                Toast.makeText(getContext(), "Failed to update user data", Toast.LENGTH_LONG).show();
+                                                            }
+                                                        });
+                                            }
+                                        })
+                                        .addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                Toast.makeText(getContext(), "Failed to update profile", Toast.LENGTH_LONG).show();
+                                            }
+                                        });
+                            }
+                        }
+                    },
+                    new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
-                }
-            }
         });
-
-        btnGoogle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent signInIntent = authHelper.getGoogleSignInIntent(requireContext());
-                googleSignInLauncher.launch(signInIntent);
-            }
-        });
-
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                authHelper.signUpWithEmailPassword(etEmail.getText().toString(),
-                        etPassword.getText().toString(),
-                        new OnSuccessListener() {
-                            @Override
-                            public void onSuccess(Object o) {
-                                // Replace with your email credentials and recipient
-                                String username = "spivak.toti@gmail.com";
-                                String password = "axzwhdzahfkamgzo";
-                                String recipient = etEmail.getText().toString();
-                                String subject = "TowerLands";
-                                String body = "Thank you for signing up!\nI hope you enjoy th game!";
-
-// Execute the email sender
-                                new EmailSender(username, password, recipient, subject, body).execute();
-
-                                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                                UserProfileChangeRequest profileUpdates =
-                                        new UserProfileChangeRequest.Builder().setDisplayName(
-                                                etUsername.getText().toString())
-                                                .build();
-                                user.updateProfile(profileUpdates).addOnSuccessListener(
-                                        new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void unused) {
-
-                                        Intent intent = new Intent(getActivity(),
-                                                IntermediateActivity.class);
-                                        startActivity(intent);
-                                    }
-                                });
-
-
-
-                            }
-                        }, new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(getContext(), e.getMessage(),
-                                        Toast.LENGTH_LONG).show();
-                            }
-                        });
-            }
-        });
-
 
         return view;
     }
 
     private boolean validatePassword(String pass, TextView tvPasswordError) {
-        if (pass.length() < 6){
+        if (pass.length() < 6) {
             tvPasswordError.setText("Password must be at least 6 characters");
             return false;
         }

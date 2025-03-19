@@ -1,16 +1,16 @@
 package tomer.spivak.androidstudio2dgame.intermediate;
 
 public class LeaderboardEntry implements Comparable<LeaderboardEntry> {
-    private final String username;
     private final int maxRound;
+    private final String displayName;
 
-    public LeaderboardEntry(String uid, int maxRound) {
-        this.username = uid;
+    public LeaderboardEntry(int maxRound, String displayName) {
         this.maxRound = maxRound;
+        this.displayName = displayName;
     }
 
-    public String getUid() {
-        return username;
+    public String getDisplayName() {
+        return displayName;
     }
 
     public int getMaxRound() {

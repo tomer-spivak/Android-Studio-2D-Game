@@ -80,6 +80,7 @@ public class EnemyManager {
             }
         }
         for (Enemy enemy : enemies) {
+            enemy.update(deltaTime);
             if (enemy.getEnemyState() == EnemyState.IDLE) {
                 updateEnemyMovement(enemy, current, deltaTime);
             }

@@ -29,6 +29,8 @@ import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectManager;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
+import tomer.spivak.androidstudio2dgame.music.SoundEffects;
+
 import android.os.Handler;
 import android.os.Looper;
 
@@ -38,6 +40,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     private final GameLoop gameLoop;
     private final CustomGridView gridView;
     private final TouchHandler touchHandler;
+    private final SoundEffects soundEffects;
     GameObjectManager gameObjectManager;
     private Float scale = 1F;
     private Bitmap morningBackground;
@@ -72,7 +75,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     };
 
 
-    public GameView(Context context, int boardSize, GameViewListener listener) {
+    public GameView(Context context, int boardSize, GameViewListener listener,
+                    SoundEffects soundEffects) {
         super(context);
         this.context = context;
         SurfaceHolder surfaceHolder = getHolder();
@@ -82,6 +86,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         this.boardSize = boardSize;
         gridView = new CustomGridView(context, boardSize);
         this.listener = listener;
+        this.soundEffects = soundEffects;
         init();
     }
 
@@ -232,11 +237,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
 
     public void pauseGameLoop() {
         Log.d("music", String.valueOf(musicService));
+        soundEffects.pauseSoundEffects();
+
         if (musicService != null) {
             musicService.pauseMusic();
-        } else {
+        }
+        else {
             new Handler(Looper.getMainLooper()).postDelayed(this::pauseGameLoop, 100);
         }
+
+
         gameLoop.stopLoop();
     }
 
@@ -244,7 +254,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         if (musicService != null) {
             musicService.stopMusic();
         }
+
         context.stopService(musicIntent);
+        soundEffects.stopSoundEffects();
 
 
         gameLoop.stopLoop();
@@ -256,6 +268,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         if (musicService != null) {
             musicService.resumeMusic();
         }
+        soundEffects.resumeSoundEffects();
         gameLoop.startLoop();
     }
 }

@@ -58,6 +58,7 @@ public class FirebaseRepository {
                 .set(boardData)
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
+
         db.collection("users")
                 .document(user.getUid())
                 .collection("board")
@@ -65,6 +66,7 @@ public class FirebaseRepository {
                 .set(new HashMap<String, Object>() {{
                     put("level", difficulty);
                 }});
+
         db.collection("users")
                 .document(user.getUid())
                 .collection("board")
@@ -255,17 +257,18 @@ public class FirebaseRepository {
                     if (task.isSuccessful()) {
                         for (DocumentSnapshot document : task.getResult()) {
                             // Assuming "leaderboard" is stored as a map inside each user document
-                            Map<String, Object> leaderboard = (Map<String, Object>) document
-                                    .get("leaderboard");
+                            Map<String, Object> leaderboard = (Map<String, Object>)
+                                    document.get("leaderboard");
                             if (leaderboard != null && leaderboard.get("max round") != null) {
                                 // Cast the value to a Number then convert to int
-                                int maxRound = ((Number) Objects.requireNonNull(leaderboard.
-                                        get("max round"))).intValue();
-                                maxRounds.add(new LeaderboardEntry(document.getId(), maxRound));
+                                int maxRound = ((Number) Objects.
+                                        requireNonNull(leaderboard.get("max round"))).intValue();
+                                // Now that each document has been updated, we can safely get the displayName
+                                String displayName = document.getString("displayName");
+                                maxRounds.add(new LeaderboardEntry(maxRound, displayName));
                             }
                         }
                         maxRounds.sort(Collections.reverseOrder());
-                        // Call the callback with the sorted list
                         callback.onLeaderboardFetched(maxRounds);
                     } else {
                         // Optionally handle errors

@@ -1,81 +1,81 @@
 package tomer.spivak.androidstudio2dgame.modelAnimations;
 
-import android.os.Handler;
-import android.os.Looper;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.IDamageable;
 
 public class BreatheFire implements EnemyAttackAnimation {
 
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private final List<Runnable> animationRunnables = new ArrayList<>();
+    private long elapsedTime;
+    private boolean running;
+    private Enemy enemy;
+    private IDamageable target;
+
+    // Constants for delays (in milliseconds)
+    private final int initDelay = 500;
+    private final int stepDelay = 150;
     private final int repeatCount = 10;
 
+    // Total duration is calculated from:
+    // - 0ms initial state (ATTACKING1)
+    // - initDelay for ATTACKING2
+    // - then a repeated cycle of two states (ATTACKING3 and ATTACKING4) for repeatCount times,
+    // - plus a final stepDelay to switch back to IDLE.
 
     @Override
     public void execute(Enemy enemy, IDamageable target) {
+        this.enemy = enemy;
+        this.target = target;
         enemy.resetAttackTimer();
-        final EnemyState[] initialStates = { EnemyState.ATTACKING1, EnemyState.ATTACKING2 };
-        final List<EnemyState> stateSequence = new ArrayList<>();
-        final List<Integer> delays = new ArrayList<>();
-        delays.add(0);
-
-        Collections.addAll(stateSequence, initialStates);
-        int initDelay = 500;
-        delays.add(initDelay);
-        delays.add(initDelay);
-        int stepDelay = 150;
-
-        for (int i = 0; i < repeatCount; i++) {
-            stateSequence.add(EnemyState.ATTACKING3);
-            delays.add(stepDelay);
-            stateSequence.add(EnemyState.ATTACKING4);
-            delays.add(stepDelay);
-        }
-
-        stateSequence.add(EnemyState.IDLE);
-        delays.add(stepDelay);
-
-        int accumulatedDelay = 0;
-        for (int i = 0; i < stateSequence.size(); i++) {
-            final EnemyState state = stateSequence.get(i);
-            final EnemyState prevState = (i > 0) ? stateSequence.get(i - 1) : null;
-
-            accumulatedDelay += delays.get(i);
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    enemy.setState(state);
-                    if (prevState == EnemyState.ATTACKING3 && state == EnemyState.ATTACKING4) {
-                        enemy.dealDamage(target);
-                    } else if (prevState == EnemyState.ATTACKING4 && state == EnemyState.ATTACKING3)
-                        enemy.dealDamage(target);
-                    if (state == EnemyState.IDLE) {
-                        enemy.resetAttackTimer();
-                    }
-                }
-            };
-
-            animationRunnables.add(runnable);
-            handler.postDelayed(runnable, accumulatedDelay);
-        }
-
+        elapsedTime = 0;
+        running = true;
+        // Set initial state
+        enemy.setState(EnemyState.ATTACKING1);
     }
 
+    @Override
+    public void update(long deltaTime) {
+        if (!running) {
+            return;
+        }
+        elapsedTime += deltaTime;
 
+        if (elapsedTime < initDelay) {
+            enemy.setState(EnemyState.ATTACKING1);
+        } else if (elapsedTime < initDelay + initDelay) {
+            enemy.setState(EnemyState.ATTACKING2);
+        } else if (elapsedTime < initDelay + initDelay + (repeatCount * 2 * stepDelay)) {
+            // Determine which cycle we are in
+            long t = elapsedTime - 2 * initDelay;
+            long cycleTime = t % (2 * stepDelay);
+
+            if (cycleTime < stepDelay) {
+                enemy.setState(EnemyState.ATTACKING3);
+            } else {
+                enemy.setState(EnemyState.ATTACKING4);
+                // Trigger damage on the transition between states.
+                // Depending on your game logic, you may want to trigger this once per cycle.
+                enemy.dealDamage(target);
+            }
+        } else {
+            // Animation finished: set state to IDLE, and stop the animation
+            enemy.setState(EnemyState.IDLE);
+            running = false;
+            enemy.resetAttackTimer();
+        }
+    }
+
+    @Override
     public void cancelAnimation() {
-        for (Runnable runnable : animationRunnables) {
-            handler.removeCallbacks(runnable);
-        }
-        animationRunnables.clear();
+        running = false;
     }
 
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
     public int getRepeatCount() {
         return repeatCount;
     }

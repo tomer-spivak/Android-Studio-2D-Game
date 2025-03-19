@@ -1,6 +1,8 @@
 package tomer.spivak.androidstudio2dgame.viewModel;
 
 
+import android.util.Log;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -89,6 +91,7 @@ public class GameViewModel extends ViewModel {
     }
 
     public void updateGameState(long deltaTime) {
+        Log.d("update", String.valueOf(deltaTime));
         GameState current = gameState.getValue();
         if (current != null) {
             current.addTime(deltaTime);
@@ -218,6 +221,17 @@ public class GameViewModel extends ViewModel {
 
     public void setSoundEffects(SoundEffects soundEffects) {
         this.soundEffects = soundEffects;
+        GameState gameState = this.gameState.getValue();
+        if (gameState == null)
+            return;
+        Cell[][] grid = gameState.getGrid();
+        for (Cell[] cells : grid) {
+            for (Cell cell : cells) {
+                if (cell.isOccupied()) {
+                    cell.getObject().setSoundEffects(soundEffects);
+                }
+            }
+        }
         enemyManager.setSoundEffects(soundEffects);
     }
 }
