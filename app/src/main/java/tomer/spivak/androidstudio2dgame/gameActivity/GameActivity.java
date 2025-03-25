@@ -64,7 +64,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
     OnBackPressedCallback backPressedCallback;
 
-    FirebaseRepository firebaseRepository;
+    DatabaseRepository databaseRepository;
+
     int boardSize;
 
     boolean gameIsOnGoing = false;
@@ -213,8 +214,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         gameView = new GameView(context, boardSize, this, soundEffects);
         gameLayout.addView(gameView);
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
-        firebaseRepository = new FirebaseRepository(context);
-        dialogHandler = new DialogHandler(context, firebaseRepository);
+        databaseRepository = new DatabaseRepository(context);
+        dialogHandler = new DialogHandler(context, databaseRepository);
 
         btnStartGame = findViewById(R.id.btnStartGame);
         btnSkipRound = findViewById(R.id.btnSkipRound);
@@ -233,12 +234,12 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             // Create a new game – there is no board in the database
             difficulty[0] = DifficultyLevel.valueOf(difficultyName);
             boardMapper = new BoardMapper(boardSize, difficulty[0]);
-            boardMapper.createBoard(null);
+            boardMapper.initBoard();
             initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0], 0L);
         } else {
             // Continue a game – load the board from the database
             boardMapper = new BoardMapper(boardSize);
-            firebaseRepository.loadBoardFromDataBase(boardMapper, new OnBoardLoadedListener() {
+            databaseRepository.loadBoardFromDataBase(boardMapper, new OnBoardLoadedListener() {
                 @Override
                 public void onBoardLoaded(Cell[][] board) {
                     Toast.makeText(context, "got board", Toast.LENGTH_SHORT).show();
@@ -301,7 +302,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 gameView.unpackGameState(gameState);
                 if (gameState.getGameStatus() == GameStatus.LOST) {
                     Toast.makeText(context, "You Lost", Toast.LENGTH_SHORT).show();
-                    firebaseRepository.removeBoard();
+                    databaseRepository.removeBoard();
                     dialogHandler.showLostAlertDialog(viewModel, gameView);
                 }
                 if (gameState.getTimeOfDay()) {

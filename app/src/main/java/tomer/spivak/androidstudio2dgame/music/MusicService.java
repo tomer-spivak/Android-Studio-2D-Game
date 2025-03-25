@@ -16,7 +16,7 @@ public class MusicService extends Service {
             R.raw.invincible, R.raw.sky_high, R.raw.spectre};
     private final Random random = new Random();
     private int lastSongIndex = -1;
-    final float Volume = 0.2f;
+    final float Volume = 0.07f;
 
     // Binder given to clients
     private final IBinder binder = new LocalBinder();
@@ -89,10 +89,19 @@ public class MusicService extends Service {
     }
 
     public void resumeMusic() {
-        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
-            mediaPlayer.start();
+        if (mediaPlayer != null) {
+            try {
+                if (!mediaPlayer.isPlaying()) {
+                    mediaPlayer.start();
+                }
+            } catch (IllegalStateException e) {
+                // Log the error and reinitialize or handle the mediaPlayer state appropriately.
+                Log.d("music", "MediaPlayer resume failed: " + e.getMessage());
+                // Optionally, reinitialize your MediaPlayer here
+            }
         }
     }
+
     public void stopMusic() {
         if (mediaPlayer != null) {
             try {

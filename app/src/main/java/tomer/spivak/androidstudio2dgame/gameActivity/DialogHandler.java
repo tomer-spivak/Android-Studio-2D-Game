@@ -25,12 +25,12 @@ import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
 public class DialogHandler {
     Context context;
-    FirebaseRepository firebaseRepository;
+    DatabaseRepository databaseRepository;
 
 
-    public DialogHandler(Context context, FirebaseRepository firebaseRepository) {
+    public DialogHandler(Context context, DatabaseRepository databaseRepository) {
         this.context = context;
-        this.firebaseRepository = firebaseRepository;
+        this.databaseRepository = databaseRepository;
     }
 
     //checks if user wants to save his base
@@ -83,7 +83,7 @@ public class DialogHandler {
         if (gameState == null || gameState.getGrid() == null)
             return;
         Log.d("time", String.valueOf(gameState.getCurrentTimeOfGame()));
-        firebaseRepository.saveBoard(Objects.requireNonNull(gameState.getGrid()),
+        databaseRepository.saveBoard(Objects.requireNonNull(gameState.getGrid()),
                 gameState.getDifficulty().name(), gameState.getCurrentTimeOfGame(),
                 new OnSuccessListener<Void>() {
             @Override
@@ -98,7 +98,7 @@ public class DialogHandler {
                 Log.d("save", Objects.requireNonNull(e.getMessage()));
             }
         });
-        firebaseRepository.logResults(viewModel);
+        databaseRepository.logResults(viewModel);
     }
 
     public void showPauseAlertDialog(GameView gameView, GameViewModel viewModel) {
@@ -128,7 +128,7 @@ public class DialogHandler {
 
     public void showLostAlertDialog(GameViewModel viewModel, GameView gameView) {
         Log.d("debug", "tried to save");
-        firebaseRepository.logResults(viewModel);
+        databaseRepository.logResults(viewModel);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Title")

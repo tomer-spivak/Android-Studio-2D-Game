@@ -21,31 +21,22 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.SetOptions;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.gameActivity.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 
 public class SignUpFragment extends Fragment {
+    DatabaseRepository repository;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
-        AuthenticationHelper authHelper = new AuthenticationHelper();
-
+        repository = new DatabaseRepository(requireContext());
         Button btn = view.findViewById(R.id.btnSignUp);
         Button btnGoogle = view.findViewById(R.id.btnGoogleSignUp);
         EditText etEmail = view.findViewById(R.id.etEmail);
@@ -143,33 +134,13 @@ public class SignUpFragment extends Fragment {
                     @Override
                     public void onActivityResult(ActivityResult result) {
                         if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                            authHelper.handleGoogleSignInResult(result.getData(), new AuthenticationHelper.GoogleSignInCallback() {
+                            repository.handleGoogleSignInResult(result.getData(),
+                                    new DatabaseRepository.GoogleSignInCallback() {
                                 @Override
                                 public void onSuccess() {
-                                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                                    FirebaseFirestore db = FirebaseFirestore.getInstance();
-                                    Map<String, Object> userData = new HashMap<>();
-                                    String displayName = user.getDisplayName();
-                                    userData.put("displayName", displayName);
-                                    db.collection("users").document(user.getUid())
-                                            .set(userData, SetOptions.merge())
-                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                @Override
-                                                public void onSuccess(Void aVoid) {
-                                                    // Now that the display name is stored both in Firebase Auth and Firestore,
-                                                    // proceed to the next activity.
-                                                    Intent intent = new Intent(getActivity(), IntermediateActivity.class);
-                                                    startActivity(intent);
-                                                }
-                                            })
-                                            .addOnFailureListener(new OnFailureListener() {
-                                                @Override
-                                                public void onFailure(@NonNull Exception e) {
-                                                    Log.d("displayName",
-                                                            Objects.requireNonNull(e
-                                                                    .getMessage()));
-                                                }
-                                            });
+                                            // proceed to the next activity.
+                                            Intent intent = new Intent(getActivity(), IntermediateActivity.class);
+                                            startActivity(intent);
                                 }
 
                                 @Override
@@ -183,73 +154,29 @@ public class SignUpFragment extends Fragment {
         );
 
         btnGoogle.setOnClickListener(v -> {
-            Intent signInIntent = authHelper.getGoogleSignInIntent(requireContext());
+            Intent signInIntent = repository.getGoogleSignInIntent(requireContext());
             googleSignInLauncher.launch(signInIntent);
         });
 
-        btn.setOnClickListener(v -> {
-            authHelper.signUpWithEmailPassword(etEmail.getText().toString(),
-                    etPassword.getText().toString(),
-                    new OnSuccessListener() {
-                        @Override
-                        public void onSuccess(Object o) {
-                            // Send welcome email
-                            String usernameEmail = "spivak.toti@gmail.com";
-                            String passwordEmail = "axzwhdzahfkamgzo";
-                            String recipient = etEmail.getText().toString();
-                            String subject = "TowerLands";
-                            String body = "Thank you for signing up!\nI hope you enjoy the game!";
-                            new EmailSender(usernameEmail, passwordEmail, recipient, subject, body).execute();
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                repository.signUpWithEmailPassword(etEmail.getText().toString(), etPassword.getText().toString(),
+                        etUsername.getText().toString(), new OnSuccessListener() {
+                            @Override
+                            public void onSuccess(Object o) {
 
-                            // Get the current Firebase user and update the profile with the display name
-                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                            if (user != null) {
-                                UserProfileChangeRequest profileUpdates =
-                                        new UserProfileChangeRequest.Builder()
-                                                .setDisplayName(etUsername.getText().toString())
-                                                .build();
-                                user.updateProfile(profileUpdates)
-                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                            @Override
-                                            public void onSuccess(Void unused) {
-                                                // Also update the Firestore "users" document with the display name
-                                                FirebaseFirestore db = FirebaseFirestore.getInstance();
-                                                Map<String, Object> userData = new HashMap<>();
-                                                userData.put("displayName", etUsername.getText().toString());
-                                                db.collection("users").document(user.getUid())
-                                                        .set(userData, SetOptions.merge())
-                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                            @Override
-                                                            public void onSuccess(Void aVoid) {
-                                                                // Now that the display name is stored both in Firebase Auth and Firestore,
-                                                                // proceed to the next activity.
-                                                                Intent intent = new Intent(getActivity(), IntermediateActivity.class);
-                                                                startActivity(intent);
-                                                            }
-                                                        })
-                                                        .addOnFailureListener(new OnFailureListener() {
-                                                            @Override
-                                                            public void onFailure(@NonNull Exception e) {
-                                                                Toast.makeText(getContext(), "Failed to update user data", Toast.LENGTH_LONG).show();
-                                                            }
-                                                        });
-                                            }
-                                        })
-                                        .addOnFailureListener(new OnFailureListener() {
-                                            @Override
-                                            public void onFailure(@NonNull Exception e) {
-                                                Toast.makeText(getContext(), "Failed to update profile", Toast.LENGTH_LONG).show();
-                                            }
-                                        });
+                                // proceed to the next activity.
+                                Intent intent = new Intent(getActivity(), IntermediateActivity.class);
+                                startActivity(intent);
                             }
-                        }
-                    },
-                    new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                    });
+                        }, new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.w("TAG", "Sign up failed", e);
+                            }
+                        });
+            }
         });
 
         return view;

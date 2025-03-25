@@ -1,6 +1,7 @@
 package tomer.spivak.androidstudio2dgame.GridView;
 
 import static java.lang.Math.PI;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Path;
@@ -22,7 +23,7 @@ public class CustomGridView extends GridView {
 
     private final float minScale = 0.8f;
 
-    private final float maxScale = 2f;
+    private final float maxScale = 4f;
 
     private final int baseCellHeight = 150;
 
@@ -48,9 +49,10 @@ public class CustomGridView extends GridView {
         float[] startCoordinates = new float[]{startX, startY};
 
         drawGridView = new DrawGridView(context);
+
         gridPathManager = new GridPathManager(numRows, numColumns, cellWidth, cellHeight, startCoordinates);
 
-        gridTransformer = new GridTransformer(startX, startY, minScale, maxScale, baseCellHeight);
+        gridTransformer = new GridTransformer(startX, startY, minScale, maxScale, (int) (baseCellHeight / maxScale * 2f));
 
         gridPathManager.calculateCellPaths();
     }
@@ -72,6 +74,7 @@ public class CustomGridView extends GridView {
         return null;
 
     }
+
     public static boolean isPointInsidePath(Path path, float x, float y) {
         PathMeasure pathMeasure = new PathMeasure(path, true);
         float length = pathMeasure.getLength();
@@ -98,6 +101,7 @@ public class CustomGridView extends GridView {
 
         return intersections % 2 == 1;
     }
+
     private static boolean rayIntersectsSegment(float px, float py, float x1, float y1, float x2, float y2) {
         if (y1 > y2) {
             float tempX = x1, tempY = y1;

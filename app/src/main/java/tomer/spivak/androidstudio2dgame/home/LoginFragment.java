@@ -30,11 +30,12 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.gameActivity.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 
 
 public class LoginFragment extends Fragment {
-
+    DatabaseRepository databaseRepository;
 
 
     @Override
@@ -42,7 +43,6 @@ public class LoginFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
 
-        AuthenticationHelper authHelper = new AuthenticationHelper();
         Button btn = view.findViewById(R.id.btnLogin);
         Button btnGoogleLogin = view.findViewById(R.id.btnGoogleLogin);
 
@@ -116,7 +116,7 @@ public class LoginFragment extends Fragment {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                authHelper.loginWithEmailAndPassword(etEmail.getText().toString(),
+                databaseRepository.loginWithEmailAndPassword(etEmail.getText().toString(),
                         etPassword.getText().toString(), new OnSuccessListener() {
                             @Override
                             public void onSuccess(Object o) {
@@ -156,7 +156,7 @@ public class LoginFragment extends Fragment {
             passwordResetDialog.setPositiveButton("Send", (dialog, which) -> {
                 String email = editTextEmail.getText().toString().trim();
                 if (!email.isEmpty()) {
-                    authHelper.forgotPassword(email, new OnSuccessListener() {
+                    databaseRepository.forgotPassword(email, new OnSuccessListener() {
                         @Override
                         public void onSuccess(Object o) {
                             Toast.makeText(getContext(), "Reset link sent to your email.",
@@ -193,8 +193,8 @@ public class LoginFragment extends Fragment {
             @Override
             public void onActivityResult(ActivityResult result) {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    authHelper.handleGoogleSignInResult(result.getData(), new AuthenticationHelper
-                            .GoogleSignInCallback() {
+                    databaseRepository.handleGoogleSignInResult(result.getData(),
+                            new DatabaseRepository.GoogleSignInCallback() {
                         @Override
                         public void onSuccess() {
                             Intent intent = new Intent(getContext(), IntermediateActivity.class);
@@ -213,7 +213,7 @@ public class LoginFragment extends Fragment {
         btnGoogleLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent signInIntent = authHelper.getGoogleSignInIntent(requireContext());
+                Intent signInIntent = databaseRepository.getGoogleSignInIntent(requireContext());
                 googleSignInLauncher.launch(signInIntent);
             }
         });

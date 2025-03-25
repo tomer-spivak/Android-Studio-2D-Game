@@ -18,17 +18,15 @@ import java.util.ArrayList;
 import tomer.spivak.androidstudio2dgame.R;
 
 public class BuildingsRecyclerViewAdapter extends
-        RecyclerView.Adapter<BuildingsRecyclerViewAdapter.BuildingViewHolder>{
+        RecyclerView.Adapter<BuildingsRecyclerViewAdapter.BuildingViewHolder> {
 
     private final Context context;
-
     private final ArrayList<String> buildingArrayList;
-
     private final OnItemClickListener listener;
-
     private View selectedBuilding;
 
-    BuildingsRecyclerViewAdapter(Context context, ArrayList<String> buildingArrayList, OnItemClickListener listener){
+    public BuildingsRecyclerViewAdapter(Context context, ArrayList<String> buildingArrayList,
+                                            OnItemClickListener listener) {
         this.context = context;
         this.buildingArrayList = buildingArrayList;
         this.listener = listener;
@@ -36,34 +34,31 @@ public class BuildingsRecyclerViewAdapter extends
 
     @NonNull
     @Override
-    public BuildingsRecyclerViewAdapter.BuildingViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public BuildingViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.recycler_view_building_item, parent, false);
-
         return new BuildingViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull BuildingsRecyclerViewAdapter.BuildingViewHolder holder, int position) {
-        String imageUrl = buildingArrayList.get(position).toLowerCase();
-        int resourceId = context.getResources().getIdentifier(imageUrl,
-                "drawable", context.getPackageName());
-        Log.d("debug", imageUrl);
+    public void onBindViewHolder(@NonNull BuildingViewHolder holder, int position) {
+        String imageName = buildingArrayList.get(position).toLowerCase();
+        int resourceId = context.getResources().getIdentifier(imageName, "drawable", context.getPackageName());
+        Log.d("debug", imageName);
         Glide.with(context)
                 .load(resourceId)
                 .placeholder(R.drawable.placeholder_building)
                 .into(holder.imageView);
 
-        String title = imageUrl.replace("0", " ");
+        // Format title: replace "0" with space, then capitalize each word.
+        String title = imageName.replace("0", " ");
         String[] words = title.split(" ");
         for (int i = 0; i < words.length; i++) {
-            String word = words[i];
-            word = word.substring(0, 1).toUpperCase() + word.substring(1);
-            words[i] = word;
+            if (words[i].length() > 0) {
+                words[i] = words[i].substring(0, 1).toUpperCase() + words[i].substring(1);
+            }
         }
         title = String.join(" ", words);
         holder.tvName.setText(title);
-
-        holder.bind(buildingArrayList.get(position), position);
     }
 
     @Override
@@ -71,10 +66,7 @@ public class BuildingsRecyclerViewAdapter extends
         return buildingArrayList.size();
     }
 
-
-
-
-    public class BuildingViewHolder extends RecyclerView.ViewHolder{
+    public class BuildingViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         ImageView imageView;
         TextView tvName;
 
@@ -82,27 +74,23 @@ public class BuildingsRecyclerViewAdapter extends
             super(itemView);
             imageView = itemView.findViewById(R.id.imageView);
             tvName = itemView.findViewById(R.id.tvName);
-
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (selectedBuilding != null) {
-                        selectedBuilding.setSelected(false);
-                    }
-                selectedBuilding = itemView;
-                itemView.setSelected(true);
-                }
-            }) ;
+            itemView.setOnClickListener(this);
         }
-        public void bind(String buildingImageURL, int position) {
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (listener != null) {
-                        listener.onBuildingRecyclerViewItemClick(buildingImageURL, position);
-                    }
-                }
-            });
+
+        @Override
+        public void onClick(View v) {
+            // Manage selected state
+            if (selectedBuilding != null) {
+                selectedBuilding.setSelected(false);
+            }
+            selectedBuilding = itemView;
+            itemView.setSelected(true);
+
+            int position = getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION && listener != null) {
+                String buildingImageURL = buildingArrayList.get(position);
+                listener.onBuildingRecyclerViewItemClick(buildingImageURL, position);
+            }
         }
     }
 }

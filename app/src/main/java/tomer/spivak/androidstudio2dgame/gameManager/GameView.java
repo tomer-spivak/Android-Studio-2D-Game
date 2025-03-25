@@ -48,6 +48,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     private Bitmap backgroundBitmap;
     private Paint paint;
     long timeTillNextRound = 0;
+    int currentRound = 0;
     Paint timerPaint = new Paint();
     Rect timerBounds = new Rect();
     int boardSize;
@@ -162,10 +163,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         updateBoard(gameState.getGrid());
         boolean timeOfDay = gameState.getTimeOfDay();
         if (timeOfDay){
+            currentRound = -1;
             timeTillNextRound = gameState.getTimeToNextRound();
             backgroundBitmap = morningBackground;
         } else {
             timeTillNextRound = -1;
+            currentRound = gameState.getCurrentRound();
             backgroundBitmap = nightBackground;
         }
         if (gameState.getGameStatus() == GameStatus.LOST){
@@ -202,8 +205,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
             gameObject.drawView(canvas);
         }
         if (timeTillNextRound > 0){
-            printTimeTillNextRound(canvas);
+            drawTimeTillNextRound(canvas);
         }
+        if (currentRound > 0){
+            drawRound(canvas);
+        }
+
     }
 
     private void drawHealthBar(GameObject gameObject, Canvas canvas) {
@@ -226,13 +233,21 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         canvas.drawRect(x, y, x + healthWidth, y + barHeight, healthPaint);
     }
 
-    private void printTimeTillNextRound(Canvas canvas) {
+    private void drawTimeTillNextRound(Canvas canvas) {
         String timeText = "Next round: " + (timeTillNextRound / 1000) + "." +
                 (timeTillNextRound % 1000) / 100 + "s";
         timerPaint.getTextBounds(timeText, 0, timeText.length(), timerBounds);
         int x = getWidth() / 2 - timerBounds.width() / 2;
         int y = 100;
         canvas.drawText(timeText, x, y, timerPaint);
+    }
+
+    private void drawRound(Canvas canvas){
+        String roundText = "current round: " + currentRound;
+        timerPaint.getTextBounds(roundText, 0, roundText.length(), timerBounds);
+        int x = getWidth() / 2 - timerBounds.width() / 2;
+        int y = 100;
+        canvas.drawText(roundText, x, y, timerPaint);
     }
 
     public void pauseGameLoop() {

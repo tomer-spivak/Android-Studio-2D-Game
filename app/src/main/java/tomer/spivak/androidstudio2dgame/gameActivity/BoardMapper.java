@@ -1,6 +1,5 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
-import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,13 +37,9 @@ public class BoardMapper {
     }
 
 
-    public void createBoard(DocumentSnapshot documentSnapshot){
-        if (documentSnapshot == null || !documentSnapshot.exists()){
-            board = initBoard();
-            return;
-        }
+    public void createBoard(Map<String, Object> data){
+
         board = new Cell[boardSize][boardSize];
-        Map<String, Object> data = documentSnapshot.getData();
 
             // Log each row and its contents in a more readable format
             for (Map.Entry<String, Object> entry : Objects.requireNonNull(data).entrySet()) {
@@ -168,22 +163,18 @@ public class BoardMapper {
 
     }
 
-    private Cell[][] initBoard() {
+    public void initBoard() {
         Cell[][] board = new Cell[boardSize][boardSize];
         for (int i = 0; i < boardSize; i++) {
             for (int j = 0; j < boardSize; j++) {
                 board[i][j] = new Cell(new Position(i, j));
             }
         }
-        return board;
+        this.board = board;
     }
 
     public Cell[][] getBoard() {
         return board;
-    }
-
-    public boolean isBoardEmpty() {
-        return isBoardEmpty;
     }
 
     public DifficultyLevel getDifficulty() {

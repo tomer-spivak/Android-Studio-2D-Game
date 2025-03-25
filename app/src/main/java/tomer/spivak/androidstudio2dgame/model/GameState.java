@@ -88,4 +88,8 @@ public class GameState {
         Log.d("time", String.valueOf(currentTimeOfGame));
         return currentTimeOfGame;
     }
+
+    public int getCurrentRound() {
+        return currentRound;
+    }
 }

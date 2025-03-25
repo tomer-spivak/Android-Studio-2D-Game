@@ -27,12 +27,10 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.gameActivity.FirebaseRepository;
+import tomer.spivak.androidstudio2dgame.gameActivity.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameCheckCallback;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
@@ -45,6 +43,9 @@ public class IntermediateActivity extends AppCompatActivity {
     Context context;
     NavigationView navigationView;
 
+    DatabaseRepository databaseRepository;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,9 +53,9 @@ public class IntermediateActivity extends AppCompatActivity {
         setContentView(R.layout.activity_intermediate);
 
 
-        init();
         context = this;
-
+        databaseRepository = new DatabaseRepository(context);
+        init();
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -67,8 +68,7 @@ public class IntermediateActivity extends AppCompatActivity {
                     replaceFragment(new LeaderboardFragment(), true);
                 }
                 else if (id == R.id.go_to_game){
-                    FirebaseRepository firebaseRepository = new FirebaseRepository(context);
-                    firebaseRepository.checkIfTheresAGame(new GameCheckCallback() {
+                    databaseRepository.checkIfTheresAGame(new GameCheckCallback() {
                         @Override
                         public void onCheckCompleted(boolean gameExists) {
                             if (gameExists) {
@@ -182,14 +182,10 @@ public class IntermediateActivity extends AppCompatActivity {
                 findViewById(R.id.header_username);
 
 
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser == null) {
-            tvUsername.setText("Guest");
-            return;
-        }
-        tvUsername.setText(currentUser.getDisplayName());
+        String displayName = databaseRepository.getDisplayName();
+        tvUsername.setText(displayName);
 
-        //tvUsername.setText();
+
     }
 
     private void initDrawerToolBar() {
