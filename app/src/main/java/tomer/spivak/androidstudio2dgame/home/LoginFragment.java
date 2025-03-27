@@ -43,6 +43,8 @@ public class LoginFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
 
+        databaseRepository = new DatabaseRepository(getContext());
+
         Button btn = view.findViewById(R.id.btnLogin);
         Button btnGoogleLogin = view.findViewById(R.id.btnGoogleLogin);
 

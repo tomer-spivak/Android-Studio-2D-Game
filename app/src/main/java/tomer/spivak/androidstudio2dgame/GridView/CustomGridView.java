@@ -21,12 +21,6 @@ public class CustomGridView extends GridView {
 
     private final float[] currentPosition = new float[]{0,0};
 
-    private final float minScale = 0.8f;
-
-    private final float maxScale = 4f;
-
-    private final int baseCellHeight = 150;
-
     private final DrawGridView drawGridView;
 
     private final GridPathManager gridPathManager;
@@ -40,8 +34,8 @@ public class CustomGridView extends GridView {
         this.numRows = boardSize;
         this.numColumns = boardSize;
 
-        int cellHeight = baseCellHeight;
-        int cellWidth = (int) (cellHeight / Math.tan(angle));
+        int baseCellHeight = 300;
+        int cellWidth = (int) (baseCellHeight / Math.tan(angle));
 
         float startX = 0;
         float startY = 0;
@@ -50,11 +44,18 @@ public class CustomGridView extends GridView {
 
         drawGridView = new DrawGridView(context);
 
-        gridPathManager = new GridPathManager(numRows, numColumns, cellWidth, cellHeight, startCoordinates);
+        gridPathManager = new GridPathManager(numRows, numColumns, cellWidth, baseCellHeight,
+                startCoordinates);
 
-        gridTransformer = new GridTransformer(startX, startY, minScale, maxScale, (int) (baseCellHeight / maxScale * 2f));
+        float minScale = 0.3f;
+        float maxScale = 1.2f;
+
+        gridTransformer = new GridTransformer(startX, startY, minScale, maxScale, baseCellHeight);
 
         gridPathManager.calculateCellPaths();
+
+        updateScale((minScale + maxScale)/2, 0, 0);
+        updatePosition(-(float) 2300 /2, -(float) 1200 /2);
     }
 
     public Point[] getSelectedCell(float x, float y) {
@@ -102,7 +103,8 @@ public class CustomGridView extends GridView {
         return intersections % 2 == 1;
     }
 
-    private static boolean rayIntersectsSegment(float px, float py, float x1, float y1, float x2, float y2) {
+    private static boolean rayIntersectsSegment(float px, float py, float x1, float y1,
+                                                float x2, float y2) {
         if (y1 > y2) {
             float tempX = x1, tempY = y1;
             x1 = x2; y1 = y2;
@@ -121,7 +123,6 @@ public class CustomGridView extends GridView {
     }
 
     public void updatePosition(float deltaX, float deltaY) {
-
         int cellWidth = gridTransformer.getCellWidth();
         int cellHeight = gridTransformer.getCellHeight();
         int pxWidth = 2300;
@@ -134,15 +135,12 @@ public class CustomGridView extends GridView {
         bounds[1][0] = cellHeight * 2;
         bounds[1][1] = cellHeight * numColumns - pxHeight + cellHeight * 3;
 
-
         if (deltaX > 0 && currentPosition[0] + deltaX > bounds[0][0]){
             deltaX = 0;
         }
 
-
         if (deltaX < 0 && currentPosition[0] + deltaX < bounds[0][1])
             deltaX = 0;
-
 
         if (deltaY > 0 && currentPosition[1] + deltaY > bounds[1][0]){
             deltaY = 0;
@@ -150,7 +148,6 @@ public class CustomGridView extends GridView {
 
         if(deltaY < 0 && currentPosition[1] + deltaY < -bounds[1][1])
             deltaY = 0;
-
 
         if (Math.abs(deltaX) < 100 && Math.abs(deltaY) < 100){
             currentPosition[0] += deltaX;
@@ -190,18 +187,13 @@ public class CustomGridView extends GridView {
             for (int i = 0; i < numRows; i++) {
                 for (int j = 0; j < numColumns; j++) {
                     drawGridView.draw(canvas, gridPathManager.getCellCenters()[i][j],
-                            gridTransformer.getScale() /maxScale, cellStates[i][j]);
+                            gridTransformer.getScale(), cellStates[i][j]);
                 }
             }
-
-
         }
-
     }
 
     public void setCellsState(CellState[][] cellStates) {
         this.cellStates = cellStates;
     }
 }
-
-

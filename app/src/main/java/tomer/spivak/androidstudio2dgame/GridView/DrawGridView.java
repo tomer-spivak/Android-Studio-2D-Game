@@ -16,8 +16,10 @@ public class DrawGridView {
 
     public DrawGridView(Context context) {
         this.grasses = new GridBitmap[CellState.values().length];
-        grasses[0] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_default), context);
-        grasses[1] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_hurt), context);
+        grasses[0] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_default),
+                context);
+        grasses[1] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_hurt),
+                context);
 
         this.context = context;
 
@@ -33,10 +35,11 @@ public class DrawGridView {
         else
             bitmap = grasses[cellState.ordinal()];
         bitmap.updateScale(scale);
+        //Log.d("bitmap", "w: " + bitmap.getWidth() + " h: " + bitmap.getHeight());
+
         float topLeftGrassX = cellCenter.x - bitmap.getWidth() / 2;
         float topLeftGrassY = cellCenter.y - bitmap.getHeight() / 2;
         canvas.drawBitmap(bitmap.getBitmap(), topLeftGrassX, topLeftGrassY, null);
-
     }
 
 
