@@ -23,12 +23,12 @@ import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
-public class DialogHandler {
+public class DialogManager {
     Context context;
     DatabaseRepository databaseRepository;
 
 
-    public DialogHandler(Context context, DatabaseRepository databaseRepository) {
+    public DialogManager(Context context, DatabaseRepository databaseRepository) {
         this.context = context;
         this.databaseRepository = databaseRepository;
     }

@@ -1,9 +1,12 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
 
+import static tomer.spivak.androidstudio2dgame.home.EmailSender.sendEmail;
+
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -33,7 +36,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.home.EmailSender;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardCallback;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;
@@ -319,11 +321,10 @@ public class DatabaseRepository {
         return authHelper.getGoogleSignInIntent(context);
     }
 
-    public void signUpWithEmailPassword(String string, String string1, String username, OnSuccessListener onSuccessListener,
-                                        OnFailureListener onFailureListener) {
+    public void signUpWithEmailPassword(String string, String string1, String username, OnSuccessListener onSuccessListener, Context context) {
         if (authHelper == null)
             authHelper = new AuthenticationHelper();
-        authHelper.signUpWithEmailPassword(string, string1, username, onSuccessListener, onFailureListener);
+        authHelper.signUpWithEmailPassword(string, string1, username, onSuccessListener, context);
     }
 
     public void loginWithEmailAndPassword(String string, String string1, OnSuccessListener onSuccessListener,
@@ -413,18 +414,12 @@ public class DatabaseRepository {
         }
 
         public void signUpWithEmailPassword(String email, String password, String username, OnSuccessListener
-                onSuccessListener, OnFailureListener onFailureListener){
+                onSuccessListener, Context context){
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnSuccessListener(new OnSuccessListener() {
                         @Override
                         public void onSuccess(Object o) {
-
-                            // Send welcome email
-                            final String usernameEmail = "spivak.toti@gmail.com";
-                            final String passwordEmail = "axzwhdzahfkamgzo";
-                            final String subject = "TowerLands";
-                            final String body = "Thank you for signing up!\nI hope you enjoy the game!";
-                            new EmailSender(usernameEmail, passwordEmail, email, subject, body).execute();
+                            sendEmail(email, context);
 
                             // Get the current Firebase user and update the profile with the display name
                             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -450,7 +445,15 @@ public class DatabaseRepository {
                         }
 
             })
-                    .addOnFailureListener(onFailureListener);
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
         }
+
+
+
     }
 }

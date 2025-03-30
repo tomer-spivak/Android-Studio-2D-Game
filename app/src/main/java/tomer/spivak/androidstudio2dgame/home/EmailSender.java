@@ -1,75 +1,82 @@
 package tomer.spivak.androidstudio2dgame.home;
 
-import android.os.AsyncTask;
+import android.content.Context;
 import android.util.Log;
 
-import java.util.Properties;
+import com.android.volley.NetworkResponse;
+import com.android.volley.ParseError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 
-import javax.mail.Authenticator;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-public class EmailSender extends AsyncTask<Void, Void, Boolean> {
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
+public class EmailSender {
 
-    private final String username; // Sender's email
-    private final String password; // Sender's password
-    private final String recipient; // Recipient's email
-    private final String subject;   // Email subject
-    private final String body;     // Email body
 
-    public EmailSender(String username, String password, String recipient, String subject, String body) {
-        this.username = username;
-        this.password = password;
-        this.recipient = recipient;
-        this.subject = subject;
-        this.body = body;
-    }
+    public static void sendEmail(String toEmail, Context context) {
+        Log.d("Email", "wtf");
+        String url = "https://api.sendgrid.com/v3/mail/send";
+        String apiKey = "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"; // Replace with your API key
 
-    @Override
-    protected Boolean doInBackground(Void... voids) {
+        // Construct the email data in JSON format
+        JSONObject emailData = new JSONObject();
         try {
-            // SMTP server properties
-            Properties props = new Properties();
-            props.put("mail.smtp.auth", "true");
-            props.put("mail.smtp.starttls.enable", "true");
-            props.put("mail.smtp.host", "smtp.gmail.com"); // SMTP host for Gmail
-            props.put("mail.smtp.port", "587"); // Port for TLS
+            emailData.put("personalizations", new JSONArray()
+                    .put(new JSONObject().put("to", new JSONArray()
+                            .put(new JSONObject().put("email", toEmail))
+                    )));
+            emailData.put("from", new JSONObject().put("email", "spivak.toti@gmail.com"));
+            emailData.put("subject", "Welcome to Our App!");
+            emailData.put("content", new JSONArray()
+                    .put(new JSONObject().put("type", "text/plain")
+                            .put("value", "Hello! Welcome to our app. We're excited to have you!")));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
-            // Create a session with authentication
-            Session session = Session.getInstance(props, new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(username, password);
+        // Create and send the request using Volley
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, emailData,
+                response -> Log.d("Email", "Email sent successfully"),
+                error -> Log.e("Email", "Failed to send email", error)) {
+
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Authorization", "Bearer " + apiKey);
+                headers.put("Content-Type", "application/json");
+                return headers;
+            }
+
+            @Override
+            protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
+                try {
+                    // Convert response data to String
+                    String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers, "utf-8"));
+                    // If the response is empty and the status code is 202, consider it a success.
+                    if (jsonString.isEmpty() && response.statusCode == 202) {
+                        Log.d("Email", "Empty response received, but status is 202 Accepted.");
+                        // Return an empty JSONObject to satisfy the response.
+                        return Response.success(new JSONObject(), HttpHeaderParser.parseCacheHeaders(response));
+                    }
+                    // Otherwise, try to parse the response normally.
+                    return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+                } catch (UnsupportedEncodingException | JSONException e) {
+                    return Response.error(new ParseError(e));
                 }
-            });
+            }
+        };
 
-            // Create a MimeMessage
-            Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(username));
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
-            message.setSubject(subject);
-            message.setText(body);
-
-            // Send the email
-            Transport.send(message);
-            return true; // Email sent successfully
-        } catch (MessagingException e) {
-            Log.e("EmailSender", "Error sending email", e);
-            return false; // Email failed to send
-        }
-    }
-
-    @Override
-    protected void onPostExecute(Boolean success) {
-        if (success) {
-            Log.d("EmailSender", "Email sent successfully!");
-        } else {
-            Log.e("EmailSender", "Failed to send email.");
-        }
+        // Add the request to the Volley request queue
+        RequestQueue queue = Volley.newRequestQueue(context);
+        queue.add(request);
     }
 }

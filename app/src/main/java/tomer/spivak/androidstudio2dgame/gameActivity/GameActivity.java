@@ -70,7 +70,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
     boolean gameIsOnGoing = false;
 
-    DialogHandler dialogHandler;
+    DialogManager dialogManager;
 
 
 
@@ -125,7 +125,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             @Override
             public void onClick(View v) {
                 gameView.pauseGameLoop();
-                dialogHandler.showPauseAlertDialog(gameView, viewModel);
+                dialogManager.showPauseAlertDialog(gameView, viewModel);
             }
         });
 
@@ -133,7 +133,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
                 @Override
                 public void handleOnBackPressed() {
-                    dialogHandler.showExitAlertDialog(viewModel);
+                    dialogManager.showExitAlertDialog(viewModel);
                 }
             };
             getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
@@ -152,14 +152,14 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     protected void onResume() {
         super.onResume();
         if (gameView != null) {
-            gameView.resumeGameLoop(); // Implement this method to start the thread
+            gameView.resumeGameLoop();
         }
     }
 
     @Override
     protected void onPause() {
         if (gameView != null) {
-            gameView.pauseGameLoop(); // Implement this method to stop the thread
+            gameView.pauseGameLoop();
         }
         super.onPause();
     }
@@ -186,7 +186,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     protected void onDestroy() {
         super.onDestroy();
         if (gameView != null) {
-            gameView.stopGameLoop(); // Ensure complete shutdown of the thread
+            gameView.stopGameLoop();
         }
         // Release SoundEffects resources
         if (soundEffects != null) {
@@ -215,7 +215,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         gameLayout.addView(gameView);
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
         databaseRepository = new DatabaseRepository(context);
-        dialogHandler = new DialogHandler(context, databaseRepository);
+        dialogManager = new DialogManager(context, databaseRepository);
 
         btnStartGame = findViewById(R.id.btnStartGame);
         btnSkipRound = findViewById(R.id.btnSkipRound);
@@ -229,7 +229,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         boolean isContinue = getIntent().getBooleanExtra("isContinue", false);
         BoardMapper boardMapper;
         final DifficultyLevel[] difficulty = new DifficultyLevel[1];
-        AlertDialog loadingDialog = dialogHandler.showLoadingBoardAlertDialog();
+        AlertDialog loadingDialog = dialogManager.showLoadingBoardAlertDialog();
         if (!isContinue){
             // Create a new game – there is no board in the database
             difficulty[0] = DifficultyLevel.valueOf(difficultyName);
@@ -303,7 +303,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 if (gameState.getGameStatus() == GameStatus.LOST) {
                     Toast.makeText(context, "You Lost", Toast.LENGTH_SHORT).show();
                     databaseRepository.removeBoard();
-                    dialogHandler.showLostAlertDialog(viewModel, gameView);
+                    dialogManager.showLostAlertDialog(viewModel, gameView);
                 }
                 if (gameState.getTimeOfDay()) {
                     if (btnChooseBuildingsCardView.getVisibility() == View.GONE)

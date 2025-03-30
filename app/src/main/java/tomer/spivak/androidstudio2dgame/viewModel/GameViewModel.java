@@ -132,7 +132,7 @@ public class GameViewModel extends ViewModel {
                     startNight(current);
                 }
             }
-            gameState.postValue(current); // Use postValue for background thread
+            gameState.postValue(current);
         }
     }
 

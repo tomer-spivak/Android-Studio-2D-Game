@@ -9,7 +9,6 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.text.Editable;
@@ -22,7 +21,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import tomer.spivak.androidstudio2dgame.R;
@@ -170,12 +168,7 @@ public class SignUpFragment extends Fragment {
                                 Intent intent = new Intent(getActivity(), IntermediateActivity.class);
                                 startActivity(intent);
                             }
-                        }, new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.w("TAG", "Sign up failed", e);
-                            }
-                        });
+                        }, getContext());
             }
         });
 

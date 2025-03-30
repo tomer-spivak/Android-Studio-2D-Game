@@ -1,19 +1,20 @@
 package tomer.spivak.androidstudio2dgame.GridView;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 
-public class TouchHandler {
+import androidx.annotation.NonNull;
+
+public class TouchManager {
     private final GestureDetector gestureDetector;
     private final ScaleGestureDetector scaleGestureDetector;
-    private final TouchHandlerListener listener;
+    private final TouchListener listener;
     private boolean isScrolling = true;
     private float lastTouchX, lastTouchY;
 
-    public TouchHandler(Context context, TouchHandlerListener listener) {
+    public TouchManager(Context context, TouchListener listener) {
         this.listener = listener;
         scaleGestureDetector = new ScaleGestureDetector(context, new ScaleListener());
         gestureDetector = new GestureDetector(context, new GestureListener());
@@ -51,7 +52,7 @@ public class TouchHandler {
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
-        public boolean onDown(MotionEvent e) {
+        public boolean onDown(@NonNull MotionEvent e) {
             if (!isScrolling) return false;
             if (Math.abs(lastTouchX - e.getX()) < 100 && Math.abs(lastTouchY - e.getY()) < 100){
                 lastTouchX = e.getX();
@@ -61,7 +62,7 @@ public class TouchHandler {
         }
 
         @Override
-        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        public boolean onScroll(MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
             if (!isScrolling) return false;
             if (e2.getPointerCount() > 1) return false;
 
@@ -78,7 +79,7 @@ public class TouchHandler {
             return true;
         }
         @Override
-        public boolean onSingleTapUp(MotionEvent e) {
+        public boolean onSingleTapUp(@NonNull MotionEvent e) {
             // This method is called when a single tap is detected
             if (isScrolling) {
                 // Call a new method in the listener to handle box click
@@ -99,7 +100,7 @@ public class TouchHandler {
         }
     }
 
-    public interface TouchHandlerListener {
+    public interface TouchListener {
         void onScale(float scaleFactor, float focusX, float focusY);
         void onScroll(float deltaX, float deltaY);
         void onBoxClick(float x, float y); // New method for handling box clicks

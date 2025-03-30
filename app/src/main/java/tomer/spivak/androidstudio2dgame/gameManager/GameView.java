@@ -21,7 +21,7 @@ import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
-import tomer.spivak.androidstudio2dgame.GridView.TouchHandler;
+import tomer.spivak.androidstudio2dgame.GridView.TouchManager;
 import tomer.spivak.androidstudio2dgame.music.MusicService;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
@@ -35,11 +35,11 @@ import android.os.Handler;
 import android.os.Looper;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback,
-        TouchHandler.TouchHandlerListener {
+        TouchManager.TouchListener {
 
     private final GameLoop gameLoop;
     private final CustomGridView gridView;
-    private final TouchHandler touchHandler;
+    private final TouchManager touchManager;
     private final SoundEffects soundEffects;
     GameObjectManager gameObjectManager;
     private Float scale = 1F;
@@ -83,7 +83,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
         gameLoop = new GameLoop(this, surfaceHolder, listener);
-        touchHandler = new TouchHandler(context, this);
+        touchManager = new TouchManager(context, this);
         this.boardSize = boardSize;
         gridView = new CustomGridView(context, boardSize);
         this.listener = listener;
@@ -123,7 +123,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         performClick();
-        return touchHandler.onTouchEvent(event) || super.onTouchEvent(event);
+        return touchManager.onTouchEvent(event) || super.onTouchEvent(event);
     }
 
     @Override
