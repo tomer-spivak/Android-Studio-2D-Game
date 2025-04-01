@@ -24,16 +24,16 @@ public class GameBuilding extends GameObject {
     }
 
     private void setScaledSize() {
-        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 0.5), context.getResources().getDisplayMetrics());
-        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 0.5), context.getResources().getDisplayMetrics());
+        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 1.2), context.getResources().getDisplayMetrics());
+        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 1.2), context.getResources().getDisplayMetrics());
 
     }
     @Override
     public void setScale(float scale) {
         this.scale = scale;
 
-        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 0.5), context.getResources().getDisplayMetrics());
-        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 0.5), context.getResources().getDisplayMetrics());
+        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 1.2), context.getResources().getDisplayMetrics());
+        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 1.2), context.getResources().getDisplayMetrics());
 
     }
 

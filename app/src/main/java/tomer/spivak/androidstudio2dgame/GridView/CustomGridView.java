@@ -44,17 +44,16 @@ public class CustomGridView extends GridView {
 
         drawGridView = new DrawGridView(context);
 
-        gridPathManager = new GridPathManager(numRows, numColumns, cellWidth, baseCellHeight,
-                startCoordinates);
+        gridPathManager = new GridPathManager(numRows, numColumns, cellWidth, baseCellHeight, startCoordinates);
 
-        float minScale = 0.3f;
+        float minScale = 0.4f;
         float maxScale = 1.2f;
 
         gridTransformer = new GridTransformer(startX, startY, minScale, maxScale, baseCellHeight);
 
         gridPathManager.calculateCellPaths();
 
-        updateScale((minScale + maxScale)/2, 0, 0);
+        //updateScale((minScale + maxScale)/2, 0, 0);
         updatePosition(-(float) 2300 /2, -(float) 1200 /2);
     }
 

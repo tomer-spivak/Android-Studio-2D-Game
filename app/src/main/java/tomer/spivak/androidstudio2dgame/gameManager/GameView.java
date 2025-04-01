@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchManager;
+import tomer.spivak.androidstudio2dgame.gameObjects.GameBuilding;
 import tomer.spivak.androidstudio2dgame.music.MusicService;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
@@ -221,7 +222,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         int barWidth = (int) (80 * scale);
         int barHeight = (int) (15 * scale);
         int x = pos.x - barWidth / 2;
-        int y = (int) (pos.y - 90 * scale);
+        int yOffset;
+        if (gameObject instanceof GameBuilding){
+            yOffset = 290;
+        } else {
+            yOffset = 170;
+        }
+        int y = (int) (pos.y - yOffset * scale);
         Paint bgPaint = new Paint();
         bgPaint.setColor(Color.GRAY);
         bgPaint.setStyle(Paint.Style.FILL);

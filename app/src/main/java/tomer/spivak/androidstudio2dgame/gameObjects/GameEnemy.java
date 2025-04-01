@@ -23,9 +23,9 @@ public class GameEnemy extends GameObject{
     }
     private void setScaledSize(){
         Log.d("debug", Arrays.toString(originalSize));
-        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 0.6),
+        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 1.2),
                 context.getResources().getDisplayMetrics());
-        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 0.6),
+        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 1.2),
                 context.getResources().getDisplayMetrics());
 
     }
@@ -35,9 +35,9 @@ public class GameEnemy extends GameObject{
         this.scale = scale;
 
         Log.d("debug", "scale: " + scale);
-        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 0.6),
+        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 1.2),
                 context.getResources().getDisplayMetrics());
-        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 0.6),
+        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 1.2),
                 context.getResources().getDisplayMetrics());
 
     }

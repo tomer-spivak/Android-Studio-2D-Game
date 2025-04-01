@@ -26,8 +26,6 @@ public abstract class GameObject {
     protected Position pos;
     // Optional: if you want a caption
 
-
-
     public GameObject(Context context, Point point, String name, float scale, Position pos)  {
         this.context = context;
         this.imagePoint = point;
@@ -38,7 +36,6 @@ public abstract class GameObject {
         this.pos = pos;
     }
 
-
     //creates the view of the Game Object
     protected void createView() {
         Log.d("grass", "creating new game object: " + imageResourceString);
@@ -46,7 +43,6 @@ public abstract class GameObject {
         imageView.setImageResource(context.getResources().getIdentifier(imageResourceString,
                 "drawable", context.getPackageName()));
         this.view = imageView;
-
 
         if (view.getDrawable() == null) {
             return;
@@ -64,7 +60,6 @@ public abstract class GameObject {
                 context.getResources().getDisplayMetrics());
         scaledSize[1] = (int) pxToDp(originalHeight * scale * 1,
                         context.getResources().getDisplayMetrics());
-
     }
 
     public void drawView(Canvas canvas) {
@@ -73,6 +68,7 @@ public abstract class GameObject {
         int topLeftY = imagePoint.y - scaledSize[1]/2;
         canvas.drawBitmap(scaledBitmap, topLeftX, topLeftY, null);
     }
+
     protected Bitmap createScaledBitmap() {
         return Bitmap.createScaledBitmap(
                 drawableToBitmap(drawable),
@@ -80,9 +76,6 @@ public abstract class GameObject {
                 scaledSize[1],
                 true
         );
-    }
-    public void update(){
-
     }
 
     protected Bitmap drawableToBitmap(Drawable drawable) {
@@ -109,8 +102,6 @@ public abstract class GameObject {
         this.scaledSize[1] = (int) pxToDp(originalSize[1] * scale * 1,
                 context.getResources().getDisplayMetrics());
     }
-
-
 
     public Point getImagePoint() {
         return imagePoint;

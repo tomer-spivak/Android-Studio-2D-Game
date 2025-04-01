@@ -53,7 +53,7 @@ public class BuildingsRecyclerViewAdapter extends
         String title = imageName.replace("0", " ");
         String[] words = title.split(" ");
         for (int i = 0; i < words.length; i++) {
-            if (words[i].length() > 0) {
+            if (!words[i].isEmpty()) {
                 words[i] = words[i].substring(0, 1).toUpperCase() + words[i].substring(1);
             }
         }
@@ -73,7 +73,7 @@ public class BuildingsRecyclerViewAdapter extends
         public BuildingViewHolder(@NonNull View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.imageView);
-            tvName = itemView.findViewById(R.id.tvName);
+            tvName = itemView.findViewById(R.id.tvTitle);
             itemView.setOnClickListener(this);
         }
 
