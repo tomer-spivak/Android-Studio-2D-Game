@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -101,11 +102,24 @@ public class DialogManager {
         databaseRepository.logResults(viewModel);
     }
 
-    public void showPauseAlertDialog(GameView gameView, GameViewModel viewModel) {
+    public void showPauseAlertDialog(GameView gameView, GameViewModel viewModel,
+                                     float volume) {
+        // Inflate the custom dialog layout
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View dialogView = inflater.inflate(R.layout.dialog_pause, null);
+        // Get reference to the SeekBar and set an initial volume if needed
+        SeekBar volumeSeekBar = dialogView.findViewById(R.id.volumeSeekBar);
+        volumeSeekBar.setProgress((int) volume); // currentVolumeLevel should be defined based on your app logic
+
+
+        Log.d("music", "volume: " + volume);
+        // Build and show the AlertDialog with the custom view
         new AlertDialog.Builder(context)
                 .setTitle("Game Paused")
+                .setView(dialogView)
                 .setPositiveButton("Resume", (dialog, which) -> {
-                    gameView.resumeGameLoop();
+                    Log.d("music", "v:" + volumeSeekBar.getProgress());
+                    gameView.resumeGameLoop(volumeSeekBar.getProgress());
                     dialog.dismiss();
                 })
                 .setNegativeButton("Exit", (dialog, which) -> {
@@ -147,7 +161,7 @@ public class DialogManager {
                         System.exit(0);
                     }
                 });
-
+        builder.setCancelable(false);
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }

@@ -284,13 +284,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         gameLoop.stopLoop();
     }
 
-    public void resumeGameLoop() {
+    public void resumeGameLoop(float volume) {
         gameObjectManager.setCenterCells(gridView.getCenterCells());
         gameObjectManager.updateGameObjectsPositions();
         if (musicService != null) {
+            Log.d("music", "resume: " + volume);
             musicService.resumeMusic();
+            musicService.setVolume(volume);
+            Log.d("music", "resume: " + musicService.getCurrentVolumeLevel());
         }
         soundEffects.resumeSoundEffects();
         gameLoop.startLoop();
+    }
+
+    public MusicService getMusicService() {
+        return musicService;
     }
 }

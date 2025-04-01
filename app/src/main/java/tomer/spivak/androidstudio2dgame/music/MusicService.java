@@ -16,11 +16,21 @@ public class MusicService extends Service {
             R.raw.invincible, R.raw.sky_high, R.raw.spectre};
     private final Random random = new Random();
     private int lastSongIndex = -1;
-    final float Volume = 0.07f;
+    float volume = 0.07f;
 
     // Binder given to clients
     private final IBinder binder = new LocalBinder();
 
+    public int getCurrentVolumeLevel() {
+        return (int) (volume * 100);
+    }
+
+    public void setVolume(float progress) {
+        if (mediaPlayer != null) {
+            volume = progress / 100;
+            mediaPlayer.setVolume(volume, volume);
+        }
+    }
 
 
     // Class used for the client Binder.
@@ -48,7 +58,7 @@ public class MusicService extends Service {
         lastSongIndex = newSongIndex;
         mediaPlayer = MediaPlayer.create(this, music[newSongIndex]);
         mediaPlayer.start();
-        mediaPlayer.setVolume(Volume, Volume);
+        mediaPlayer.setVolume(volume, volume);
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
@@ -93,6 +103,8 @@ public class MusicService extends Service {
             try {
                 if (!mediaPlayer.isPlaying()) {
                     mediaPlayer.start();
+                    mediaPlayer.setVolume(volume, volume);
+
                 }
             } catch (IllegalStateException e) {
                 // Log the error and reinitialize or handle the mediaPlayer state appropriately.

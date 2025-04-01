@@ -124,8 +124,10 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         btnPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                float volume = gameView.getMusicService().getCurrentVolumeLevel();
+                Log.d("music", "volume: " + volume);
                 gameView.pauseGameLoop();
-                dialogManager.showPauseAlertDialog(gameView, viewModel);
+                dialogManager.showPauseAlertDialog(gameView, viewModel, volume);
             }
         });
 
@@ -152,7 +154,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     protected void onResume() {
         super.onResume();
         if (gameView != null) {
-            gameView.resumeGameLoop();
+            gameView.resumeGameLoop(0.07f);
         }
     }
 
