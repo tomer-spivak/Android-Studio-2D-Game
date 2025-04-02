@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
@@ -146,6 +147,35 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         // Observe sound events from the ViewModel
     }
 
+    private void scheduleNotification(Context context, int hour) {
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, NotificationReceiver.class);
+
+        // Use a unique request code for each alarm (e.g., combining hour and minute)
+        int requestCode = hour * 100;
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        // Set up the calendar for the target time
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+
+        // If the time has already passed today, schedule for tomorrow
+        if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+
+        // Set an exact alarm
+        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+    }
+
+
     private boolean canStartGame() {
         return viewModel.isNotEmptyBuildings();
     }
@@ -168,19 +198,10 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
     @Override
     protected void onStop() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(this, NotificationReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        scheduleNotification(this, 10);  // 10:00 AM
+        scheduleNotification(this, 16);  // 4:00 PM
+        scheduleNotification(this, 22);  // 10:00 PM
 
-        long triggerTime = System.currentTimeMillis() + 4 * 1000; // 1 minute later
-        Log.d("AlarmManager", "Setting alarm for 4 seconds from now");
-        if (alarmManager != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                Log.d("AlarmManager", "Setting alarm for 4 seconds from right now");
-                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
-            }
-
-        }
         super.onStop();
     }
 

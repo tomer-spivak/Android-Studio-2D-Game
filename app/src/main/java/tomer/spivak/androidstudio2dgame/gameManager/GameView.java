@@ -107,6 +107,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         // Start and bind the MusicService
         musicIntent = new Intent(getContext(), MusicService.class);
         context.startService(musicIntent);
+
         Log.d("music", "started");
         context.bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }

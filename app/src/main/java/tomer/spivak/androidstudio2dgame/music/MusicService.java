@@ -2,6 +2,7 @@ package tomer.spivak.androidstudio2dgame.music;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
@@ -29,6 +30,12 @@ public class MusicService extends Service {
         if (mediaPlayer != null) {
             volume = progress / 100;
             mediaPlayer.setVolume(volume, volume);
+
+            SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putFloat("volume", volume);
+            editor.apply(); // or editor.commit() if you need synchronous saving
+
         }
     }
 
@@ -43,6 +50,11 @@ public class MusicService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        float volume = prefs.getFloat("volume", 0.07f); // 0.5f is the default value if not set
+        if (mediaPlayer != null) {
+            mediaPlayer.setVolume(volume, volume);
+        }
         playRandomSong(); // Start with a random song
         Log.d("music", "MusicService onCreate");
     }

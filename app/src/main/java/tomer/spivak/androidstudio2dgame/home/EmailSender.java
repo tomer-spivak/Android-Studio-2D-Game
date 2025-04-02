@@ -25,7 +25,7 @@ public class EmailSender {
     public static void sendEmail(String toEmail, Context context) {
         Log.d("Email", "wtf");
         String url = "https://api.sendgrid.com/v3/mail/send";
-        String apiKey = "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"; // Replace with your API key
+        String apiKey = "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";
 
         // Construct the email data in JSON format
         JSONObject emailData = new JSONObject();
