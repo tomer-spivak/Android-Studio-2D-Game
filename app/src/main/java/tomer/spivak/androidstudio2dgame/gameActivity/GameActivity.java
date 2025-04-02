@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 
+import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
+import tomer.spivak.androidstudio2dgame.helper.DialogManager;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.music.NotificationReceiver;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;

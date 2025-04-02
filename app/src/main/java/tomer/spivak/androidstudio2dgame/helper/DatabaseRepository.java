@@ -1,15 +1,18 @@
-package tomer.spivak.androidstudio2dgame.gameActivity;
+package tomer.spivak.androidstudio2dgame.helper;
 
 
 import static tomer.spivak.androidstudio2dgame.home.EmailSender.sendEmail;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -27,6 +30,9 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,6 +42,9 @@ import java.util.Map;
 import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.gameActivity.BoardMapper;
+import tomer.spivak.androidstudio2dgame.gameActivity.GameCheckCallback;
+import tomer.spivak.androidstudio2dgame.gameActivity.OnBoardLoadedListener;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardCallback;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;
@@ -46,11 +55,17 @@ public class DatabaseRepository {
     private final FirebaseFirestore db;
     private final FirebaseUser user;
     AuthenticationHelper authHelper;
+    FirebaseStorage storage;
+    Context context;
+    StorageReference storageRef;
+
 
     public DatabaseRepository(Context context){
-
         FirebaseApp.initializeApp(context);
+        this.context = context;
         db = FirebaseFirestore.getInstance();
+        storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReference();
         user = FirebaseAuth.getInstance().getCurrentUser();
     }
 
@@ -180,7 +195,6 @@ public class DatabaseRepository {
         listener.onBoardLoaded(board);
     }
 
-
     public void checkIfTheresAGame(GameCheckCallback callback) {
         if (user == null) {
             callback.onCheckCompleted(false);
@@ -298,7 +312,6 @@ public class DatabaseRepository {
                 });
     }
 
-
     public String getDisplayName() {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -306,8 +319,6 @@ public class DatabaseRepository {
         }
         return currentUser.getDisplayName();
     }
-
-
 
     public void handleGoogleSignInResult(Intent data, GoogleSignInCallback googleSignInCallback) {
         if (authHelper == null)
@@ -321,10 +332,10 @@ public class DatabaseRepository {
         return authHelper.getGoogleSignInIntent(context);
     }
 
-    public void signUpWithEmailPassword(String string, String string1, String username, OnSuccessListener onSuccessListener, Context context) {
+    public void signUpWithEmailPassword(String string, String string1, String username, OnSuccessListener onSuccessListener, Context context, Uri uri) {
         if (authHelper == null)
             authHelper = new AuthenticationHelper();
-        authHelper.signUpWithEmailPassword(string, string1, username, onSuccessListener, context);
+        authHelper.signUpWithEmailPassword(string, string1, username, onSuccessListener, context, uri);
     }
 
     public void loginWithEmailAndPassword(String string, String string1, OnSuccessListener onSuccessListener,
@@ -340,12 +351,60 @@ public class DatabaseRepository {
         authHelper.forgotPassword(email, onSuccessListener, onFailureListener);
     }
 
+    public void uploadImage(Uri imageUri, String username, OnSuccessListener onSuccessListener){
+
+        storageRef = storageRef.child("profileImages/" + username + ".jpg");
+
+        storageRef.putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        Toast.makeText(context, "image uploaded: " + taskSnapshot.toString(), Toast.LENGTH_LONG).show();
+                        storageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                Log.d("image", String.valueOf(uri));
+                                onSuccessListener.onSuccess(null);
+                            }
+                        });
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d("image", String.valueOf(user.getDisplayName()));
+                Toast.makeText(context, "failed to upload image: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        })
+        ;
+    }
+
+    public void fetchAndSetImage(ImageView imageView, Context intermiditaecontext){
+        storageRef = storageRef.child("profileImages/" + user.getDisplayName() + ".jpg");
+        Log.d("image", String.valueOf(user.getDisplayName()));
+        storageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                Toast.makeText(intermiditaecontext, "image fetched", Toast.LENGTH_LONG).show();
+                Glide.with(intermiditaecontext)
+                        .load(uri)
+                        .into(imageView);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(intermiditaecontext, "image failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+
+                fetchAndSetImage(imageView, intermiditaecontext);
+            }
+        });
+
+    }
+
     public interface GoogleSignInCallback {
         void onSuccess();
         void onFailure(Exception e);
     }
 
-    private static class AuthenticationHelper {
+    private class AuthenticationHelper {
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
         public void loginWithEmailAndPassword(String email, String password,
@@ -360,9 +419,6 @@ public class DatabaseRepository {
                     .addOnSuccessListener(onSuccessListener)
                     .addOnFailureListener(onFailureListener);
         }
-
-
-
 
         public Intent getGoogleSignInIntent(Context context) {
             GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -385,6 +441,7 @@ public class DatabaseRepository {
                 callback.onFailure(e);
             }
         }
+
         private void firebaseAuthWithGoogle(GoogleSignInAccount acct,
                                             final GoogleSignInCallback callback) {
             AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
@@ -414,7 +471,7 @@ public class DatabaseRepository {
         }
 
         public void signUpWithEmailPassword(String email, String password, String username, OnSuccessListener
-                onSuccessListener, Context context){
+                onSuccessListener, Context context, Uri uri){
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnSuccessListener(new OnSuccessListener() {
                         @Override
@@ -438,7 +495,12 @@ public class DatabaseRepository {
                                                 userData.put("displayName", username);
                                                 db.collection("users").document(user.getUid())
                                                         .set(userData, SetOptions.merge())
-                                                        .addOnSuccessListener(onSuccessListener);
+                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                            @Override
+                                                            public void onSuccess(Void unused) {
+                                                                uploadImage(uri, username, onSuccessListener);
+                                                            }
+                                                        });
                                             }
                                         });
                             }

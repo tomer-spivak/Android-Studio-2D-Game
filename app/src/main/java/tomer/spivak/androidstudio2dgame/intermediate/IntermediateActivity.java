@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.window.OnBackInvokedCallback;
 
@@ -30,7 +31,7 @@ import com.google.android.material.navigation.NavigationView;
 
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.gameActivity.DatabaseRepository;
+import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameCheckCallback;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
@@ -166,6 +167,8 @@ public class IntermediateActivity extends AppCompatActivity {
             }
         }
 
+
+
     }
 
 
@@ -180,10 +183,12 @@ public class IntermediateActivity extends AppCompatActivity {
     private void initHeader() {
         TextView tvUsername = navigationView.getHeaderView(0).
                 findViewById(R.id.header_username);
-
+        ImageView ivProfile = navigationView.getHeaderView(0).findViewById(R.id.header_image);
 
         String displayName = databaseRepository.getDisplayName();
         tvUsername.setText(displayName);
+
+        databaseRepository.fetchAndSetImage(ivProfile, context);
 
 
     }

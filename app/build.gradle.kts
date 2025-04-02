@@ -66,6 +66,8 @@ dependencies {
 
     implementation (libs.recyclerview)
 
+    implementation (libs.firebase.storage)
+
     implementation(platform(libs.firebase.bom))
 
     implementation(libs.firebase.firestore)

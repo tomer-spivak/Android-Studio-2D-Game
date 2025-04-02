@@ -30,7 +30,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.gameActivity.DatabaseRepository;
+import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 
 

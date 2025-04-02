@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.gameActivity;
+package tomer.spivak.androidstudio2dgame.helper;
 
 import static androidx.core.app.ActivityCompat.finishAffinity;
 
@@ -33,6 +33,25 @@ public class DialogManager {
         this.context = context;
         this.databaseRepository = databaseRepository;
     }
+
+    public void showImagePickerDialog(ImageChooser imageChooser) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Select Image")
+                .setItems(new CharSequence[]{"Take Photo", "Choose from Gallery"}, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == 0) {
+                            // User chose "Take Photo"
+                            imageChooser.takePhoto();
+                        } else if (which == 1) {
+                            // User chose "Choose from Gallery"
+                            imageChooser.openGallery();
+                        }
+                    }
+                })
+                .show();
+    }
+
 
     //checks if user wants to save his base
     public void showExitAlertDialog(GameViewModel viewModel) {

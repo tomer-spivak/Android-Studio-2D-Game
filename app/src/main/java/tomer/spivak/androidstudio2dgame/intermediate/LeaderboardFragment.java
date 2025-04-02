@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import androidx.fragment.app.Fragment;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.gameActivity.DatabaseRepository;
+import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -18,7 +18,6 @@ import java.util.List;
 
 
 public class LeaderboardFragment extends Fragment {
-    private RecyclerView recyclerView;
     private LeaderboardAdapter adapter;
     private final ArrayList<LeaderboardEntry> leaderboardList = new ArrayList<>();
     DatabaseRepository databaseRepository = new DatabaseRepository(getContext());
@@ -27,7 +26,7 @@ public class LeaderboardFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_leaderboard, container, false);
-        recyclerView = view.findViewById(R.id.rvLeaderboard);
+        RecyclerView recyclerView = view.findViewById(R.id.rvLeaderboard);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new LeaderboardAdapter(leaderboardList);
         recyclerView.setAdapter(adapter);
