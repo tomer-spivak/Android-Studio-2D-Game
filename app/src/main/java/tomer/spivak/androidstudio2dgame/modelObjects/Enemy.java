@@ -26,11 +26,13 @@ public class Enemy extends ModelObject implements IDamager{
     private final AttackComponent attackComponent;
     private final EnemyAttackAnimation attackAnimation;
     private EnemyAttackAnimation activeAttackAnimation = null;
+    private final int reward;
 
 
     public Enemy(float health, float damage, float movementSpeed, Position pos,
-                 EnemyType enemyType, float attackCooldown, EnemyAttackAnimation attackAnimation) {
+                 EnemyType enemyType, float attackCooldown, EnemyAttackAnimation attackAnimation, int reward) {
         super(health, pos); // Call base constructor
+        this.reward = reward;
         attackComponent = new AttackComponent(damage, attackCooldown);
         this.movementSpeed = movementSpeed;
         this.type = enemyType;
@@ -124,6 +126,11 @@ public class Enemy extends ModelObject implements IDamager{
         }
     }
 
+
+    public int getReward() {
+        return reward;
+    }
+
     public List<Position> getPath() {
         return path;
     }
@@ -199,4 +206,5 @@ public class Enemy extends ModelObject implements IDamager{
         enemyData.put("type", type.name());
         return enemyData;
     }
+
 }

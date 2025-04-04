@@ -28,7 +28,8 @@ public class ModelObjectFactory {
                 new Enemy(getEnemyHealthByDifficulty(80, difficulty),
                         getEnemyDamageByDifficulty(30, difficulty),
                         getSpeedByDifficulty(3f, difficulty), position, EnemyType.MONSTER,
-                        500, new BreatheFire()));
+                        500, new BreatheFire(), getRewardByDifficulty(100, difficulty)));
+
     }
 
 
@@ -90,6 +91,14 @@ public class ModelObjectFactory {
             case EASY: return base * 0.75f;
             case HARD: return base * 1.4f;
             default: return base;
+        }
+    }
+
+    private static int getRewardByDifficulty(int i, DifficultyLevel difficulty) {
+        switch (difficulty) {
+            case EASY: return i * 2;
+            case HARD: return i / 2;
+            default: return i;
         }
     }
 }

@@ -33,7 +33,6 @@ public class GameViewModel extends ViewModel {
     private static final int NIGHT_THRESHOLD = 5000;
     EnemyManager enemyManager = new EnemyManager();
     TurretManager turretManager = new TurretManager();
-    boolean deadObjectsExist = false;
     SoundEffects soundEffects;
 
     public void initBoardFromCloud(Cell[][] board, DifficultyLevel difficulty) {
@@ -103,15 +102,14 @@ public class GameViewModel extends ViewModel {
         if (current != null) {
             current.addTime(deltaTime);
             if (!current.getTimeOfDay()){
-                //clearDeadObjects(current);
 
-                if (deadObjectsExist) {
-                    clearDeadObjects(current);
-                    deadObjectsExist = false;
-                }
-                if (checkDeadObjects(current)){
-                    deadObjectsExist = true;
-                }
+                //if (deadObjectsExist) {
+                    //clearDeadObjects(current);
+                  //  deadObjectsExist = false;
+                //}
+                //if (checkDeadObjects(current)){
+                  //  deadObjectsExist = true;
+                //}
 
                 if (enemyManager.getEnemies(current).isEmpty()){
                     //won
@@ -131,6 +129,7 @@ public class GameViewModel extends ViewModel {
                     //raid ended with all buildings destroyed
                     Lose(current);
                 }
+                clearDeadObjects(current);
             }
             else {
                 current.decreaseTimeToNextRound(deltaTime);
@@ -139,31 +138,18 @@ public class GameViewModel extends ViewModel {
                     startNight(current);
                 }
             }
+
             gameState.postValue(current);
         }
     }
 
-    private boolean checkDeadObjects(GameState gameState) {
-        Cell[][] grid = gameState.getGrid();
-        for (Cell[] row : grid) {
-            for (Cell cell : row) {
-                ModelObject object = cell.getObject();
-                if (object == null)
-                    continue;
-                boolean dead = object.getHealth() <= 0;
-               if (dead){
-                   deathAnimation(cell);
-                   return true;
-               }
-            }
-        }
-        return false;
-    }
-
-    private void deathAnimation(Cell cell) {
+    private void cellDeath(GameState current, Cell cell) {
         ModelObject object = cell.getObject();
-        if (object instanceof Enemy)
+        if (object instanceof Enemy){
+            Enemy enemy = (Enemy) object;
             CellAnimationManager.executeEnemyDeathAnimation(cell);
+            current.addShnuzes(enemy.getReward());
+        }
     }
 
     private void Win(GameState current) {
@@ -181,6 +167,7 @@ public class GameViewModel extends ViewModel {
                 if (cell.getObject() != null){
                     ModelObject object = cell.getObject();
                     if (object.getHealth() <= 0){
+                        cellDeath(current, cell);
                         cell.removeObject();
                     }
                 }

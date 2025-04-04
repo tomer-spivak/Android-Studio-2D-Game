@@ -104,6 +104,10 @@ public class GameState {
         return currentRound;
     }
 
+    public void addShnuzes(int shnuzes) {
+        this.shnuzes += shnuzes;
+    }
+
     public void removeShnuzes(int shnuzes) {
         this.shnuzes -= shnuzes;
     }
