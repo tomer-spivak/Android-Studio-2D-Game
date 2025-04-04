@@ -17,7 +17,7 @@ public class MusicService extends Service {
             R.raw.invincible, R.raw.sky_high, R.raw.spectre};
     private final Random random = new Random();
     private int lastSongIndex = -1;
-    float volume = 0.07f;
+    float volume;
 
     // Binder given to clients
     private final IBinder binder = new LocalBinder();
@@ -26,19 +26,18 @@ public class MusicService extends Service {
         return (int) (volume * 100);
     }
 
-    public void setVolume(float progress) {
+    public float getVolume() {
+        return volume;
+    }
+
+    public void setVolumeLevel(float progress) {
         if (mediaPlayer != null) {
             volume = progress / 100;
             mediaPlayer.setVolume(volume, volume);
 
-            SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putFloat("volume", volume);
-            editor.apply(); // or editor.commit() if you need synchronous saving
 
         }
     }
-
 
     // Class used for the client Binder.
     public class LocalBinder extends Binder {
@@ -51,13 +50,15 @@ public class MusicService extends Service {
     public void onCreate() {
         super.onCreate();
         SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
-        float volume = prefs.getFloat("volume", 0.07f); // 0.5f is the default value if not set
+        volume = prefs.getFloat("volume", 0.07f) ; // 0.5f is the default value if not set
         if (mediaPlayer != null) {
             mediaPlayer.setVolume(volume, volume);
         }
         playRandomSong(); // Start with a random song
         Log.d("music", "MusicService onCreate");
     }
+
+
 
     private void playRandomSong() {
         if (mediaPlayer != null) {

@@ -7,6 +7,7 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -107,7 +108,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         // Set window to fullscreen (hide status bar)
         setContentView(R.layout.activity_game);
         context = this;
-
 
         init();
 
@@ -223,7 +223,10 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     protected void onResume() {
         super.onResume();
         if (gameView != null) {
-            gameView.resumeGameLoop(0.07f);
+            SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+            float volume = prefs.getFloat("volume", 0.07f) ; // 0.5f is the default value if not set
+            Log.d("volume", "get" +volume);
+            gameView.resumeGameLoop(volume * 100);
         }
     }
 

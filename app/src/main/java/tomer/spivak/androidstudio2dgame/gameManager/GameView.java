@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -72,8 +73,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     };
 
 
-    public GameView(Context context, int boardSize, GameViewListener listener,
-                    SoundEffects soundEffects) {
+    public GameView(Context context, int boardSize, GameViewListener listener, SoundEffects soundEffects) {
         super(context);
         this.context = context;
         SurfaceHolder surfaceHolder = getHolder();
@@ -91,12 +91,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
 
         gameDrawerHelper = new GameDrawerHelper(gameObjectManager);
 
-
-        // Start and bind the MusicService
         musicIntent = new Intent(getContext(), MusicService.class);
         context.startService(musicIntent);
 
-        Log.d("music", "started");
         context.bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -227,6 +224,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
 
     public void stopGameLoop() {
         if (musicService != null) {
+            SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+
+            float volume = musicService.getVolume();
+            editor.putFloat("volume", volume);
+            Log.d("volume", "put" +volume);
+
+            editor.apply();
             musicService.stopMusic();
         }
 
@@ -237,14 +242,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         gameLoop.stopLoop();
     }
 
-    public void resumeGameLoop(float volume) {
+    public void resumeGameLoop(float volumeLevel) {
         gameObjectManager.setCenterCells(gridView.getCenterCells());
         gameObjectManager.updateGameObjectsPositions();
         if (musicService != null) {
-            Log.d("music", "resume: " + volume);
             musicService.resumeMusic();
-            musicService.setVolume(volume);
-            Log.d("music", "resume: " + musicService.getCurrentVolumeLevel());
+            musicService.setVolumeLevel(volumeLevel);
         }
         soundEffects.resumeSoundEffects();
         gameLoop.startLoop();
