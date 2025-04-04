@@ -59,6 +59,14 @@ public class BuildingsRecyclerViewAdapter extends
         }
         title = String.join(" ", words);
         holder.tvName.setText(title);
+
+        if (title.equals("Lightning Tower")){
+            holder.tvPrice.setText("3,000 \uD83D\uDCB0");
+        }
+        if (title.equals("Obelisk")){
+            holder.tvPrice.setText("1,000 \uD83D\uDCB0");
+        }
+
     }
 
     @Override
@@ -69,11 +77,13 @@ public class BuildingsRecyclerViewAdapter extends
     public class BuildingViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         ImageView imageView;
         TextView tvName;
+        TextView tvPrice;
 
         public BuildingViewHolder(@NonNull View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.imageView);
             tvName = itemView.findViewById(R.id.tvTitle);
+            tvPrice = itemView.findViewById(R.id.tvPrice);
             itemView.setOnClickListener(this);
         }
 

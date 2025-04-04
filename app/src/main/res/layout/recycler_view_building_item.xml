@@ -1,7 +1,7 @@
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="140dp"
+    android:layout_width="165dp"
     android:layout_height="match_parent"
     app:cardCornerRadius="8dp"
     app:cardElevation="4dp"
@@ -10,33 +10,46 @@
     <!-- Set a fixed size for the white rectangle -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="match_parent"
         android:background="@android:color/white"
         android:id="@+id/conLay"
-        android:padding="16dp">
+        android:padding="5dp">
 
         <!-- Title TextView -->
         <TextView
+            android:gravity="center"
             android:id="@+id/tvTitle"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Building Title"
             android:textColor="@android:color/black"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:maxLines="2"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- ImageView with a fixed vertical position -->
+        <TextView
+            android:id="@+id/tvPrice"
+            android:text="1000"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@+id/tvTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+        </TextView>
+
         <ImageView
             android:id="@+id/imageView"
             android:layout_width="0dp"
-            android:layout_height="90dp"
+            android:layout_height="140dp"
+            android:layout_marginBottom="-10dp"
             android:scaleType="centerCrop"
             android:src="@drawable/placeholder_building"
-            android:layout_marginBottom="25dp"
             app:layout_constraintBottom_toBottomOf="@+id/conLay"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />

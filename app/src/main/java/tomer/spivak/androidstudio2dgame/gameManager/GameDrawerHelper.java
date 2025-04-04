@@ -84,7 +84,7 @@ public class GameDrawerHelper {
     public void drawShnuzes(Canvas canvas, int shunzes, int screenWidth) {
         String formattedShunzes = NumberFormat.getNumberInstance().format(shunzes);
 
-        String shunzesText = "Shnuzes: " + formattedShunzes + " 🪙";
+        String shunzesText = "Shnuzes: " + formattedShunzes + " \uD83D\uDCB0";
 
         int x = screenWidth / 2 - timerBounds.width() / 2 - 50;
         int y = 180;
