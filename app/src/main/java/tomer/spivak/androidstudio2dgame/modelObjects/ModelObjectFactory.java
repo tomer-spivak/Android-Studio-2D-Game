@@ -17,12 +17,12 @@ public class ModelObjectFactory {
     static {
         typeMap.put("OBELISK", (position, difficulty) ->
                 new Ruin(getBuildingHealthByDifficulty(200, difficulty), position,
-                        RuinType.OBELISK));
+                        RuinType.OBELISK, 1000));
 
         typeMap.put("LIGHTNINGTOWER", (position, difficulty) ->
                 new AOETurret(getBuildingHealthByDifficulty(100, difficulty),
                         getTurretDamageByDifficulty(20, difficulty), 4, position,
-                        TurretType.LIGHTNINGTOWER, 1500, AttackType.LIGHTNING));
+                        TurretType.LIGHTNINGTOWER, 1500, AttackType.LIGHTNING, 3000));
 
         typeMap.put("MONSTER", (position, difficulty) ->
                 new Enemy(getEnemyHealthByDifficulty(80, difficulty),
@@ -40,6 +40,14 @@ public class ModelObjectFactory {
             return creator.create(position, difficulty);
         }
         throw new IllegalArgumentException("Unknown type: " + type);
+    }
+
+    public static int getPrice(String selectedBuildingType) {
+        switch (selectedBuildingType) {
+            case "OBELISK": return 1000;
+            case "LIGHTNINGTOWER": return 3000;
+        }
+        return 0;
     }
 
     @FunctionalInterface

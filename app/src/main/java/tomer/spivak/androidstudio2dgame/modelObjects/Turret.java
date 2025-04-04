@@ -19,8 +19,8 @@ public abstract class Turret extends Building implements IDamager{
     protected AttackType attackType;
 
     public Turret(float health, float attackDamage, float attackRange, Position pos,
-                  TurretType type, long attackCooldown, AttackType attackType) {
-        super(health, pos);
+                  TurretType type, long attackCooldown, AttackType attackType, int price) {
+        super(health, pos, price);
         this.attackRange = attackRange;
         this.type = type;
         attackComponent = new AttackComponent(attackDamage, attackCooldown);

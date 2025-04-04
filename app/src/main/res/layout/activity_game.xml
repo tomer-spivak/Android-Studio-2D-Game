@@ -26,7 +26,6 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:visibility="gone"
         android:background="@drawable/pause_game_button_background"
         android:drawablePadding="8dp"
         android:elevation="8dp"
@@ -44,6 +43,8 @@
         android:textSize="18sp"
         android:textStyle="bold"
         android:layout_margin="16dp" />
+
+
     <Button
         android:id="@+id/btnStartGame"
         android:layout_width="wrap_content"

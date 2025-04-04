@@ -26,6 +26,11 @@
             android:name=".intermediate.IntermediateActivity"
             android:exported="true" >
 
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
 
 
         </activity>
@@ -42,11 +47,6 @@
             android:exported="true"
             android:theme="@style/Base.Theme.AndroidStudio2DGame">
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
 
         </activity>
     </application>

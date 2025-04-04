@@ -55,7 +55,7 @@ public class GameViewModel extends ViewModel {
             return;
         Cell selectedCell = current.getGrid()[row][col];
         if (!selectedCell.isOccupied()){
-            if (selectedBuildingType != null && current.getTimeOfDay()){
+            if (canPlaceBuilding(current)){
                 placeBuilding(row, col, current);
                 selectedBuildingType = null;
                 gameState.postValue(current);
@@ -67,6 +67,10 @@ public class GameViewModel extends ViewModel {
                 gameState.postValue(current);
             }
         }
+    }
+
+    private boolean canPlaceBuilding(GameState current) {
+        return selectedBuildingType != null && current.getTimeOfDay() && current.getShnuzes() >= ModelObjectFactory.getPrice(selectedBuildingType);
     }
 
     private boolean canRemoveBuilding(GameState current) {
@@ -90,6 +94,7 @@ public class GameViewModel extends ViewModel {
                 new Position(row, col), current.getDifficulty());
         building.setSoundEffects(soundEffects);
         cell.placeBuilding(building);
+        current.removeShnuzes(building.getPrice());
     }
 
     public void updateGameState(long deltaTime) {

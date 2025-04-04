@@ -6,10 +6,14 @@ import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.BuildingState;
 
 public abstract class Building extends ModelObject {
+
     protected BuildingState state;
-    public Building(float health, Position pos) {
+    protected final int price;
+
+    public Building(float health, Position pos, int price) {
         super(health, pos);
         this.state = BuildingState.IDLE;
+        this.price = price;
     }
 
     public BuildingState getState() {
@@ -18,6 +22,10 @@ public abstract class Building extends ModelObject {
 
     public void setState(BuildingState state) {
         this.state = state;
+    }
+
+    public int getPrice(){
+       return price;
     }
 
     @Override

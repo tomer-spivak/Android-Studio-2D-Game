@@ -14,9 +14,8 @@ public class AOETurret extends Turret{
     List<Position> positionsToAttack = new ArrayList<>();
 
     public AOETurret(float health, float attackDamage, float attackRange, Position pos,
-                     TurretType type, long attackCooldown,
-                     AttackType attackType) {
-        super(health, attackDamage, attackRange, pos, type, attackCooldown, attackType);
+                     TurretType type, long attackCooldown, AttackType attackType, int price) {
+        super(health, attackDamage, attackRange, pos, type, attackCooldown, attackType, price);
         setCellsToAttack();
     }
 

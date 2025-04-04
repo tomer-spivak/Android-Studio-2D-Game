@@ -7,10 +7,7 @@ import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -22,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchManager;
-import tomer.spivak.androidstudio2dgame.gameObjects.GameBuilding;
 import tomer.spivak.androidstudio2dgame.music.MusicService;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
@@ -44,21 +40,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     private final SoundEffects soundEffects;
     GameObjectManager gameObjectManager;
     private Float scale = 1F;
-    private Bitmap morningBackground;
-    private Bitmap nightBackground;
+    private final Bitmap morningBackground;
+    private final Bitmap nightBackground;
     private Bitmap backgroundBitmap;
-    private Paint paint;
     long timeTillNextRound = 0;
     int currentRound = 0;
-    Paint timerPaint = new Paint();
-    Rect timerBounds = new Rect();
     int boardSize;
     GameViewListener listener;
     Context context;
+    GameDrawerHelper gameDrawerHelper;
+    private int shnuzes = 0;
 
     // Reference to the MusicService and its intent.
     private MusicService musicService;
-    private Intent musicIntent;
+    private final Intent musicIntent;
 
     // ServiceConnection to bind to the MusicService
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -89,20 +84,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         gridView = new CustomGridView(context, boardSize);
         this.listener = listener;
         this.soundEffects = soundEffects;
-        init();
-    }
-
-    void init(){
         morningBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_morning);
         nightBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_night);
         backgroundBitmap = morningBackground;
-        paint = new Paint();
-        timerPaint.setColor(Color.WHITE);
-        timerPaint.setTextSize(60);
-        timerPaint.setAntiAlias(true);
-        timerPaint.setTextAlign(Paint.Align.LEFT);
-        timerPaint.setShadowLayer(5, 0, 0, Color.BLACK);
         gameObjectManager = new GameObjectManager(context, boardSize, gridView.getCenterCells());
+
+        gameDrawerHelper = new GameDrawerHelper(gameObjectManager);
+
 
         // Start and bind the MusicService
         musicIntent = new Intent(getContext(), MusicService.class);
@@ -178,6 +166,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
             Log.d("lost", "lost");
             stopGameLoop();
         }
+        shnuzes = gameState.getShnuzes();
     }
 
     public void updateBoard(Cell[][] board) {
@@ -191,9 +180,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         super.draw(canvas);
         int screenWidth = getWidth();
         int screenHeight = getHeight();
-        Bitmap scaledBackBitmap = Bitmap.createScaledBitmap(backgroundBitmap, screenWidth, screenHeight, true);
-        canvas.drawBitmap(scaledBackBitmap, 0, 0, paint);
+
+        gameDrawerHelper.drawBackground(canvas, backgroundBitmap, screenWidth, screenHeight);
         gridView.setCellsState(gameObjectManager.getCellStates());
+
         gridView.draw(canvas);
         List<GameObject> objectsToDraw;
         ArrayList<GameObject> gameObjectsViewsArrayList = gameObjectManager.getGameObjectsViewsArrayList();
@@ -203,60 +193,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         for (GameObject gameObject : objectsToDraw) {
             if (gameObject == null)
                 continue;
-            drawHealthBar(gameObject, canvas);
             gameObject.drawView(canvas);
+            gameDrawerHelper.drawHealthBar(gameObject, canvas, scale);
+
         }
         if (timeTillNextRound > 0){
-            drawTimeTillNextRound(canvas);
+            gameDrawerHelper.drawTimeTillNextRound(canvas, timeTillNextRound, screenWidth);
         }
         if (currentRound > 0){
-            drawRound(canvas);
+            gameDrawerHelper.drawRoundNumber(canvas, currentRound, screenWidth);
         }
 
+        gameDrawerHelper.drawShnuzes(canvas, shnuzes, screenWidth);
+
     }
 
-    private void drawHealthBar(GameObject gameObject, Canvas canvas) {
-        Point pos = gameObject.getImagePoint();
-        tomer.spivak.androidstudio2dgame.model.Position position = gameObject.getPos();
-        float health = gameObjectManager.getBoard()[position.getX()][position.getY()].getObject().getHealth();
-        float maxHealth = gameObjectManager.getBoard()[position.getX()][position.getY()].getObject().getMaxHealth();
-        int barWidth = (int) (80 * scale);
-        int barHeight = (int) (15 * scale);
-        int x = pos.x - barWidth / 2;
-        int yOffset;
-        if (gameObject instanceof GameBuilding){
-            yOffset = 290;
-        } else {
-            yOffset = 170;
-        }
-        int y = (int) (pos.y - yOffset * scale);
-        Paint bgPaint = new Paint();
-        bgPaint.setColor(Color.GRAY);
-        bgPaint.setStyle(Paint.Style.FILL);
-        canvas.drawRect(x, y, x + barWidth, y + barHeight, bgPaint);
-        Paint healthPaint = new Paint();
-        healthPaint.setColor(Color.RED);
-        healthPaint.setStyle(Paint.Style.FILL);
-        int healthWidth = (int) ((health / maxHealth) * barWidth);
-        canvas.drawRect(x, y, x + healthWidth, y + barHeight, healthPaint);
-    }
 
-    private void drawTimeTillNextRound(Canvas canvas) {
-        String timeText = "Next round: " + (timeTillNextRound / 1000) + "." +
-                (timeTillNextRound % 1000) / 100 + "s";
-        timerPaint.getTextBounds(timeText, 0, timeText.length(), timerBounds);
-        int x = getWidth() / 2 - timerBounds.width() / 2;
-        int y = 100;
-        canvas.drawText(timeText, x, y, timerPaint);
-    }
-
-    private void drawRound(Canvas canvas){
-        String roundText = "current round: " + currentRound;
-        timerPaint.getTextBounds(roundText, 0, roundText.length(), timerBounds);
-        int x = getWidth() / 2 - timerBounds.width() / 2;
-        int y = 100;
-        canvas.drawText(roundText, x, y, timerPaint);
-    }
 
     public void pauseGameLoop() {
         Log.d("music", String.valueOf(musicService));

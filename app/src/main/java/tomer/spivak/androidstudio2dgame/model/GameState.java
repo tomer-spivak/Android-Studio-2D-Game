@@ -16,6 +16,7 @@ public class GameState {
     private int currentRound;
     private final DifficultyLevel difficulty;
     private long currentTimeOfGame;
+    private int shnuzes;
 
     public GameState(Cell[][] grid, int nightThreshold, DifficultyLevel difficulty) {
         this.grid = grid;
@@ -23,7 +24,13 @@ public class GameState {
         this.currentRound = 1;
         this.nightThreshold = nightThreshold;
         this.difficulty = difficulty;
+        initShnuzes();
         currentTimeOfGame = 0;
+    }
+
+    private void initShnuzes() {
+        int difficulty = 4 - (this.difficulty.ordinal() + 1);
+        this.shnuzes = difficulty * 5000;
     }
 
     public boolean isValidPosition(Position pos) {
@@ -38,6 +45,10 @@ public class GameState {
 
     public Cell[][] getGrid() {
         return grid;
+    }
+
+    public int getShnuzes() {
+        return shnuzes;
     }
 
     public boolean getTimeOfDay() {
@@ -92,4 +103,9 @@ public class GameState {
     public int getCurrentRound() {
         return currentRound;
     }
+
+    public void removeShnuzes(int shnuzes) {
+        this.shnuzes -= shnuzes;
+    }
+
 }

@@ -149,6 +149,7 @@ public class DialogManager {
                 .show();
     }
 
+
     public AlertDialog showLoadingBoardAlertDialog() {
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setTitle("Loading board")
@@ -190,4 +191,5 @@ public class DialogManager {
             ((Activity) context).finish();
         }
     }
+
 }

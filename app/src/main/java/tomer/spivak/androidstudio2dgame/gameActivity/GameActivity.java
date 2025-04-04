@@ -1,4 +1,7 @@
+
+
 package tomer.spivak.androidstudio2dgame.gameActivity;
+
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -13,6 +16,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
@@ -23,8 +27,11 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+
 import java.util.ArrayList;
 import java.util.Calendar;
+
+
 
 
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
@@ -41,13 +48,16 @@ import tomer.spivak.androidstudio2dgame.gameManager.GameViewListener;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.music.SoundEffects;
 
+
 public class GameActivity extends AppCompatActivity implements OnItemClickListener,
         GameViewListener {
+
 
     Context context;
     GameView gameView;
     private GameViewModel viewModel;
     private SoundEffects soundEffects; // Instance of SoundEffects
+
 
     Button btnChooseBuildingsCardView;
     Button btnStartGame;
@@ -55,25 +65,38 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     Button btnPause;
     LinearLayout gameLayout;
 
+
     ArrayList<String> buildingImagesURL = new ArrayList<>();
+
 
     CardView cvSelectBuildingMenu;
 
+
     ImageButton btnCloseMenu;
+
 
     BuildingsRecyclerViewAdapter adapter;
 
+
     RecyclerView buildingRecyclerView;
+
 
     OnBackPressedCallback backPressedCallback;
 
+
     DatabaseRepository databaseRepository;
+
 
     int boardSize;
 
+
     boolean gameIsOnGoing = false;
 
+
     DialogManager dialogManager;
+
+
+
 
 
 
@@ -85,14 +108,15 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         setContentView(R.layout.activity_game);
         context = this;
 
+
         init();
+
 
         btnStartGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (canStartGame()) {
                     gameIsOnGoing = true;
-                    btnPause.setVisibility(View.VISIBLE);
                     btnStartGame.setVisibility(View.GONE);
                     btnSkipRound.setVisibility(View.VISIBLE);
                 } else {
@@ -102,12 +126,14 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             }
         });
 
+
         btnChooseBuildingsCardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 cvSelectBuildingMenu.setVisibility(View.VISIBLE);
             }
         });
+
 
         btnCloseMenu.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -116,6 +142,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             }
         });
 
+
         btnSkipRound.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -123,6 +150,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 btnSkipRound.setVisibility(View.GONE);
             }
         });
+
 
         btnPause.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -134,6 +162,10 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             }
         });
 
+
+
+
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)  {
             backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
                 @Override
@@ -144,14 +176,18 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
         }
 
+
         // Initialize SoundEffects using this Activity's context
+
 
         // Observe sound events from the ViewModel
     }
 
+
     private void scheduleNotification(Context context, int hour) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, NotificationReceiver.class);
+
 
         // Use a unique request code for each alarm (e.g., combining hour and minute)
         int requestCode = hour * 100;
@@ -162,25 +198,31 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
+
         // Set up the calendar for the target time
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, hour);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
 
+
         // If the time has already passed today, schedule for tomorrow
         if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
         }
+
 
         // Set an exact alarm
         alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
     }
 
 
+
+
     private boolean canStartGame() {
         return viewModel.isNotEmptyBuildings();
     }
+
 
     @Override
     protected void onResume() {
@@ -190,6 +232,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         }
     }
 
+
     @Override
     protected void onPause() {
         if (gameView != null) {
@@ -198,14 +241,17 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         super.onPause();
     }
 
+
     @Override
     protected void onStop() {
         scheduleNotification(this, 10);  // 10:00 AM
         scheduleNotification(this, 16);  // 4:00 PM
         scheduleNotification(this, 22);  // 10:00 PM
 
+
         super.onStop();
     }
+
 
     @Override
     protected void onDestroy() {
@@ -219,11 +265,13 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         }
     }
 
+
     private void init(){
         hideSystemUI();
         initViews();
         initGame();
     }
+
 
     private void initViews() {
         btnChooseBuildingsCardView = findViewById(R.id.btnPopUpMenu);
@@ -231,6 +279,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         btnCloseMenu = findViewById(R.id.btnCloseMenu);
         buildingRecyclerView = findViewById(R.id.buildingRecyclerView);
     }
+
 
     private void initGame() {
         boardSize = 14;
@@ -242,12 +291,14 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         databaseRepository = new DatabaseRepository(context);
         dialogManager = new DialogManager(context, databaseRepository);
 
+
         btnStartGame = findViewById(R.id.btnStartGame);
         btnSkipRound = findViewById(R.id.btnSkipRound);
         btnPause = findViewById(R.id.btnPause);
-
         observeViewModel();
         initPlacingBuilding();
+
+
 
 
         String difficultyName = getIntent().getStringExtra("difficultyLevel");
@@ -276,6 +327,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         }
     }
 
+
     private void initBoardInViewModel(Cell[][] board, AlertDialog dialog,
                                       DifficultyLevel difficulty, Long timeSinceStartOfGame) {
         gameView.updateBoard(board);
@@ -284,6 +336,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         dialog.dismiss();
         viewModel.setSoundEffects(soundEffects);
     }
+
 
     private void hideSystemUI() {
         View decorView = getWindow().getDecorView();
@@ -297,6 +350,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         );
     }
 
+
     private void initPlacingBuilding() {
         initBuildingToChoose();
         adapter = new BuildingsRecyclerViewAdapter(context, buildingImagesURL, this);
@@ -304,6 +358,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 LinearLayoutManager.HORIZONTAL, false));
         buildingRecyclerView.setAdapter(adapter);
     }
+
 
     // Pop the options for user (need to add more buildings later)
     private void initBuildingToChoose() {
@@ -313,12 +368,14 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         buildingImagesURL.add(archerTower);
     }
 
+
     // A building has been selected in the card view, sending info to game view
     @Override
     public void onBuildingRecyclerViewItemClick(String buildingImageURL, int position) {
         onBuildingSelected(buildingImageURL.replace("0", ""));
         cvSelectBuildingMenu.setVisibility(View.GONE);
     }
+
 
     private void observeViewModel() {
         viewModel.getGameState().observe(this, new Observer<GameState>() {
@@ -346,10 +403,12 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                     }
                 }
 
+
                 checkDeadObjects(gameState);
             }
         });
     }
+
 
     private void checkDeadObjects(GameState gameState) {
         Cell[][] grid = gameState.getGrid();
@@ -365,15 +424,18 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         }
     }
 
+
     @Override
     public void onCellClicked(int row, int col) {
         viewModel.onCellClicked(row, col);
     }
 
+
     @Override
     public void onBuildingSelected(String buildingType) {
         viewModel.selectBuilding(buildingType);
     }
+
 
     @Override
     public void updateGameState(long elapsedTime) {

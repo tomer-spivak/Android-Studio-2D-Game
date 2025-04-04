@@ -11,8 +11,8 @@ import tomer.spivak.androidstudio2dgame.modelEnums.RuinType;
 public class Ruin extends Building{
     private final RuinType type;
 
-    public Ruin(float health, Position pos, RuinType type) {
-        super(health, pos);
+    public Ruin(float health, Position pos, RuinType type, int price) {
+        super(health, pos, price);
         this.type = type;
     }
 
