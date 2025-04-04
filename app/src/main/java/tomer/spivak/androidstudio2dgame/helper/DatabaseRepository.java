@@ -358,7 +358,6 @@ public class DatabaseRepository {
         storageRef.putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        Toast.makeText(context, "image uploaded: " + taskSnapshot.toString(), Toast.LENGTH_LONG).show();
                         storageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri uri) {
@@ -383,7 +382,6 @@ public class DatabaseRepository {
         storageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
-                Toast.makeText(intermiditaecontext, "image fetched", Toast.LENGTH_LONG).show();
                 Glide.with(intermiditaecontext)
                         .load(uri)
                         .into(imageView);
@@ -391,9 +389,7 @@ public class DatabaseRepository {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Toast.makeText(intermiditaecontext, "image failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-
-                fetchAndSetImage(imageView, intermiditaecontext);
+                Toast.makeText(intermiditaecontext, "failed to fetch image: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
 
@@ -477,7 +473,7 @@ public class DatabaseRepository {
                         @Override
                         public void onSuccess(Object o) {
                             sendEmail(email, context);
-
+                            uploadImage(uri, username, onSuccessListener);
                             // Get the current Firebase user and update the profile with the display name
                             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                             if (user != null) {
@@ -494,13 +490,7 @@ public class DatabaseRepository {
                                                 Map<String, Object> userData = new HashMap<>();
                                                 userData.put("displayName", username);
                                                 db.collection("users").document(user.getUid())
-                                                        .set(userData, SetOptions.merge())
-                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                            @Override
-                                                            public void onSuccess(Void unused) {
-                                                                uploadImage(uri, username, onSuccessListener);
-                                                            }
-                                                        });
+                                                        .set(userData, SetOptions.merge());
                                             }
                                         });
                             }
@@ -510,7 +500,7 @@ public class DatabaseRepository {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "failed to create a user: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     });
         }
