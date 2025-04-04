@@ -176,11 +176,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
         }
 
-
-        // Initialize SoundEffects using this Activity's context
-
-
-        // Observe sound events from the ViewModel
     }
 
 

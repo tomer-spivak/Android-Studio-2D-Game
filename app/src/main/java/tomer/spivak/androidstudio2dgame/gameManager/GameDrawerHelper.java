@@ -7,6 +7,8 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 
+import java.text.NumberFormat;
+
 import tomer.spivak.androidstudio2dgame.gameObjects.GameBuilding;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectManager;
@@ -80,9 +82,13 @@ public class GameDrawerHelper {
 
 
     public void drawShnuzes(Canvas canvas, int shunzes, int screenWidth) {
-        String shunzesText = "Shnuzes: " + shunzes;
-        int x = screenWidth/2 - timerBounds.width() / 2; // left padding
-        int y = 180; // below round/time
+        String formattedShunzes = NumberFormat.getNumberInstance().format(shunzes);
+
+        String shunzesText = "Shnuzes: " + formattedShunzes + " 🪙";
+
+        int x = screenWidth / 2 - timerBounds.width() / 2 - 50;
+        int y = 180;
+
         canvas.drawText(shunzesText, x, y, timerPaint);
     }
 
