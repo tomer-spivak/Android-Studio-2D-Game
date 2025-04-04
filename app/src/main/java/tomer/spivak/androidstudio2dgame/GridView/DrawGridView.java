@@ -20,7 +20,14 @@ public class DrawGridView {
                 context);
         grasses[1] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_hurt),
                 context);
-
+        grasses[2] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_enemydeath1),
+                context);
+        grasses[3] = new GridBitmap(ContextCompat.getDrawable(context,
+                R.drawable.grass_enemydeath2),
+                context);
+        grasses[4] = new GridBitmap(ContextCompat.getDrawable(context,
+                R.drawable.grass_enemydeath3),
+                context);
         this.context = context;
 
 

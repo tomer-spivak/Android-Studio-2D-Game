@@ -114,37 +114,21 @@
             app:layout_constraintTop_toBottomOf="@+id/etPassword" />
 
         <Button
-            android:gravity="center_vertical"
-            android:textColor="#000000"
-            android:backgroundTint="@color/login_sign_up_button_background"
             android:id="@+id/btnSignUp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:layout_marginStart="20dp"
             android:layout_marginTop="10dp"
-            android:layout_marginEnd="48dp"
+            android:backgroundTint="@color/login_sign_up_button_background"
             android:enabled="false"
             android:fontFamily="@font/nikea"
+            android:gravity="center_vertical"
             android:text="@string/Sign_up"
+            android:textColor="#000000"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvPasswordError" />
 
-        <Button
-            android:gravity="center_vertical"
-            android:textColor="#000000"
-            android:backgroundTint="@color/login_sign_up_button_background"
-            android:id="@+id/btnGoogleSignUp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start"
-            android:layout_marginStart="48dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginEnd="10dp"
-            android:fontFamily="@font/nikea"
-            android:text="google sign up"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvPasswordError" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

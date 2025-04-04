@@ -55,6 +55,7 @@ public class Enemy extends ModelObject implements IDamager{
     public void updateDirection(Position prevPos) {
         updateDirection(prevPos, pos);
     }
+
     public void updateDirection(Position prevPos, Position nextPos) {
         if (prevPos.getX() > nextPos.getX()){
             setCurrentDirection(Direction.UPRIGHT);
@@ -82,7 +83,8 @@ public class Enemy extends ModelObject implements IDamager{
     }
 
     public void update(long deltaTime){
-        updateAnimation(deltaTime);
+        if (state != EnemyState.HURT)
+            updateAnimation(deltaTime);
     }
 
     public void updateAnimation(long deltaTime) {
@@ -96,26 +98,21 @@ public class Enemy extends ModelObject implements IDamager{
         super.takeDamage(damage);
         Log.d("take", String.valueOf(timeSinceLastMove));
 
-
-        //stun lock:
-        //if (activeAttackAnimation != null) {
-          //  activeAttackAnimation.cancelAnimation();
-            //activeAttackAnimation = null;
-        //}
-
         if (health <= 0){
             onDeath();
             return;
         }
         EnemyState currentState = getEnemyState();
         setState(EnemyState.HURT);
+        soundEffects.pauseSoundEffects();
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 setState(currentState);
+                soundEffects.resumeSoundEffects();
             }
-        }, 100);
+        }, 1000);
     }
 
     @Override

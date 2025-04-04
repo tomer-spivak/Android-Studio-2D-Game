@@ -22,13 +22,13 @@ public class ModelObjectFactory {
         typeMap.put("LIGHTNINGTOWER", (position, difficulty) ->
                 new AOETurret(getBuildingHealthByDifficulty(100, difficulty),
                         getTurretDamageByDifficulty(20, difficulty), 4, position,
-                        TurretType.LIGHTNINGTOWER, 1000, AttackType.LIGHTNING));
+                        TurretType.LIGHTNINGTOWER, 1500, AttackType.LIGHTNING));
 
         typeMap.put("MONSTER", (position, difficulty) ->
                 new Enemy(getEnemyHealthByDifficulty(80, difficulty),
                         getEnemyDamageByDifficulty(30, difficulty),
                         getSpeedByDifficulty(3f, difficulty), position, EnemyType.MONSTER,
-                        1000, new BreatheFire()));
+                        500, new BreatheFire()));
     }
 
 
@@ -71,7 +71,7 @@ public class ModelObjectFactory {
 
     private static float getTurretDamageByDifficulty(int base, DifficultyLevel difficulty) {
         switch (difficulty) {
-            case EASY: return (int) (base * 1.5);
+            case EASY: return (int) (base * 1.25);
             case HARD: return (int) (base * 0.75);
             default: return base;
         }

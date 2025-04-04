@@ -58,8 +58,6 @@ public class ImageChooser {
         );
     }
 
-
-
     private Uri saveBitmapToFile(Bitmap bitmap) {
         try {
             File file = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "myImage.jpg");
@@ -79,10 +77,11 @@ public class ImageChooser {
         takePictureLauncher.launch(takePictureIntent);
     }
 
-
     public void openGallery() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        takePictureLauncher.launch(intent);
     }
-
 
     public interface OnImageChosenListener {
         void onImageChosen(Uri imageUri);

@@ -13,11 +13,13 @@ import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.model.EnemyManager;
 import tomer.spivak.androidstudio2dgame.model.TurretManager;
+import tomer.spivak.androidstudio2dgame.modelAnimations.CellAnimationManager;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Position;
@@ -144,11 +146,19 @@ public class GameViewModel extends ViewModel {
                 if (object == null)
                     continue;
                 boolean dead = object.getHealth() <= 0;
-               if (dead)
+               if (dead){
+                   deathAnimation(cell);
                    return true;
+               }
             }
         }
         return false;
+    }
+
+    private void deathAnimation(Cell cell) {
+        ModelObject object = cell.getObject();
+        if (object instanceof Enemy)
+            CellAnimationManager.executeEnemyDeathAnimation(cell);
     }
 
     private void Win(GameState current) {

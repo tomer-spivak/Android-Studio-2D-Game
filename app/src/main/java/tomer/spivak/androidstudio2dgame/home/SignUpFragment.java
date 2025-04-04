@@ -1,15 +1,11 @@
 package tomer.spivak.androidstudio2dgame.home;
 
-import static android.app.Activity.RESULT_OK;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.text.Editable;
@@ -39,33 +35,13 @@ public class SignUpFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
         repository = new DatabaseRepository(requireContext());
         Button btnSignUp = view.findViewById(R.id.btnSignUp);
-        Button btnGoogle = view.findViewById(R.id.btnGoogleSignUp);
         EditText etEmail = view.findViewById(R.id.etEmail);
         EditText etPassword = view.findViewById(R.id.etPassword);
         EditText etUsername = view.findViewById(R.id.etUsername);
         TextView tvEmailError = view.findViewById(R.id.tvEmailError);
         TextView tvPasswordError = view.findViewById(R.id.tvPasswordError);
         TextView tvUsernameError = view.findViewById(R.id.tvUsernameError);
-        Fragment fragment = this;
-
-
-        ImageChooser.OnImageChosenListener listener = new ImageChooser.OnImageChosenListener() {
-            @Override
-            public void onImageChosen(Uri imageUri) {
-
-                repository.signUpWithEmailPassword(etEmail.getText().toString(), etPassword.getText().toString(),
-                        etUsername.getText().toString(), new OnSuccessListener() {
-                            @Override
-                            public void onSuccess(Object o) {
-                                Intent intent = new Intent(getActivity(), IntermediateActivity.class);
-                                startActivity(intent);
-                            }
-                        }, getContext(), imageUri) ;
-            }
-        };
-
-
-        ImageChooser imageChooser = new ImageChooser(fragment, listener);
+        ImageChooser imageChooser = getImageChooser(etEmail, etPassword, etUsername);
 
 
         TextWatcher textWatcherPassword = new TextWatcher() {
@@ -125,58 +101,37 @@ public class SignUpFragment extends Fragment {
             public void afterTextChanged(Editable s) { }
         };
 
-        etEmail.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) {
-                etEmail.addTextChangedListener(textWatcherEmail);
-            } else {
-                validateEmail(etEmail.getText().toString(), tvEmailError);
-            }
-        });
-
-        etPassword.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) {
-                etPassword.addTextChangedListener(textWatcherPassword);
-            } else {
-                validatePassword(etPassword.getText().toString(), tvPasswordError);
-            }
-        });
-
-        etUsername.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) {
-                etUsername.addTextChangedListener(textWatcherUsername);
-            } else {
-                validateUsername(etUsername.getText().toString(), tvUsernameError);
-            }
-        });
-
-        ActivityResultLauncher<Intent> googleSignInLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                new ActivityResultCallback<ActivityResult>() {
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                            repository.handleGoogleSignInResult(result.getData(),
-                                    new DatabaseRepository.GoogleSignInCallback() {
-                                @Override
-                                public void onSuccess() {
-                                            // proceed to the next activity.
-                                            Intent intent = new Intent(getActivity(), IntermediateActivity.class);
-                                            startActivity(intent);
-                                }
-
-                                @Override
-                                public void onFailure(Exception e) {
-                                    Log.w("TAG", "Google sign-in failed", e);
-                                }
-                            });
-                        }
-                    }
+        etEmail.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    etEmail.addTextChangedListener(textWatcherEmail);
+                } else {
+                    validateEmail(etEmail.getText().toString(), tvEmailError);
                 }
-        );
+            }
+        });
 
-        btnGoogle.setOnClickListener(v -> {
-            Intent signInIntent = repository.getGoogleSignInIntent(requireContext());
-            googleSignInLauncher.launch(signInIntent);
+        etPassword.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    etPassword.addTextChangedListener(textWatcherPassword);
+                } else {
+                    validatePassword(etPassword.getText().toString(), tvPasswordError);
+                }
+            }
+        });
+
+        etUsername.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    etUsername.addTextChangedListener(textWatcherUsername);
+                } else {
+                    validateUsername(etUsername.getText().toString(), tvUsernameError);
+                }
+            }
         });
 
         btnSignUp.setOnClickListener(new View.OnClickListener() {
@@ -189,6 +144,26 @@ public class SignUpFragment extends Fragment {
         });
 
         return view;
+    }
+
+    @NonNull
+    private ImageChooser getImageChooser(EditText etEmail, EditText etPassword, EditText etUsername) {
+        Fragment fragment = this;
+        ImageChooser.OnImageChosenListener listener = new ImageChooser.OnImageChosenListener() {
+            @Override
+            public void onImageChosen(Uri imageUri) {
+
+                repository.signUpWithEmailPassword(etEmail.getText().toString(), etPassword.getText().toString(),
+                        etUsername.getText().toString(), new OnSuccessListener() {
+                            @Override
+                            public void onSuccess(Object o) {
+                                Intent intent = new Intent(getActivity(), IntermediateActivity.class);
+                                startActivity(intent);
+                            }
+                        }, getContext(), imageUri) ;
+            }
+        };
+        return new ImageChooser(fragment, listener);
     }
 
 
