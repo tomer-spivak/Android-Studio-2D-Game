@@ -102,27 +102,17 @@ public class GameViewModel extends ViewModel {
         if (current != null) {
             current.addTime(deltaTime);
             if (!current.getTimeOfDay()){
-
-                //if (deadObjectsExist) {
-                    //clearDeadObjects(current);
-                  //  deadObjectsExist = false;
-                //}
-                //if (checkDeadObjects(current)){
-                  //  deadObjectsExist = true;
-                //}
-
                 if (enemyManager.getEnemies(current).isEmpty()){
                     //won
                     Win(current);
                     current.setTimeOfDay(true);
                     current.accumulateRound();
                     current.startTimerForNextRound();
+                    current.addShnuzes(current.getCurrentRound() * 1000);
                 }
 
                 if (isNotEmptyBuildings()){
-                    // Example: Trigger turret attack sound if a turret fires.
-                    turretManager.updateTurrets(current, enemyManager.getEnemies(current),
-                            deltaTime);
+                    turretManager.updateTurrets(current, enemyManager.getEnemies(current), deltaTime);
                     enemyManager.updateEnemies(current, deltaTime);
 
                 } else {

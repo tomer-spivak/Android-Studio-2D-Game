@@ -7,11 +7,10 @@ import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 
 public class GameState {
-    private final Cell[][] grid; // 2D grid of cells
+    private final Cell[][] grid;
     private final int nightThreshold;
-    private boolean timeOfDay; // true for day, false for night
+    private boolean timeOfDay;
     private long timeToNextRound;
-    //true is morning, false is night
     private GameStatus gameStatus;
     private int currentRound;
     private final DifficultyLevel difficulty;
@@ -34,7 +33,6 @@ public class GameState {
     }
 
     public boolean isValidPosition(Position pos) {
-        // Check if the position is within grid bounds
         return pos.getX() >= 0 && pos.getX() < grid.length &&
                 pos.getY() >= 0 && pos.getY() < grid[0].length;
     }
