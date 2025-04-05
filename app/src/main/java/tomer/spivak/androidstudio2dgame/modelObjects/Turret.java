@@ -27,9 +27,13 @@ public abstract class Turret extends Building implements IDamager{
         this.attackType = attackType;
     }
 
-    public void attack(Enemy target) {
+    public void executeAttackSoundAndAnimation(Enemy target) {
         setSoundStreamId(soundEffects.playTurretAttackSound());
         TurretAnimationManager.executeAttackAnimation(this, target);
+    }
+
+    public void update(long deltaTime){
+
     }
 
     // This method should be called in the main game loop.

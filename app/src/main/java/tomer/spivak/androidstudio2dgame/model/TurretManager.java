@@ -10,20 +10,22 @@ import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.Turret;
 
 public class TurretManager {
+
     public void updateTurrets(GameState current, List<Enemy> enemies, long deltaTime) {
         List<Turret> turrets = getTurrets(current);
         for (Turret turret : turrets) {
+            turret.update(deltaTime);
             if (turret instanceof AOETurret){
                 AOETurret aoeTurret = (AOETurret) turret;
-                if (aoeTurret.update(enemies, deltaTime)){
-                    aoeTurret.updateCellsToAttack(current);
+                aoeTurret.updateCellsToAttack(current);
+                if (aoeTurret.shouldExecuteAttack(enemies)){
                     List<Position> positionsToAttack = aoeTurret.getCellsToAttack();
-                    createCellsToAttack(current, (ArrayList<Position>) positionsToAttack,
-                            turret.getAttackType());
+                    attackCells(current, (ArrayList<Position>) positionsToAttack, turret.getAttackType());
                 }
             }
         }
     }
+
     private List<Turret> getTurrets(GameState current) {
         List<Turret> turrets = new ArrayList<>();
         Cell[][] grid = current.getGrid();
@@ -37,8 +39,8 @@ public class TurretManager {
         }
         return turrets;
     }
-    private void createCellsToAttack(GameState current, ArrayList<Position> positionsToAttack,
-                                     AttackType attackType) {
+
+    private void attackCells(GameState current, ArrayList<Position> positionsToAttack, AttackType attackType) {
         for (Position pos : positionsToAttack){
             Cell cell = current.getCellAt(pos);
             cell.cellAttacked(attackType);

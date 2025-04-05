@@ -3,6 +3,7 @@ package tomer.spivak.androidstudio2dgame.modelObjects;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import tomer.spivak.androidstudio2dgame.model.GameState;
@@ -12,17 +13,17 @@ import tomer.spivak.androidstudio2dgame.modelEnums.TurretType;
 
 public class AOETurret extends Turret{
     List<Position> positionsToAttack = new ArrayList<>();
+    List<Position> removedPositions = new ArrayList<>();
 
     public AOETurret(float health, float attackDamage, float attackRange, Position pos,
                      TurretType type, long attackCooldown, AttackType attackType, int price) {
         super(health, attackDamage, attackRange, pos, type, attackCooldown, attackType, price);
-        setCellsToAttack();
+        initCellsToAttack();
     }
 
 
-    private void setCellsToAttack(){
+    private void initCellsToAttack(){
         if (type == TurretType.LIGHTNINGTOWER){
-            //square
             for (int i = 0; i < attackRange; i++){
                 positionsToAttack.add(new Position(pos.getX() + i + 1, pos.getY()));
             }
@@ -40,16 +41,14 @@ public class AOETurret extends Turret{
         }
     }
 
-    public boolean update(List<Enemy> enemies, long elapsedTime){
+    public void update(long elapsedTime){
         attackComponent.accumulateAttackTime(elapsedTime);
 
-        return isTargetInRange(enemies);
     }
 
-    private boolean isTargetInRange(List<Enemy> enemies) {
+    public boolean shouldExecuteAttack(List<Enemy> enemies) {
         boolean bool = false;
         if (!canAttack()){
-
             Log.d("AOE", "cant Attack");
             return false;
         }
@@ -60,7 +59,7 @@ public class AOETurret extends Turret{
             Log.d("AOE", "enemy pos" + enemy.getPosition().toString());
             for (Position pos : positionsToAttack){
                 if (pos.equals(enemy.getPosition())){
-                    attack(enemy);
+                    executeAttackSoundAndAnimation(enemy);
                     attackComponent.resetAttackTimer();
                     bool = true;
                 }
@@ -73,8 +72,32 @@ public class AOETurret extends Turret{
         return positionsToAttack;
     }
 
+    private boolean shouldAttackPosition(Position position, GameState current){
+        return current.isValidPosition(position) && !(current.getCellAt(position).getObject() instanceof Building);
+    }
+
     public void updateCellsToAttack(GameState current) {
-        positionsToAttack.removeIf(pos -> !current.isValidPosition(pos) || current.getCellAt(pos)
-                .getObject() instanceof Building);
+        Iterator<Position> iterator = positionsToAttack.iterator();
+        while (iterator.hasNext()) {
+            Position pos = iterator.next();
+            if (!shouldAttackPosition(pos, current)) {
+                if(current.isValidPosition(pos))
+                    removedPositions.add(pos);
+                iterator.remove(); // ✅ safe removal
+            }
+        }
+
+        // Re-check removedPositions
+        Iterator<Position> removedIterator = removedPositions.iterator();
+        while (removedIterator.hasNext()) {
+            Position pos = removedIterator.next();
+            Log.d("position", "addingToRemovedPositons:" + pos);
+            Log.d("position", "re-checking:" + (current.getCellAt(pos).getObject() instanceof Building));
+            if (shouldAttackPosition(pos, current)) {
+                Log.d("position", "re-adding");
+                positionsToAttack.add(pos);
+                removedIterator.remove(); // ✅ safe removal from removedPositions
+            }
+        }
     }
 }
