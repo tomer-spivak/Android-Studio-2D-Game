@@ -59,7 +59,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     private GameViewModel viewModel;
     private SoundEffects soundEffects; // Instance of SoundEffects
 
-
     Button btnChooseBuildingsCardView;
     Button btnStartGame;
     Button btnSkipRound;
@@ -158,7 +157,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 float volume = gameView.getMusicService().getCurrentVolumeLevel();
                 Log.d("music", "volume: " + volume);
                 gameView.pauseGameLoop();
-                dialogManager.showPauseAlertDialog(gameView, viewModel, volume);
+                dialogManager.showPauseAlertDialog(gameView, viewModel, volume, soundEffects);
             }
         });
 

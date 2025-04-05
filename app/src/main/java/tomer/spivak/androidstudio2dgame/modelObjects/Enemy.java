@@ -106,13 +106,13 @@ public class Enemy extends ModelObject implements IDamager{
         }
         EnemyState currentState = getEnemyState();
         setState(EnemyState.HURT);
-        soundEffects.pauseSoundEffects();
+        soundEffects.pauseSoundEffect(soundStreamId);
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 setState(currentState);
-                soundEffects.resumeSoundEffects();
+                soundEffects.resumeSoundEffect(soundStreamId);
             }
         }, 1000);
     }

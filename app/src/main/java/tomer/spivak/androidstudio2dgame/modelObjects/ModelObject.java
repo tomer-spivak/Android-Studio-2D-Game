@@ -11,7 +11,7 @@ public abstract class ModelObject implements IDamageable {
     protected Position pos;
     protected float health;
     protected float maxHealth;
-    private int soundStreamId = -1; // Default to -1 indicating “no sound playing”
+    protected int soundStreamId = -1; // Default to -1 indicating “no sound playing”
     SoundEffects soundEffects;
 
     public void setSoundStreamId(int soundStreamId) {

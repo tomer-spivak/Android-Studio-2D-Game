@@ -22,6 +22,7 @@ import java.util.Objects;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.music.SoundEffects;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
 public class DialogManager {
@@ -121,14 +122,16 @@ public class DialogManager {
         databaseRepository.logResults(viewModel);
     }
 
-    public void showPauseAlertDialog(GameView gameView, GameViewModel viewModel,
-                                     float volume) {
+    public void showPauseAlertDialog(GameView gameView, GameViewModel viewModel, float volume, SoundEffects soundEffects) {
         // Inflate the custom dialog layout
         LayoutInflater inflater = LayoutInflater.from(context);
         View dialogView = inflater.inflate(R.layout.dialog_pause, null);
         // Get reference to the SeekBar and set an initial volume if needed
         SeekBar volumeSeekBar = dialogView.findViewById(R.id.volumeSeekBar);
         volumeSeekBar.setProgress((int) volume); // currentVolumeLevel should be defined based on your app logic
+
+        SeekBar soundEffectsSeekBar = dialogView.findViewById(R.id.soundEffectsSeekBar);
+        soundEffectsSeekBar.setProgress(soundEffects.getVolumeLevel());
 
 
         Log.d("music", "volume: " + volume);
@@ -139,11 +142,13 @@ public class DialogManager {
                 .setPositiveButton("Resume", (dialog, which) -> {
                     Log.d("music", "v:" + volumeSeekBar.getProgress());
                     gameView.resumeGameLoop(volumeSeekBar.getProgress());
+                    soundEffects.setVolume(soundEffectsSeekBar.getProgress() / 100f);
                     dialog.dismiss();
                 })
                 .setNegativeButton("Exit", (dialog, which) -> {
                     saveBoard(viewModel, gameView);
                     dialog.dismiss();
+
                 })
                 .setCancelable(false)
                 .show();

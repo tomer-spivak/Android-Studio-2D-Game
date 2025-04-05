@@ -205,8 +205,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
 
     }
 
-
-
     public void pauseGameLoop() {
         Log.d("music", String.valueOf(musicService));
         soundEffects.pauseSoundEffects();
@@ -217,7 +215,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         else {
             new Handler(Looper.getMainLooper()).postDelayed(this::pauseGameLoop, 100);
         }
-
 
         gameLoop.stopLoop();
     }
