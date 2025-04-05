@@ -1,7 +1,7 @@
 package tomer.spivak.androidstudio2dgame.helper;
 
 
-import static tomer.spivak.androidstudio2dgame.home.EmailSender.sendEmail;
+import static tomer.spivak.androidstudio2dgame.helper.EmailSender.sendEmail;
 
 import android.content.Context;
 import android.content.Intent;
@@ -376,23 +376,25 @@ public class DatabaseRepository {
         ;
     }
 
-    public void fetchAndSetImage(ImageView imageView, Context intermiditaecontext){
-        storageRef = storageRef.child("profileImages/" + user.getDisplayName() + ".jpg");
-        Log.d("image", String.valueOf(user.getDisplayName()));
-        storageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-            @Override
-            public void onSuccess(Uri uri) {
-                Glide.with(intermiditaecontext)
-                        .load(uri)
-                        .into(imageView);
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(intermiditaecontext, "failed to fetch image: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
+    public void fetchAndSetImage(ImageView imageView, Context context) {
+        Uri photoUrl = user.getPhotoUrl();
 
+        // If the user already has a photo URL, use it directly
+        if (photoUrl != null) {
+            Glide.with(context)
+                    .load(photoUrl)
+                    .into(imageView);
+            return;
+        }
+
+        // Otherwise, use the default profile image path based on display name.
+        StorageReference profileImageRef = storageRef.child("profileImages/" + user.getDisplayName() + ".jpg");
+        profileImageRef.getDownloadUrl().addOnSuccessListener(uri ->
+                        Glide.with(context)
+                                .load(uri)
+                                .into(imageView))
+                .addOnFailureListener(e ->
+                        Toast.makeText(context, "Failed to fetch image: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
     public interface GoogleSignInCallback {
@@ -449,6 +451,7 @@ public class DatabaseRepository {
                             Map<String, Object> userData = new HashMap<>();
                             String displayName = user.getDisplayName();
                             userData.put("displayName", displayName);
+
                             db.collection("users").document(user.getUid())
                                     .set(userData, SetOptions.merge())
                                     .addOnFailureListener(new OnFailureListener() {

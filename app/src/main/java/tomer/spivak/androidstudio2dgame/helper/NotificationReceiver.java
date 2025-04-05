@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.music;
+package tomer.spivak.androidstudio2dgame.helper;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;

@@ -23,7 +23,7 @@ import com.google.android.material.navigation.NavigationBarView;
 import java.util.Calendar;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.music.NotificationReceiver;
+import tomer.spivak.androidstudio2dgame.helper.NotificationReceiver;
 
 public class HomeActivity extends AppCompatActivity{
     BottomNavigationView bottomNavigationView;
@@ -75,7 +75,7 @@ public class HomeActivity extends AppCompatActivity{
 
 
         // Use a unique request code for each alarm (e.g., combining hour and minute)
-        int requestCode = hour * 100 + 0;
+        int requestCode = hour * 100;
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context,
                 requestCode,

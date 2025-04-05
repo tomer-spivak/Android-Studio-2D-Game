@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.home;
+package tomer.spivak.androidstudio2dgame.helper;
 
 import android.content.Context;
 import android.util.Log;
