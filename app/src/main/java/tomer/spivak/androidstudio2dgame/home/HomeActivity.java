@@ -1,6 +1,13 @@
 package tomer.spivak.androidstudio2dgame.home;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.MenuItem;
 
 import androidx.activity.EdgeToEdge;
@@ -13,7 +20,10 @@ import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 
+import java.util.Calendar;
+
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.music.NotificationReceiver;
 
 public class HomeActivity extends AppCompatActivity{
     BottomNavigationView bottomNavigationView;
@@ -41,7 +51,60 @@ public class HomeActivity extends AppCompatActivity{
                 return true;
             }
         });
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager alarmManager1 = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            if (!alarmManager1.canScheduleExactAlarms()) {
+                // Request permission
+                Intent intent1 = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                intent1.setData(Uri.parse("package:" + getPackageName()));
+                startActivity(intent1);
+            }
+        }
+        scheduleNotification(this, 10);  // 10:00 AM
+        scheduleNotification(this, 16);  // 4:00 PM
+
+        scheduleNotification(this, 22);  // 10:00 PM
+
     }
+
+
+    private void scheduleNotification(Context context, int hour) {
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, NotificationReceiver.class);
+
+
+        // Use a unique request code for each alarm (e.g., combining hour and minute)
+        int requestCode = hour * 100 + 0;
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+
+        // Set up the calendar for the target time
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+
+
+        // If the time has already passed today, schedule for tomorrow
+        if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+
+
+
+
+
+        // Set an exact alarm
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+    }
+
+
     void init(){
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
     }

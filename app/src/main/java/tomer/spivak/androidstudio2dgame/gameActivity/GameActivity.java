@@ -3,10 +3,7 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,7 +27,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import java.util.ArrayList;
-import java.util.Calendar;
 
 
 
@@ -38,7 +34,6 @@ import java.util.Calendar;
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.helper.DialogManager;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
-import tomer.spivak.androidstudio2dgame.music.NotificationReceiver;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.model.Cell;
@@ -178,37 +173,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     }
 
 
-    private void scheduleNotification(Context context, int hour) {
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(context, NotificationReceiver.class);
-
-
-        // Use a unique request code for each alarm (e.g., combining hour and minute)
-        int requestCode = hour * 100;
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                context,
-                requestCode,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
-
-
-        // Set up the calendar for the target time
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, hour);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-
-
-        // If the time has already passed today, schedule for tomorrow
-        if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
-            calendar.add(Calendar.DAY_OF_YEAR, 1);
-        }
-
-
-        // Set an exact alarm
-        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-    }
 
 
 
@@ -239,15 +203,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     }
 
 
-    @Override
-    protected void onStop() {
-        scheduleNotification(this, 10);  // 10:00 AM
-        scheduleNotification(this, 16);  // 4:00 PM
-        scheduleNotification(this, 22);  // 10:00 PM
 
 
-        super.onStop();
-    }
 
 
     @Override
