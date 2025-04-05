@@ -189,6 +189,7 @@ public class Enemy extends ModelObject implements IDamager{
     public EnemyState getEnemyState() {
         return state;
     }
+
     public void setState(EnemyState enemyState) {
         Log.d("enemyState", enemyState.toString());
         this.state = enemyState;

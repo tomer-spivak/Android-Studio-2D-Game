@@ -93,7 +93,9 @@ public class EnemyManager {
         int targetIndex = enemy.getCurrentTargetIndex();
 
         if (path == null || path.isEmpty() || targetIndex >= path.size()){
-            finishedPath(current, enemy, deltaTime);
+            Building building = attemptAttack(current, enemy, deltaTime);
+            fixDirectionToBuilding(enemy, current, building);
+
             return;
         }
 
@@ -114,12 +116,9 @@ public class EnemyManager {
             targetIndex = moveEnemy(currentCell, nextCell, enemy, timePerStep);
             enemy.setState(EnemyState.IDLE);
         }
-        if (path.isEmpty() || targetIndex >= path.size()){
-            fixDirectionToBuilding(enemy, current);
-        }
     }
 
-    private void finishedPath(GameState current, Enemy enemy, long deltaTime) {
+    private Building attemptAttack(GameState current, Enemy enemy, long deltaTime) {
         Cell currentEnemyCell = current.getCellAt(enemy.getPosition());
         List<Cell> neighbors = currentEnemyCell.getNeighbors(current);
 
@@ -131,19 +130,25 @@ public class EnemyManager {
                 adjacentBuildings.add((Building) obj);
             }
         }
-
+        Building buildingToAttack = null;
         if (!adjacentBuildings.isEmpty()) {
             enemy.accumulateAttackTime(deltaTime);
 
             for (Building building : adjacentBuildings) {
                 if (enemy.canAttack()) {
+                    buildingToAttack = building;
                     enemy.attack(building);
                 }
             }
         }
+        return buildingToAttack;
     }
 
-    private void fixDirectionToBuilding(Enemy enemy, GameState current) {
+    private void fixDirectionToBuilding(Enemy enemy, GameState current, Building building) {
+        if (building != null) {
+            enemy.updateDirection(enemy.getPosition(), building.getPosition());
+            return;
+        }
         Cell enemyCell = current.getCellAt(enemy.getPosition());
         List<Cell> buildingPotential = enemyCell.getNeighbors(current);
         for (Cell cell : buildingPotential) {
