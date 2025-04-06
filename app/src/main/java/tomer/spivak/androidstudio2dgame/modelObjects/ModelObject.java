@@ -76,4 +76,8 @@ public abstract class ModelObject implements IDamageable {
     public void setSoundEffects(SoundEffects soundEffects) {
         this.soundEffects = soundEffects;
     }
+
+    public void stopSound() {
+        soundEffects.stopSound(soundStreamId);
+    }
 }

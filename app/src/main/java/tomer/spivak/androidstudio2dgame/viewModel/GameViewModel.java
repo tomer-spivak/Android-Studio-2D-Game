@@ -60,19 +60,11 @@ public class GameViewModel extends ViewModel {
                 gameState.postValue(current);
             }
         } else {
-            if (selectedCell.getObject() instanceof Building && current.getTimeOfDay() &&
-                    canRemoveBuilding(current)){
-                selectedCell.removeObject();
-                gameState.postValue(current);
-            }
+            removeBuilding(selectedCell, current);
         }
     }
 
-    private boolean canPlaceBuilding(GameState current) {
-        return selectedBuildingType != null && current.getTimeOfDay() && current.getShnuzes() >= ModelObjectFactory.getPrice(selectedBuildingType);
-    }
-
-    private boolean canRemoveBuilding(GameState current) {
+    private void removeBuilding(Cell selectedCell, GameState current) {
         int num = 0;
         Cell[][] grid = current.getGrid();
         for (Cell[] cells : grid) {
@@ -81,10 +73,25 @@ public class GameViewModel extends ViewModel {
                     num++;
                 }
                 if (num == 2)
-                    return true;
+                    break;
             }
         }
-        return false;
+        if (num < 2)
+            return;
+
+        if (selectedCell.getObject() instanceof Building && current.getTimeOfDay()){
+            Building building = (Building) selectedCell.getObject();
+            building.stopSound();
+            building.setSoundEffects(null);
+
+            current.addShnuzes(building.getPrice()/2);
+            selectedCell.removeObject();
+            gameState.postValue(current);
+        }
+    }
+
+    private boolean canPlaceBuilding(GameState current) {
+        return selectedBuildingType != null && current.getTimeOfDay() && current.getShnuzes() >= ModelObjectFactory.getPrice(selectedBuildingType);
     }
 
     public void placeBuilding(int row, int col, GameState current) {
