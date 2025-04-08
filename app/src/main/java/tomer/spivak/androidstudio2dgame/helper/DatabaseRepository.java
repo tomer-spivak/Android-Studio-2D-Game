@@ -56,18 +56,25 @@ public class DatabaseRepository {
     private final FirebaseUser user;
     AuthenticationHelper authHelper;
     FirebaseStorage storage;
-    Context context;
     StorageReference storageRef;
+    private static DatabaseRepository instance;
 
 
-    public DatabaseRepository(Context context){
+    private DatabaseRepository(Context context){
         FirebaseApp.initializeApp(context);
-        this.context = context;
         db = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReference();
         user = FirebaseAuth.getInstance().getCurrentUser();
     }
+
+    public static synchronized DatabaseRepository getInstance(Context context) {
+        if (instance == null) {
+            instance = new DatabaseRepository(context);
+        }
+        return instance;
+    }
+
 
     public void saveBoard(Cell[][] board, String difficulty, Long gameTime,
                           OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
@@ -77,7 +84,7 @@ public class DatabaseRepository {
         for (int i = 0; i < board.length; i++) {
             List<Map<String, Object>> rowData = new ArrayList<>();
             for (int j = 0; j < board[i].length; j++) {
-                rowData.add(board[i][j].toMap()); // Convert each Cell to a map
+                rowData.add(board[i][j].toMap());
             }
             boardData.put("row_" + i, rowData);
         }
@@ -274,7 +281,6 @@ public class DatabaseRepository {
     }
 
     private void saveRound(int round) {
-        // Fetch all users (each document under "users" collection)
         Map<String, Object> leaderboard = new HashMap<>();
         leaderboard.put("max round", round);
 
@@ -291,14 +297,11 @@ public class DatabaseRepository {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         for (DocumentSnapshot document : task.getResult()) {
-                            // Assuming "leaderboard" is stored as a map inside each user document
                             Map<String, Object> leaderboard = (Map<String, Object>)
                                     document.get("leaderboard");
                             if (leaderboard != null && leaderboard.get("max round") != null) {
-                                // Cast the value to a Number then convert to int
                                 int maxRound = ((Number) Objects.
                                         requireNonNull(leaderboard.get("max round"))).intValue();
-                                // Now that each document has been updated, we can safely get the displayName
                                 String displayName = document.getString("displayName");
                                 maxRounds.add(new LeaderboardEntry(maxRound, displayName));
                             }
@@ -306,7 +309,6 @@ public class DatabaseRepository {
                         maxRounds.sort(Collections.reverseOrder());
                         callback.onLeaderboardFetched(maxRounds);
                     } else {
-                        // Optionally handle errors
                         callback.onLeaderboardFetched(new ArrayList<>());
                     }
                 });
@@ -370,7 +372,6 @@ public class DatabaseRepository {
             @Override
             public void onFailure(@NonNull Exception e) {
                 Log.d("image", String.valueOf(user.getDisplayName()));
-                Toast.makeText(context, "failed to upload image: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
         })
         ;
@@ -379,7 +380,6 @@ public class DatabaseRepository {
     public void fetchAndSetImage(ImageView imageView, Context context) {
         Uri photoUrl = user.getPhotoUrl();
 
-        // If the user already has a photo URL, use it directly
         if (photoUrl != null) {
             Glide.with(context)
                     .load(photoUrl)
@@ -387,7 +387,6 @@ public class DatabaseRepository {
             return;
         }
 
-        // Otherwise, use the default profile image path based on display name.
         StorageReference profileImageRef = storageRef.child("profileImages/" + user.getDisplayName() + ".jpg");
         profileImageRef.getDownloadUrl().addOnSuccessListener(uri ->
                         Glide.with(context)
@@ -425,7 +424,6 @@ public class DatabaseRepository {
                     .build();
 
             GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(context, gso);
-            // Optional: sign out to force a new login each time
             googleSignInClient.signOut();
             return googleSignInClient.getSignInIntent();
         }
@@ -477,7 +475,6 @@ public class DatabaseRepository {
                         public void onSuccess(Object o) {
                             sendEmail(email, context);
                             uploadImage(uri, username, onSuccessListener);
-                            // Get the current Firebase user and update the profile with the display name
                             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                             if (user != null) {
                                 UserProfileChangeRequest profileUpdates =
@@ -488,7 +485,6 @@ public class DatabaseRepository {
                                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                                             @Override
                                             public void onSuccess(Void unused) {
-                                                // Also update the Firestore "users" document with the display name
                                                 FirebaseFirestore db = FirebaseFirestore.getInstance();
                                                 Map<String, Object> userData = new HashMap<>();
                                                 userData.put("displayName", username);

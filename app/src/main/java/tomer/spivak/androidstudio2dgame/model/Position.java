@@ -1,6 +1,5 @@
 package tomer.spivak.androidstudio2dgame.model;
 
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -10,21 +9,12 @@ import java.util.List;
 import java.util.Map;
 
 public class Position {
-    private final int x; // Grid row index (e.g., 0 to 9 for a 10x10 grid)
-    private final int y; // Grid column index
+    private final int x;
+    private final int y;
 
     public Position(int x, int y) {
         this.x = x;
         this.y = y;
-    }
-
-    // Calculate distance between two grid positions (for attack range checks)
-    public float distanceTo(Position other) {
-        // Use Manhattan distance for grid-based movement
-        Log.d("dist", x + " " + other.x + " " + y + " " + other.y);
-        int distX = Math.abs(x - other.x);
-        int distY = Math.abs(y - other.y);
-        return distX + distY;
     }
 
     @Override
@@ -38,12 +28,12 @@ public class Position {
     public List<Position> getNeighbors() {
         List<Position> neighbors = new ArrayList<>();
 
-        neighbors.add(new Position(x + 1, y)); // Right
+        neighbors.add(new Position(x + 1, y));
         if (x - 1 >= 0)
-            neighbors.add(new Position(x - 1, y)); // Left
-        neighbors.add(new Position(x, y + 1)); // Down
+            neighbors.add(new Position(x - 1, y));
+        neighbors.add(new Position(x, y + 1));
         if (y - 1 >= 0)
-            neighbors.add(new Position(x, y - 1)); // Up
+            neighbors.add(new Position(x, y - 1));
         return neighbors;
     }
 

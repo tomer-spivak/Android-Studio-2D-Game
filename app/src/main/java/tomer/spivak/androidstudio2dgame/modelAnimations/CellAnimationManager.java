@@ -24,14 +24,12 @@ public class CellAnimationManager {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // After 200ms, reset the state and the attack timer.
                 cell.setState(CellState.NORMAL);
             }
         }, 200);
     }
 
     public static void executeEnemyDeathAnimation(Cell cell) {
-        // Define the animation states for one cycle.
         final CellState[] states = {
                 CellState.ENEMYDEATH1,
                 CellState.ENEMYDEATH2,
@@ -43,14 +41,12 @@ public class CellAnimationManager {
         final int totalSteps = cyclesToRun * stepsPerCycle;
         final AtomicInteger stepCounter = new AtomicInteger(0);
 
-        // Create a scheduler that will update the state every 200ms.
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 int step = stepCounter.getAndIncrement();
                 if (step < totalSteps) {
-                    // Determine the state for the current step.
                     int stateIndex = step % stepsPerCycle;
                     cell.setState(states[stateIndex]);
                 } else {

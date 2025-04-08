@@ -14,12 +14,9 @@ public class Pathfinder {
         this.gameState = gameState;
     }
 
-    // Returns the closest REACHABLE building to the enemy's position, or null if none exist
     public Position findClosestBuilding(Position enemyPos, List<Position> allBuildings) {
-        // Step 1: Run BFS from the enemy's position to compute distances to all tiles
         Map<Position, Integer> bfsDistances = bfs(enemyPos);
 
-        // Step 2: Iterate through all buildings to find the closest one
         Position closestBuilding = null;
         int minDistance = Integer.MAX_VALUE;
 
@@ -36,7 +33,6 @@ public class Pathfinder {
         return closestBuilding;
     }
 
-    // BFS to compute shortest distances from a starting position
     private Map<Position, Integer> bfs(Position start) {
         Map<Position, Integer> distances = new HashMap<>();
         Queue<Position> queue = new LinkedList<>();
@@ -47,10 +43,8 @@ public class Pathfinder {
             Position current = queue.poll();
             int currentDist = distances.get(current);
 
-            // Explore all 4-directional neighbors
             for (Position neighbor : current.getNeighbors()) {
-                // Skip if neighbor is out of bounds, blocked, or already visited
-                if (!gameState.isValidPosition(neighbor) || !isPassablePosition(neighbor) ||
+                if (!gameState.isValidPosition(neighbor) || isPassablePosition(neighbor) ||
                         distances.containsKey(neighbor)) {
                     continue;
                 }
@@ -64,8 +58,7 @@ public class Pathfinder {
     }
 
     private boolean isPassablePosition(Position pos) {
-        // Check if the position is valid AND not occupied
-        return !gameState.getGrid()[pos.getX()][pos.getY()].isOccupied();
+        return gameState.getGrid()[pos.getX()][pos.getY()].isOccupied();
     }
 
     public List<Position> findPath(Position start, Position goal) {
@@ -77,13 +70,12 @@ public class Pathfinder {
         while (!frontier.isEmpty()) {
             Position current = frontier.poll();
 
-            // Stop if we've reached the goal
             if (current.equals(goal)) {
                 break;
             }
 
             for (Position neighbor : current.getNeighbors()) {
-                if (!gameState.isValidPosition(neighbor) || !isPassablePosition(neighbor)) {
+                if (!gameState.isValidPosition(neighbor) || isPassablePosition(neighbor)) {
                     continue;
                 }
                 if (!cameFrom.containsKey(neighbor)) {
@@ -93,20 +85,17 @@ public class Pathfinder {
             }
         }
 
-        // If the goal wasn't reached, return an empty path.
         if (!cameFrom.containsKey(goal)) {
             return new ArrayList<>();
         }
 
-        // Reconstruct the path from goal to start.
         List<Position> path = new ArrayList<>();
         Position current = goal;
         while (current != null) {
-            path.add(0, current);  // Insert at the beginning.
+            path.add(0, current);
             current = cameFrom.get(current);
         }
 
-        // Remove the starting position if present.
         if (!path.isEmpty() && path.get(0).equals(start)) {
             path.remove(0);
         }

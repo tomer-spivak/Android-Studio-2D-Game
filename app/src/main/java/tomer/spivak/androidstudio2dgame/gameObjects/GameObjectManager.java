@@ -147,9 +147,7 @@ public class GameObjectManager {
 
     public void updateGameObjectsPositions() {
         for (GameObject gameObject : gameObjectsViewsArrayList) {
-            // Retrieve the object's current grid position
             Position pos = gameObject.getPos();
-            // Update the drawing coordinate to match the newly calculated center
             gameObject.setImagePoint(centerCells[pos.getX()][pos.getY()]);
         }
     }

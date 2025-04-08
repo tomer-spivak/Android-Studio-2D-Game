@@ -38,20 +38,10 @@ public class GridTransformer {
         return state.getScale();
     }
 
-    //public TransformState reset() {
-      //  // Reset to initial state
-        //state = new TransformState(state.getInitialX(), state.getInitialY(), 1.0f);
-        //return state;
-    //}
 
     private boolean isScaleInvalid(float scale) {
         return scale < minScale || scale > maxScale;
     }
-
-
-
-
-    // Additional utility methods that might be useful
     public int getCellWidth() {
         return (int) (baseCellHeight * state.getScale() / Math.tan(angle));
     }

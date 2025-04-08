@@ -5,10 +5,14 @@ import static androidx.core.app.ActivityCompat.finishAffinity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
@@ -17,35 +21,47 @@ import androidx.appcompat.app.AlertDialog;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.lang.ref.WeakReference;
 import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.music.SoundEffects;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
 public class DialogManager {
-    Context context;
+    private WeakReference<Context> contextRef;
     DatabaseRepository databaseRepository;
+    private static DialogManager instance;
 
 
-    public DialogManager(Context context, DatabaseRepository databaseRepository) {
-        this.context = context;
+    private DialogManager(Context context, DatabaseRepository databaseRepository) {
+        this.contextRef = new WeakReference<>(context);
         this.databaseRepository = databaseRepository;
     }
 
+    public static synchronized DialogManager getInstance(Context context, DatabaseRepository databaseRepository) {
+        if (instance == null) {
+            instance = new DialogManager(context, databaseRepository);
+        } else {
+            instance.contextRef = new WeakReference<>(context);
+            instance.databaseRepository = databaseRepository;
+        }
+        return instance;
+    }
+
     public void showImagePickerDialog(ImageChooser imageChooser) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(contextRef.get());
         builder.setTitle("Select Image")
                 .setItems(new CharSequence[]{"Take Photo", "Choose from Gallery"}, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (which == 0) {
-                            // User chose "Take Photo"
                             imageChooser.takePhoto();
                         } else if (which == 1) {
-                            // User chose "Choose from Gallery"
                             imageChooser.openGallery();
                         }
                     }
@@ -56,10 +72,10 @@ public class DialogManager {
 
     //checks if user wants to save his base
     public void showExitAlertDialog(GameViewModel viewModel) {
-        LayoutInflater inflater = LayoutInflater.from(context);
+        LayoutInflater inflater = LayoutInflater.from(contextRef.get());
         View dialogView = inflater.inflate(R.layout.alert_dialog, null);
 
-        AlertDialog alertDialog = new AlertDialog.Builder(context)
+        AlertDialog alertDialog = new AlertDialog.Builder(contextRef.get())
                 .setView(dialogView)
                 .setCancelable(false)
                 .create();
@@ -111,7 +127,7 @@ public class DialogManager {
             public void onSuccess(Void unused) {
                 gameView.stopGameLoop();
                 finish();
-                Toast.makeText(context, "success", Toast.LENGTH_SHORT).show();
+                Toast.makeText(contextRef.get(), "success", Toast.LENGTH_SHORT).show();
             }
         }, new OnFailureListener() {
             @Override
@@ -123,10 +139,8 @@ public class DialogManager {
     }
 
     public void showPauseAlertDialog(GameView gameView, GameViewModel viewModel, float volume, SoundEffects soundEffects) {
-        // Inflate the custom dialog layout
-        LayoutInflater inflater = LayoutInflater.from(context);
+        LayoutInflater inflater = LayoutInflater.from(contextRef.get());
         View dialogView = inflater.inflate(R.layout.dialog_pause, null);
-        // Get reference to the SeekBar and set an initial volume if needed
         SeekBar volumeSeekBar = dialogView.findViewById(R.id.volumeSeekBar);
         volumeSeekBar.setProgress((int) volume); // currentVolumeLevel should be defined based on your app logic
 
@@ -135,8 +149,7 @@ public class DialogManager {
 
 
         Log.d("music", "volume: " + volume);
-        // Build and show the AlertDialog with the custom view
-        new AlertDialog.Builder(context)
+        new AlertDialog.Builder(contextRef.get())
                 .setTitle("Game Paused")
                 .setView(dialogView)
                 .setPositiveButton("Resume", (dialog, which) -> {
@@ -156,10 +169,10 @@ public class DialogManager {
 
 
     public AlertDialog showLoadingBoardAlertDialog() {
-        AlertDialog dialog = new AlertDialog.Builder(context)
+        AlertDialog dialog = new AlertDialog.Builder(contextRef.get())
                 .setTitle("Loading board")
                 .setMessage("Please wait...")
-                .setCancelable(false) // Prevents dismissal by tapping outside or pressing back
+                .setCancelable(false)
                 .create();
         dialog.show();
         return dialog;
@@ -169,7 +182,7 @@ public class DialogManager {
         Log.d("debug", "tried to save");
         databaseRepository.logResults(viewModel);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(contextRef.get());
         builder.setTitle("Title")
                 .setMessage("This is an alert dialog.")
                 .setPositiveButton("Go back to menu", new DialogInterface.OnClickListener() {
@@ -182,7 +195,7 @@ public class DialogManager {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         gameView.stopGameLoop();
-                        finishAffinity((Activity) context);
+                        finishAffinity((Activity) contextRef.get());
                         System.exit(0);
                     }
                 });
@@ -191,9 +204,47 @@ public class DialogManager {
         alertDialog.show();
     }
 
+    public void showDifficultyAlertDialog() {
+        LayoutInflater inflater = LayoutInflater.from(contextRef.get());
+        View dialogView = inflater.inflate(R.layout.alert_dialog_difficulty, null);
+
+        RadioGroup group = dialogView.findViewById(R.id.difficultyGroup);
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+        Button continueButton = dialogView.findViewById(R.id.continueButton);
+
+        AlertDialog dialog = new AlertDialog.Builder(contextRef.get())
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+
+        continueButton.setOnClickListener(v -> {
+            DifficultyLevel selected = DifficultyLevel.EASY;
+            int checkedId = group.getCheckedRadioButtonId();
+            if (checkedId == R.id.normal) {
+                selected = DifficultyLevel.MEDIUM;
+            } else if (checkedId == R.id.hard) {
+                selected = DifficultyLevel.HARD;
+            }
+            Intent intent = new Intent(contextRef.get(), GameActivity.class);
+            intent.putExtra("difficultyLevel", selected.name());
+            intent.putExtra("isContinue", false);
+            contextRef.get().startActivity(intent);
+            dialog.dismiss();
+        });
+
+        dialog.show();
+
+    }
+
+
     private void finish() {
-        if (context instanceof Activity) {
-            ((Activity) context).finish();
+        if (contextRef.get() instanceof Activity) {
+            ((Activity) contextRef.get()).finish();
         }
     }
 

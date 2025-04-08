@@ -80,9 +80,7 @@ public class TouchManager {
         }
         @Override
         public boolean onSingleTapUp(@NonNull MotionEvent e) {
-            // This method is called when a single tap is detected
             if (isScrolling) {
-                // Call a new method in the listener to handle box click
                 listener.onBoxClick(e.getX(), e.getY());
                 return true;
             }
@@ -103,7 +101,6 @@ public class TouchManager {
     public interface TouchListener {
         void onScale(float scaleFactor, float focusX, float focusY);
         void onScroll(float deltaX, float deltaY);
-        void onBoxClick(float x, float y); // New method for handling box clicks
-
+        void onBoxClick(float x, float y);
     }
 }

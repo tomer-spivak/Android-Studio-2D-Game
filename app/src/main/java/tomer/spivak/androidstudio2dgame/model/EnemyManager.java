@@ -45,25 +45,19 @@ public class EnemyManager {
             Log.d("debug", String.valueOf(cols));
             Random rand = new Random();
 
-            // Total frame positions
             int leftColumnCount = rows - 2;
             int rightColumnCount = rows - 2;
             int totalFramePositions = cols + cols + leftColumnCount + rightColumnCount;
 
-            // Generate random index from the frame positions
             int randChoice = rand.nextInt(totalFramePositions);
 
             if (randChoice < cols) {
-                // First row
                 return centerCells[0][randChoice];
             } else if (randChoice < cols + cols) {
-                // Last row
                 return centerCells[rows - 1][randChoice - cols];
             } else if (randChoice < cols + cols + leftColumnCount) {
-                // First column (excluding first/last row)
                 return centerCells[randChoice - cols - cols + 1][0];
             } else {
-                // Last column (excluding first/last row)
                 return centerCells[randChoice - cols - cols - leftColumnCount + 1][cols - 1];
             }
         }
@@ -102,7 +96,7 @@ public class EnemyManager {
         enemy.updateDirection(enemy.getPosition(), path.get(0));
         enemy.accumulateTime(deltaTime);
 
-        float timePerStep = 1000 / enemy.getMovementSpeed(); // ms per cell
+        float timePerStep = 1000 / enemy.getMovementSpeed();
 
         while (enemy.getAccumulatedTime() >= timePerStep && targetIndex < path.size()) {
             Position nextPos = path.get(targetIndex);

@@ -49,7 +49,6 @@ public class BuildingsRecyclerViewAdapter extends
                 .placeholder(R.drawable.placeholder_building)
                 .into(holder.imageView);
 
-        // Format title: replace "0" with space, then capitalize each word.
         String title = imageName.replace("0", " ");
         String[] words = title.split(" ");
         for (int i = 0; i < words.length; i++) {
@@ -89,7 +88,6 @@ public class BuildingsRecyclerViewAdapter extends
 
         @Override
         public void onClick(View v) {
-            // Manage selected state
             if (selectedBuilding != null) {
                 selectedBuilding.setSelected(false);
             }

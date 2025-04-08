@@ -43,7 +43,7 @@ public class LoginFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
 
-        databaseRepository = new DatabaseRepository(getContext());
+        databaseRepository = DatabaseRepository.getInstance(getContext());
 
         Button btn = view.findViewById(R.id.btnLogin);
         Button btnGoogleLogin = view.findViewById(R.id.btnGoogleLogin);
@@ -131,11 +131,9 @@ public class LoginFragment extends Fragment {
                             public void onFailure(@NonNull Exception e) {
                                 LayoutInflater inflater = LayoutInflater.from(getContext());
                                 View layout = inflater.inflate(R.layout.custom_toast, null);
-                                // Use null as the parent
 
                                 TextView text = layout.findViewById(R.id.toast_text);
-                                text.setText("Couldn't Log in"); // Set the text properly
-
+                                text.setText("Couldn't Log in");
                                 Toast toast = new Toast(getContext());
                                 toast.setDuration(Toast.LENGTH_SHORT);
                                 toast.setView(layout);

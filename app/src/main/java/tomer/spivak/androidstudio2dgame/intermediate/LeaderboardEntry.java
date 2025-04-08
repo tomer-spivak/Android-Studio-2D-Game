@@ -19,7 +19,7 @@ public class LeaderboardEntry implements Comparable<LeaderboardEntry> {
 
     @Override
     public int compareTo(LeaderboardEntry other) {
-        return Integer.compare(this.maxRound, other.maxRound); // Descending order
+        return Integer.compare(this.maxRound, other.maxRound);
 
     }
 }

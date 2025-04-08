@@ -74,7 +74,6 @@ public class HomeActivity extends AppCompatActivity{
         Intent intent = new Intent(context, NotificationReceiver.class);
 
 
-        // Use a unique request code for each alarm (e.g., combining hour and minute)
         int requestCode = hour * 100;
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context,
@@ -84,14 +83,12 @@ public class HomeActivity extends AppCompatActivity{
         );
 
 
-        // Set up the calendar for the target time
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, hour);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
 
 
-        // If the time has already passed today, schedule for tomorrow
         if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
         }
@@ -100,7 +97,6 @@ public class HomeActivity extends AppCompatActivity{
 
 
 
-        // Set an exact alarm
         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
     }
 

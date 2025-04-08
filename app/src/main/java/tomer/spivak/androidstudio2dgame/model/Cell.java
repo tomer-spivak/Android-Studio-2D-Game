@@ -41,12 +41,12 @@ public class Cell {
 
     public void placeBuilding(Building building) {
         this.object = building;
-        building.setPosition(position); // Use grid position, not screen pixels
+        building.setPosition(position);
     }
 
     public void spawnEnemy(Enemy enemy) {
         this.object = enemy;
-        enemy.setPosition(position); // Use grid position
+        enemy.setPosition(position);
     }
 
     public List<Cell> getNeighbors(GameState current) {
@@ -81,12 +81,11 @@ public class Cell {
         this.cellState = cellState;
     }
 
-    // Method to convert the Cell to a Map for Firestore
     public Map<String, Object> toMap() {
         Map<String, Object> cellData = new HashMap<>();
         cellData.put("position", position.toMap()); // Convert Position to Map
         cellData.put("occupied", object != null); // Boolean if occupied
-        cellData.put("object", object != null ? object.toMap() : null); // Convert ModelObject to Map if not null
+        cellData.put("object", object != null ? object.toMap() : null);
         return cellData;
     }
 
@@ -106,7 +105,6 @@ public class Cell {
 
     public void cellAttacked(AttackType attackType) {
         CellAnimationManager.executeAttackedAnimation(this, attackType);
-        // Schedule a task to reset the state after 200ms
     }
 }
 

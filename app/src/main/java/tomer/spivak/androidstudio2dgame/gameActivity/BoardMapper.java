@@ -41,7 +41,6 @@ public class BoardMapper {
 
         board = new Cell[boardSize][boardSize];
 
-            // Log each row and its contents in a more readable format
             for (Map.Entry<String, Object> entry : Objects.requireNonNull(data).entrySet()) {
                 Object rowData = entry.getValue();
                 List<Map<String, Object>> rowList = (List<Map<String, Object>>) rowData;
@@ -121,11 +120,9 @@ public class BoardMapper {
         int rows = array.length;
         int cols = array[0].length;
 
-        // Track valid rows and columns
         boolean[] validRows = new boolean[rows];
         boolean[] validCols = new boolean[cols];
 
-        // Identify valid rows and columns
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 if (array[i][j] != null) {
@@ -135,17 +132,14 @@ public class BoardMapper {
             }
         }
 
-        // Count valid rows and columns
         int validRowCount = 0;
         for (boolean row : validRows) if (row) validRowCount++;
 
         int validColCount = 0;
         for (boolean col : validCols) if (col) validColCount++;
 
-        // Create the new array
         Cell[][] result = new Cell[validRowCount][validColCount];
 
-        // Fill the new array
         int newRow = 0;
         for (int i = 0; i < rows; i++) {
             if (validRows[i]) {

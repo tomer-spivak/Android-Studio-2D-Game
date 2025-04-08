@@ -83,7 +83,7 @@ public class AOETurret extends Turret{
             if (!shouldAttackPosition(pos, current)) {
                 if(current.isValidPosition(pos))
                     removedPositions.add(pos);
-                iterator.remove(); // ✅ safe removal
+                iterator.remove();
             }
         }
 
@@ -96,7 +96,7 @@ public class AOETurret extends Turret{
             if (shouldAttackPosition(pos, current)) {
                 Log.d("position", "re-adding");
                 positionsToAttack.add(pos);
-                removedIterator.remove(); // ✅ safe removal from removedPositions
+                removedIterator.remove();
             }
         }
     }

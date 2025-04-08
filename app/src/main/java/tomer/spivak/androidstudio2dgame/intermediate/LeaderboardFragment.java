@@ -20,7 +20,7 @@ import java.util.List;
 public class LeaderboardFragment extends Fragment {
     private LeaderboardAdapter adapter;
     private final ArrayList<LeaderboardEntry> leaderboardList = new ArrayList<>();
-    DatabaseRepository databaseRepository = new DatabaseRepository(getContext());
+    DatabaseRepository databaseRepository = DatabaseRepository.getInstance(getContext());
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

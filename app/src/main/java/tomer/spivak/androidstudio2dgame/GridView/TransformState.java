@@ -16,14 +16,10 @@ class TransformState {
         this.initialY = positionY;
     }
 
-    // Getters
     public float getPositionX() { return positionX; }
     public float getPositionY() { return positionY; }
     public float getScale() { return scale; }
-    public float getInitialX() { return initialX; }
-    public float getInitialY() { return initialY; }
 
-    // Transformation methods that return new states
     public TransformState translate(float deltaX, float deltaY) {
         return new TransformState(
                 positionX + deltaX,
@@ -32,7 +28,6 @@ class TransformState {
         );
     }
 
-    // Utility method for creating new states
     public TransformState with(float newX, float newY, float newScale) {
         return new TransformState(newX, newY, newScale);
     }

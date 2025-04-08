@@ -67,6 +67,7 @@ dependencies {
     implementation (libs.recyclerview)
 
     implementation (libs.firebase.storage)
+    implementation (libs.material.vlatestversion)
 
     implementation(platform(libs.firebase.bom))
 

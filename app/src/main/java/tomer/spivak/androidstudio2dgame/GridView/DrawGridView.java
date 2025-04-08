@@ -10,7 +10,6 @@ import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 
 public class DrawGridView {
-    //private final Paint gridPaint;
     private final GridBitmap[] grasses;
     Context context;
 
@@ -42,7 +41,6 @@ public class DrawGridView {
         else
             bitmap = grasses[cellState.ordinal()];
         bitmap.updateScale(scale);
-        //Log.d("bitmap", "w: " + bitmap.getWidth() + " h: " + bitmap.getHeight());
 
         float topLeftGrassX = cellCenter.x - bitmap.getWidth() / 2;
         float topLeftGrassY = cellCenter.y - bitmap.getHeight() / 2;

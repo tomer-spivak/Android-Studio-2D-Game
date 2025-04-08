@@ -33,7 +33,7 @@ public class SignUpFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
-        repository = new DatabaseRepository(requireContext());
+        repository = DatabaseRepository.getInstance(requireContext());
         Button btnSignUp = view.findViewById(R.id.btnSignUp);
         EditText etEmail = view.findViewById(R.id.etEmail);
         EditText etPassword = view.findViewById(R.id.etPassword);
@@ -137,7 +137,7 @@ public class SignUpFragment extends Fragment {
         btnSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DialogManager dialogManager = new DialogManager(getContext(), repository);
+                DialogManager dialogManager = DialogManager.getInstance(getContext(), repository);
 
                 dialogManager.showImagePickerDialog(imageChooser);
             }

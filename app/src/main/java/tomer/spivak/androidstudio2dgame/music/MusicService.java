@@ -19,7 +19,6 @@ public class MusicService extends Service {
     private int lastSongIndex = -1;
     float volume;
 
-    // Binder given to clients
     private final IBinder binder = new LocalBinder();
 
     public int getCurrentVolumeLevel() {
@@ -39,7 +38,6 @@ public class MusicService extends Service {
         }
     }
 
-    // Class used for the client Binder.
     public class LocalBinder extends Binder {
         public MusicService getService() {
             return MusicService.this;
@@ -50,11 +48,11 @@ public class MusicService extends Service {
     public void onCreate() {
         super.onCreate();
         SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
-        volume = prefs.getFloat("volume", 0.07f) ; // 0.5f is the default value if not set
+        volume = prefs.getFloat("volume", 0.07f) ;
         if (mediaPlayer != null) {
             mediaPlayer.setVolume(volume, volume);
         }
-        playRandomSong(); // Start with a random song
+        playRandomSong();
         Log.d("music", "MusicService onCreate");
     }
 
@@ -66,7 +64,7 @@ public class MusicService extends Service {
         }
         int newSongIndex;
         do {
-            newSongIndex = random.nextInt(music.length); // Pick a random index
+            newSongIndex = random.nextInt(music.length);
         } while (newSongIndex == lastSongIndex);
         lastSongIndex = newSongIndex;
         mediaPlayer = MediaPlayer.create(this, music[newSongIndex]);
@@ -120,9 +118,7 @@ public class MusicService extends Service {
 
                 }
             } catch (IllegalStateException e) {
-                // Log the error and reinitialize or handle the mediaPlayer state appropriately.
                 Log.d("music", "MediaPlayer resume failed: " + e.getMessage());
-                // Optionally, reinitialize your MediaPlayer here
             }
         }
     }
@@ -130,12 +126,10 @@ public class MusicService extends Service {
     public void stopMusic() {
         if (mediaPlayer != null) {
             try {
-                // Check if MediaPlayer is playing or in a valid state
                 if (mediaPlayer.isPlaying()) {
                     mediaPlayer.stop();
                 }
             } catch (IllegalStateException e) {
-                // Optionally log or handle the exception
                 Log.e("music", "MediaPlayer stop failed: " + e.getMessage());
             } finally {
                 mediaPlayer.release();

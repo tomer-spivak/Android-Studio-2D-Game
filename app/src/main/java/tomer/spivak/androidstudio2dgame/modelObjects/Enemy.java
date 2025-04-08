@@ -31,7 +31,7 @@ public class Enemy extends ModelObject implements IDamager{
 
     public Enemy(float health, float damage, float movementSpeed, Position pos,
                  EnemyType enemyType, float attackCooldown, EnemyAttackAnimation attackAnimation, int reward) {
-        super(health, pos); // Call base constructor
+        super(health, pos);
         this.reward = reward;
         attackComponent = new AttackComponent(damage, attackCooldown);
         this.movementSpeed = movementSpeed;
@@ -137,7 +137,6 @@ public class Enemy extends ModelObject implements IDamager{
     public void setPath(List<Position> path) {
         this.path = path;
         this.currentTargetIndex = 0;
-        //this.timeSinceLastMove = 0;
     }
 
     public float getAccumulatedTime() {

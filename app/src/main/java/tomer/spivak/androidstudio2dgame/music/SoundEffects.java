@@ -18,18 +18,16 @@ public class SoundEffects {
 
 
     public SoundEffects(Context context) {
-        // Initialize SoundPool
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_GAME)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build();
 
             soundPool = new SoundPool.Builder()
-                    .setMaxStreams(50) // Up to 5 sounds at once
+                    .setMaxStreams(50)
                     .setAudioAttributes(audioAttributes)
                     .build();
 
-            // Load sound
         volume = 0.5f;
             enemyAttackSound = soundPool.load(context, R.raw.monsterattack, 1);
             turretAttackSound = soundPool.load(context, R.raw.lightningtowerattack, 1);

@@ -27,7 +27,6 @@ public class EmailSender {
         String url = "https://api.sendgrid.com/v3/mail/send";
         String apiKey = "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";
 
-        // Construct the email data in JSON format
         JSONObject emailData = new JSONObject();
         try {
             emailData.put("personalizations", new JSONArray()
@@ -43,7 +42,6 @@ public class EmailSender {
             e.printStackTrace();
         }
 
-        // Create and send the request using Volley
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, emailData,
                 response -> Log.d("Email", "Email sent successfully"),
                 error -> Log.e("Email", "Failed to send email", error)) {
@@ -59,15 +57,11 @@ public class EmailSender {
             @Override
             protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
                 try {
-                    // Convert response data to String
                     String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers, "utf-8"));
-                    // If the response is empty and the status code is 202, consider it a success.
                     if (jsonString.isEmpty() && response.statusCode == 202) {
                         Log.d("Email", "Empty response received, but status is 202 Accepted.");
-                        // Return an empty JSONObject to satisfy the response.
                         return Response.success(new JSONObject(), HttpHeaderParser.parseCacheHeaders(response));
                     }
-                    // Otherwise, try to parse the response normally.
                     return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));
                 } catch (UnsupportedEncodingException | JSONException e) {
                     return Response.error(new ParseError(e));
@@ -75,7 +69,6 @@ public class EmailSender {
             }
         };
 
-        // Add the request to the Volley request queue
         RequestQueue queue = Volley.newRequestQueue(context);
         queue.add(request);
     }

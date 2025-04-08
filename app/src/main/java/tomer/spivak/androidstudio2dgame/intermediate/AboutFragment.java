@@ -30,7 +30,6 @@ public class AboutFragment extends Fragment {
                 intent.putExtra(Intent.EXTRA_SUBJECT, "");
                 intent.putExtra(Intent.EXTRA_TEXT, "");
 
-// Set Gmail package
                 intent.setPackage("com.google.android.gm");
 
                 try {

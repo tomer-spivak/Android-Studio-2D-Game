@@ -74,7 +74,6 @@ public class GridPathManager {
     }
 
     public Path[][] getCellPaths() {
-      //  Log.d("cell", "getCellPaths" + cellHeight + " " + cellWidth);
         return cellPaths;
     }
 

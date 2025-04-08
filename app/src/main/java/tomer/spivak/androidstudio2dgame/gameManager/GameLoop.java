@@ -10,8 +10,6 @@ public class GameLoop implements Runnable {
     private boolean isRunning = false;
     private final SurfaceHolder surfaceHolder;
     private final GameView gameView;
-//    private double averageUPS;
-//    private double averageFPS;
     private Thread gameThread;
     private final GameViewListener listener;
 

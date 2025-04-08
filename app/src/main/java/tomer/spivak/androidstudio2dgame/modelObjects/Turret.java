@@ -36,7 +36,6 @@ public abstract class Turret extends Building implements IDamager{
 
     }
 
-    // This method should be called in the main game loop.
     protected boolean canAttack() {
         return attackComponent.canAttack() && state != BuildingState.ATTACKING &&
                 state != BuildingState.HURT;
@@ -73,7 +72,6 @@ public abstract class Turret extends Building implements IDamager{
     @Override
     public Object toMap() {
         Map turretData = (Map) super.toMap();
-        // Store the type of object
         turretData.put("type", type.name());
         turretData.put("attackType", attackType.name());
         turretData.put("timeSinceLastAttack", attackComponent.getTimeSinceLastAttack());

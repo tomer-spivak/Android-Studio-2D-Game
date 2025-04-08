@@ -17,12 +17,10 @@ public class TurretAnimationManager {
 
     private static void executeLightningAttackAnimation(Turret turret, Enemy target) {
         turret.setState(BuildingState.ATTACKING);
-        // Schedule a task to reset the state after 200ms
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // After 200ms, reset the state and the attack timer.
                 turret.setState(BuildingState.IDLE);
                 turret.dealDamage(target);
                 turret.resetAttackTimer();

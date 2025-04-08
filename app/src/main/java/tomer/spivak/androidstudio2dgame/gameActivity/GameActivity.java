@@ -52,7 +52,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     Context context;
     GameView gameView;
     private GameViewModel viewModel;
-    private SoundEffects soundEffects; // Instance of SoundEffects
+    private SoundEffects soundEffects;
 
     Button btnChooseBuildingsCardView;
     Button btnStartGame;
@@ -99,7 +99,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        // Set window to fullscreen (hide status bar)
         setContentView(R.layout.activity_game);
         context = this;
 
@@ -187,7 +186,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         super.onResume();
         if (gameView != null) {
             SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
-            float volume = prefs.getFloat("volume", 0.07f) ; // 0.5f is the default value if not set
+            float volume = prefs.getFloat("volume", 0.07f) ;
             Log.d("volume", "get" +volume);
             gameView.resumeGameLoop(volume * 100);
         }
@@ -213,7 +212,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         if (gameView != null) {
             gameView.stopGameLoop();
         }
-        // Release SoundEffects resources
         if (soundEffects != null) {
             soundEffects.onDestroy();
         }
@@ -242,8 +240,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         gameView = new GameView(context, boardSize, this, soundEffects);
         gameLayout.addView(gameView);
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
-        databaseRepository = new DatabaseRepository(context);
-        dialogManager = new DialogManager(context, databaseRepository);
+        databaseRepository = DatabaseRepository.getInstance(context);
+        dialogManager = DialogManager.getInstance(context, databaseRepository);
 
 
         btnStartGame = findViewById(R.id.btnStartGame);
@@ -261,13 +259,11 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         final DifficultyLevel[] difficulty = new DifficultyLevel[1];
         AlertDialog loadingDialog = dialogManager.showLoadingBoardAlertDialog();
         if (!isContinue){
-            // Create a new game – there is no board in the database
             difficulty[0] = DifficultyLevel.valueOf(difficultyName);
             boardMapper = new BoardMapper(boardSize, difficulty[0]);
             boardMapper.initBoard();
             initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0], 0L);
         } else {
-            // Continue a game – load the board from the database
             boardMapper = new BoardMapper(boardSize);
             databaseRepository.loadBoardFromDataBase(boardMapper, new OnBoardLoadedListener() {
                 @Override
@@ -314,7 +310,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     }
 
 
-    // Pop the options for user (need to add more buildings later)
     private void initBuildingToChoose() {
         String obelisk = "OBELISK";
         String archerTower = "LIGHTNING0TOWER";
@@ -323,7 +318,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     }
 
 
-    // A building has been selected in the card view, sending info to game view
     @Override
     public void onBuildingRecyclerViewItemClick(String buildingImageURL, int position) {
         onBuildingSelected(buildingImageURL.replace("0", ""));

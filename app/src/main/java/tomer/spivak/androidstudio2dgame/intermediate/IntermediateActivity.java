@@ -34,18 +34,19 @@ import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameCheckCallback;
+import tomer.spivak.androidstudio2dgame.helper.DialogManager;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 
 public class IntermediateActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
-    //private FrameLayout flMain;
     MaterialToolbar tbMain;
     Context context;
     NavigationView navigationView;
 
     DatabaseRepository databaseRepository;
 
+    DialogManager dialogManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +56,8 @@ public class IntermediateActivity extends AppCompatActivity {
 
 
         context = this;
-        databaseRepository = new DatabaseRepository(context);
+        databaseRepository = DatabaseRepository.getInstance(context);
+        dialogManager = DialogManager.getInstance(context, databaseRepository);
         init();
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -108,34 +110,7 @@ public class IntermediateActivity extends AppCompatActivity {
             }
 
             private void createNewGame() {
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                final DifficultyLevel[] difficultyLevel = {DifficultyLevel.EASY};
-                builder.setTitle("select difficulty level")
-                        .setItems(new String[]{"Easy", "Normal", "Hard"},new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                switch (which) {
-                                    case 0:
-                                        difficultyLevel[0] = DifficultyLevel.EASY;
-                                        break;
-                                    case 1:
-                                        difficultyLevel[0] = DifficultyLevel.MEDIUM;
-                                        // Handle Option 2
-                                        break;
-                                    case 2:
-                                        difficultyLevel[0] = DifficultyLevel.HARD;
-                                        // Handle Option 3
-                                        break;
-                                }
-                                Intent intent = new Intent(context, GameActivity.class);
-                                intent.putExtra("difficultyLevel", difficultyLevel[0].name());
-                                intent.putExtra("isContinue", false);
-                                startActivity(intent);
-                            }
-                        });
-
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                dialogManager.showDifficultyAlertDialog();
             }
         });
 
@@ -202,11 +177,9 @@ public class IntermediateActivity extends AppCompatActivity {
                 tbMain, R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close);
 
-        //toggle.setDrawerIndicatorEnabled(false); // Disable default icon
 
         toggle.syncState();
 
-        //toggle.setHomeAsUpIndicator(R.drawable.ic_launcher_foreground); // Set custom icon
 
         tbMain.setNavigationOnClickListener(new View.OnClickListener() {
             @Override

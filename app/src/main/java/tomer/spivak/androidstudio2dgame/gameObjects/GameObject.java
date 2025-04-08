@@ -24,7 +24,6 @@ public abstract class GameObject {
     protected Drawable drawable;
     protected String imageResourceString;
     protected Position pos;
-    // Optional: if you want a caption
 
     public GameObject(Context context, Point point, String name, float scale, Position pos)  {
         this.context = context;
@@ -36,7 +35,6 @@ public abstract class GameObject {
         this.pos = pos;
     }
 
-    //creates the view of the Game Object
     protected void createView() {
         Log.d("grass", "creating new game object: " + imageResourceString);
         ImageView imageView = new ImageView(context); // Use your Activity or Application context

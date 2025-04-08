@@ -11,7 +11,7 @@ public abstract class ModelObject implements IDamageable {
     protected Position pos;
     protected float health;
     protected float maxHealth;
-    protected int soundStreamId = -1; // Default to -1 indicating “no sound playing”
+    protected int soundStreamId = -1;
     SoundEffects soundEffects;
 
     public void setSoundStreamId(int soundStreamId) {
@@ -54,8 +54,7 @@ public abstract class ModelObject implements IDamageable {
 
     public Object toMap(){
         Map<String, Object> modelObjectData = new HashMap<>();
-        modelObjectData.put("type", "modelObject"); // Store the type of object
-        // monsterData.put("name", name);
+        modelObjectData.put("type", "modelObject");
         modelObjectData.put("health", health);
         return modelObjectData;
     }

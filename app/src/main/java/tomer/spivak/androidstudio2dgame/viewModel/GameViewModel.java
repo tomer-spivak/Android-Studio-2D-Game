@@ -27,7 +27,6 @@ import tomer.spivak.androidstudio2dgame.music.SoundEffects;
 
 public class GameViewModel extends ViewModel {
     private final MutableLiveData<GameState> gameState = new MutableLiveData<>();
-    // New LiveData for sound events.
 
     private String selectedBuildingType;
     private static final int NIGHT_THRESHOLD = 5000;
@@ -174,7 +173,6 @@ public class GameViewModel extends ViewModel {
 
     private void startNight(GameState current) {
         current.setTimeOfDay(false);
-        // Place holder amount
         int amount = current.getRound();
         enemyManager.spawnEnemies(current, amount);
     }
@@ -200,7 +198,6 @@ public class GameViewModel extends ViewModel {
         return gameState;
     }
 
-    // Expose the sound event LiveData
 
 
 
@@ -208,7 +205,6 @@ public class GameViewModel extends ViewModel {
         GameState current = gameState.getValue();
         if (current == null)
             return;
-        //current.accumulateRound();
         current.startTimerForNextRound();
         updateGameState((long) (current.getTimeToNextRound() - 0.1));
         gameState.postValue(current);

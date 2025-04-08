@@ -52,11 +52,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     GameDrawerHelper gameDrawerHelper;
     private int shnuzes = 0;
 
-    // Reference to the MusicService and its intent.
     private MusicService musicService;
     private final Intent musicIntent;
 
-    // ServiceConnection to bind to the MusicService
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -133,7 +131,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         if (gameLoop != null) {
             gameLoop.stopLoop();
         }
-        // Unbind the service when the view is destroyed
         context.unbindService(serviceConnection);
     }
 
