@@ -35,7 +35,6 @@ import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameCheckCallback;
 import tomer.spivak.androidstudio2dgame.helper.DialogManager;
-import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 
 public class IntermediateActivity extends AppCompatActivity {
 
@@ -57,7 +56,7 @@ public class IntermediateActivity extends AppCompatActivity {
 
         context = this;
         databaseRepository = DatabaseRepository.getInstance(context);
-        dialogManager = DialogManager.getInstance(context, databaseRepository);
+        dialogManager = DialogManager.getInstance(databaseRepository);
         init();
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -110,7 +109,7 @@ public class IntermediateActivity extends AppCompatActivity {
             }
 
             private void createNewGame() {
-                dialogManager.showDifficultyAlertDialog();
+                dialogManager.showDifficultyAlertDialog(context);
             }
         });
 

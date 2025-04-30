@@ -151,7 +151,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 float volume = gameView.getMusicService().getCurrentVolumeLevel();
                 Log.d("music", "volume: " + volume);
                 gameView.pauseGameLoop();
-                dialogManager.showPauseAlertDialog(gameView, viewModel, volume, soundEffects);
+                dialogManager.showPauseAlertDialog(gameView, viewModel, volume, soundEffects, context);
             }
         });
 
@@ -163,7 +163,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
                 @Override
                 public void handleOnBackPressed() {
-                    dialogManager.showExitAlertDialog(viewModel);
+                    dialogManager.showExitAlertDialog(viewModel, context);
                 }
             };
             getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
@@ -177,7 +177,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
 
     private boolean canStartGame() {
-        return viewModel.isNotEmptyBuildings();
+        return viewModel.canStartGame();
     }
 
 
@@ -241,7 +241,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         gameLayout.addView(gameView);
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
         databaseRepository = DatabaseRepository.getInstance(context);
-        dialogManager = DialogManager.getInstance(context, databaseRepository);
+        dialogManager = DialogManager.getInstance(databaseRepository);
 
 
         btnStartGame = findViewById(R.id.btnStartGame);
@@ -257,7 +257,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         boolean isContinue = getIntent().getBooleanExtra("isContinue", false);
         BoardMapper boardMapper;
         final DifficultyLevel[] difficulty = new DifficultyLevel[1];
-        AlertDialog loadingDialog = dialogManager.showLoadingBoardAlertDialog();
+        AlertDialog loadingDialog = dialogManager.showLoadingBoardAlertDialog(context);
         if (!isContinue){
             difficulty[0] = DifficultyLevel.valueOf(difficultyName);
             boardMapper = new BoardMapper(boardSize, difficulty[0]);
@@ -281,8 +281,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     private void initBoardInViewModel(Cell[][] board, AlertDialog dialog,
                                       DifficultyLevel difficulty, Long timeSinceStartOfGame) {
         gameView.updateBoard(board);
-        viewModel.initBoardFromCloud(board.clone(), difficulty);
-        viewModel.updateGameState(timeSinceStartOfGame);
+        viewModel.initBoard(board.clone(), difficulty);
+        viewModel.tick(timeSinceStartOfGame);
         dialog.dismiss();
         viewModel.setSoundEffects(soundEffects);
     }
@@ -333,7 +333,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 if (gameState.getGameStatus() == GameStatus.LOST) {
                     Toast.makeText(context, "You Lost", Toast.LENGTH_SHORT).show();
                     databaseRepository.removeBoard();
-                    dialogManager.showLostAlertDialog(viewModel, gameView);
+                    dialogManager.showLostAlertDialog(viewModel, gameView, context);
                 }
                 if (gameState.getTimeOfDay()) {
                     if (btnChooseBuildingsCardView.getVisibility() == View.GONE)
@@ -388,6 +388,6 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
     @Override
     public void updateGameState(long elapsedTime) {
         if (gameIsOnGoing)
-            viewModel.updateGameState(elapsedTime);
+            viewModel.tick(elapsedTime);
     }
 }

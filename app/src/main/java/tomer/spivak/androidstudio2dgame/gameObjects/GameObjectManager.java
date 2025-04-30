@@ -111,9 +111,9 @@ public class GameObjectManager {
             Enemy enemy = (Enemy) object;
             gameObject = GameObjectFactory.create(context, centerCells[centerX][centerY],
                     enemy.getType().name().toLowerCase(), scale,
-                    new Position(centerX, centerY),
-                    enemy.getCurrentDirection().name().toLowerCase(), enemy.getEnemyState().
-                            name().toLowerCase());
+                    new Position(centerX, centerY),enemy.getEnemyState().
+                            name().toLowerCase(),
+                    enemy.getCurrentDirection().name().toLowerCase());
         } else if (object instanceof Ruin){
             Ruin ruin = (Ruin) object;
             gameObject = GameObjectFactory.create(context, centerCells[centerX][centerY],

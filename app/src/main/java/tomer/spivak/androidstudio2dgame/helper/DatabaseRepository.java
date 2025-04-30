@@ -499,7 +499,7 @@ public class DatabaseRepository {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(context, "failed to create a user: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "failed to create a user: " + e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
         }

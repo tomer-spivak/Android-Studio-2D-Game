@@ -137,9 +137,9 @@ public class SignUpFragment extends Fragment {
         btnSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DialogManager dialogManager = DialogManager.getInstance(getContext(), repository);
+                DialogManager dialogManager = DialogManager.getInstance(repository);
 
-                dialogManager.showImagePickerDialog(imageChooser);
+                dialogManager.showImagePickerDialog(imageChooser, getContext());
             }
         });
 

@@ -9,7 +9,6 @@ import android.graphics.Rect;
 
 import java.text.NumberFormat;
 
-import tomer.spivak.androidstudio2dgame.gameObjects.GameBuilding;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectManager;
 
@@ -41,8 +40,8 @@ public class GameDrawerHelper {
         int barHeight = (int) (15 * scale);
         int x = pos.x - barWidth / 2;
         int yOffset;
-        if (gameObject instanceof GameBuilding){
-            yOffset = 290;
+        if (gameObject.getBuildingType().equals("building")) {
+            yOffset = 250;
         } else {
             yOffset = 170;
         }
