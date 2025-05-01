@@ -68,7 +68,7 @@ public class ModelGameManager {
             Building building = (Building) selectedCell.getObject();
             building.stopSound();
             building.setSoundEffects(null);
-            state.addShnuzes(building.getPrice()/2);
+            state.addShnuzes((int) ((building.getPrice() * building.getHealth())/building.getMaxHealth()));
             selectedCell.removeObject();
         }
 
