@@ -211,4 +211,16 @@ public class ModelGameManager {
     public int getRound() {
         return state.getCurrentRound();
     }
+
+    public void setCurrentRound(int currentRound) {
+        state.setCurrentRound(currentRound);
+    }
+
+    public void setShnuzes(int shnuzes) {
+        state.setShnuzes(shnuzes);
+    }
+
+    public void initShnuzes() {
+        state.initShnuzes();
+    }
 }

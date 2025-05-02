@@ -10,14 +10,14 @@ public class ModelObjectFactory {
     private static final Map<String, ModelObjectCreator> typeMap = new HashMap<>();
 
     static {
-        typeMap.put("OBELISK", (position, difficulty) ->
+        typeMap.put("obelisk", (position, difficulty) ->
                 new Building(getBuildingHealthByDifficulty(200, difficulty), position, 1000));
 
-        typeMap.put("LIGHTNINGTOWER", (position, difficulty) ->
+        typeMap.put("lightningtower", (position, difficulty) ->
                 new Turret(getBuildingHealthByDifficulty(100, difficulty), getTurretDamageByDifficulty(20, difficulty),
                         4, position, 1500, 3000));
 
-        typeMap.put("MONSTER", (position, difficulty) ->
+        typeMap.put("monster", (position, difficulty) ->
                 new Enemy(getEnemyHealthByDifficulty(80, difficulty), getEnemyDamageByDifficulty(30, difficulty),
                       2.5f, position, 500, getRewardByDifficulty(100, difficulty)));
 
@@ -36,8 +36,8 @@ public class ModelObjectFactory {
 
     public static int getPrice(String selectedBuildingType) {
         switch (selectedBuildingType) {
-            case "OBELISK": return 1000;
-            case "LIGHTNINGTOWER": return 3000;
+            case "obelisk": return 1000;
+            case "lightningtower": return 3000;
         }
         return 0;
     }

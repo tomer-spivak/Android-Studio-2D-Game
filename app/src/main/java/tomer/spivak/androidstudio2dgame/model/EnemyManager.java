@@ -17,7 +17,7 @@ public class EnemyManager {
 
 
     public void spawnEnemies(GameState gameState, int amount) {
-        String enemyType = "MONSTER";
+        String enemyType = "monster";
             for (int i = 0; i < amount; i++) {
                 spawnEnemy(gameState, enemyType);
             }

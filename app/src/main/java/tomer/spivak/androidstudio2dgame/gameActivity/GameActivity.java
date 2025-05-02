@@ -262,26 +262,28 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             difficulty[0] = DifficultyLevel.valueOf(difficultyName);
             boardMapper = new BoardMapper(boardSize, difficulty[0]);
             boardMapper.initBoard();
-            initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0], 0L);
+            initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0], 0L, 1, -1);
         } else {
             boardMapper = new BoardMapper(boardSize);
-            databaseRepository.loadBoardFromDataBase(boardMapper, new OnBoardLoadedListener() {
+            databaseRepository.loadDataFromDataBase(boardMapper, new OnBoardLoadedListener() {
                 @Override
                 public void onBoardLoaded(Cell[][] board) {
                     Toast.makeText(context, "got board", Toast.LENGTH_SHORT).show();
                     difficulty[0] = boardMapper.getDifficulty();
                     Long timeSinceStartOfGame = boardMapper.getTimeSinceStartOfGame();
-                    initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0], timeSinceStartOfGame);
+                    int currentRound = boardMapper.getCurrentRound();
+                    int shnuzes = boardMapper.getShnuzes();
+                    initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0],
+                            timeSinceStartOfGame, currentRound, shnuzes);
                 }
             });
         }
     }
 
 
-    private void initBoardInViewModel(Cell[][] board, AlertDialog dialog,
-                                      DifficultyLevel difficulty, Long timeSinceStartOfGame) {
+    private void initBoardInViewModel(Cell[][] board, AlertDialog dialog, DifficultyLevel difficulty, Long timeSinceStartOfGame, int currentRound, int shnuzes) {
         gameView.updateBoard(board);
-        viewModel.initBoard(board.clone(), difficulty);
+        viewModel.initBoard(board.clone(), difficulty, currentRound, shnuzes);
         viewModel.tick(timeSinceStartOfGame);
         dialog.dismiss();
         viewModel.setSoundEffects(soundEffects);
@@ -311,8 +313,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
 
     private void initBuildingToChoose() {
-        String obelisk = "OBELISK";
-        String archerTower = "LIGHTNING0TOWER";
+        String obelisk = "obelisk";
+        String archerTower = "lightning0tower";
         buildingImagesURL.add(obelisk);
         buildingImagesURL.add(archerTower);
     }
@@ -334,6 +336,12 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                     Toast.makeText(context, "You Lost", Toast.LENGTH_SHORT).show();
                     databaseRepository.removeBoard();
                     dialogManager.showLostAlertDialog(viewModel, gameView, context);
+                } else if (gameState.getGameStatus() == GameStatus.WON)  {
+                    Toast.makeText(context, "You Won", Toast.LENGTH_SHORT).show();
+                    databaseRepository.removeBoard();
+                    dialogManager.showWonAlertDialog(viewModel, gameView, context);
+
+
                 }
                 if (gameState.getTimeOfDay()) {
                     if (btnChooseBuildingsCardView.getVisibility() == View.GONE)

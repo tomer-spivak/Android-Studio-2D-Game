@@ -1,6 +1,5 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,13 +20,13 @@ public class BoardMapper {
     DifficultyLevel difficulty;
     Cell[][] board;
     boolean isBoardEmpty = true;
+    private int currentRound;
+    private int shnuzes;
 
     public BoardMapper(int boardSize, DifficultyLevel difficulty) {
         this.boardSize = boardSize;
-
         this.difficulty = difficulty;
-        board = new Cell[boardSize][boardSize];
-
+        this.board = new Cell[boardSize][boardSize];
     }
 
     public BoardMapper(int boardSize) {
@@ -35,70 +34,48 @@ public class BoardMapper {
         this.board = new Cell[boardSize][boardSize];
     }
 
-
-    public void createBoard(Map<String, Object> data){
-
+    public void createBoard(Map<String, Object> data) {
         board = new Cell[boardSize][boardSize];
 
-            for (Map.Entry<String, Object> entry : Objects.requireNonNull(data).entrySet()) {
-                Object rowData = entry.getValue();
-                List<Map<String, Object>> rowList = (List<Map<String, Object>>) rowData;
+        for (Map.Entry<String, Object> entry : Objects.requireNonNull(data).entrySet()) {
+            Object rowData = entry.getValue();
+            List<Map<String, Object>> rowList = (List<Map<String, Object>>) rowData;
 
-                for (Map<String, Object> col : rowList) {
-                    HashMap map = (HashMap) col.get("position");
-                    Position pos = new Position(((Long)(Objects.
-                            requireNonNull(Objects.requireNonNull(map).get("x"))))
-                            .intValue(), ((Long)(Objects.requireNonNull(map.get("y"))))
-                            .intValue());
-                    if (pos.getX() >= boardSize || pos.getY() >= boardSize)
-                        continue;
-                    HashMap objectMap = (HashMap)(col.get("object"));
+            for (Map<String, Object> col : rowList) {
+                HashMap map = (HashMap) col.get("position");
+                Position pos = new Position(((Long) Objects.requireNonNull(map.get("x"))).intValue(),
+                        ((Long) Objects.requireNonNull(map.get("y"))).intValue());
 
-                    if (objectMap != null){
+                if (pos.getX() >= boardSize || pos.getY() >= boardSize) continue;
 
-                        ModelObject object = ModelObjectFactory.create((String)
-                                objectMap.get("type"), pos, difficulty);
-                        String type = (String) objectMap.get("type");
-                        object.setHealth(((Number) Objects.requireNonNull(objectMap.
-                                get("health"))).floatValue());
-                        if (type.equals("MONSTER")) {
-                            Enemy enemy = (Enemy) ModelObjectFactory.create(type, pos, difficulty);
+                HashMap objectMap = (HashMap) (col.get("object"));
 
-                            String stateString = Objects.requireNonNull(objectMap.get("enemyState"))
-                                    .toString();
-                            EnemyState state = EnemyState.valueOf(stateString);
-                            enemy.setState(state);
+                if (objectMap != null) {
+                    ModelObject object = ModelObjectFactory.create((String) objectMap.get("type"), pos, difficulty);
+                    String type = (String) objectMap.get("type");
+                    object.setHealth(((Number) Objects.requireNonNull(objectMap.get("health"))).floatValue());
 
-                            String directionString = Objects.requireNonNull(objectMap.
-                                    get("currentDirection")).toString();
-                            Direction direction = Direction.valueOf(directionString);
-                            enemy.setCurrentDirection(direction);
+                    if (type.equals("monster")) {
+                        Enemy enemy = (Enemy) ModelObjectFactory.create(type, pos, difficulty);
 
+                        enemy.setState(EnemyState.valueOf(objectMap.get("enemyState").toString()));
+                        enemy.setCurrentDirection(Direction.valueOf(objectMap.get("currentDirection").toString()));
+                        enemy.setCurrentTargetIndex(((Number) objectMap.get("currentTargetIndex")).intValue());
+                        enemy.setTimeSinceLastAttack(((Double) objectMap.get("timeSinceLastAttack")).floatValue());
+                        enemy.setTimeSinceLastMove(((Double) objectMap.get("timeSinceLastMove")).floatValue());
 
-                            enemy.setCurrentTargetIndex(((Number) Objects.
-                                    requireNonNull(objectMap.get("currentTargetIndex")))
-                                    .intValue());
-
-                            enemy.setTimeSinceLastAttack(((Double) Objects.requireNonNull(objectMap.
-                                    get("timeSinceLastAttack"))).floatValue());
-
-                            enemy.setTimeSinceLastMove(((Double) Objects.requireNonNull(objectMap.
-                                    get("timeSinceLastMove"))).floatValue());
-                        }
-
-                        else {
-                            isBoardEmpty = false;
-                        }
-
+                        board[pos.getX()][pos.getY()] = new Cell(pos, enemy);
+                    } else {
                         board[pos.getX()][pos.getY()] = new Cell(pos, object);
+                    }
 
-                    }
-                    else {
-                        board[pos.getX()][pos.getY()] = new Cell(pos);
-                    }
+                    isBoardEmpty = false;
+                } else {
+                    board[pos.getX()][pos.getY()] = new Cell(pos);
                 }
             }
-            board = removeNullRowsAndColumns(board);
+        }
+        board = removeNullRowsAndColumns(board);
     }
 
     public Cell[][] removeNullRowsAndColumns(Cell[][] array) {
@@ -126,7 +103,6 @@ public class BoardMapper {
         for (boolean col : validCols) if (col) validColCount++;
 
         Cell[][] result = new Cell[validRowCount][validColCount];
-
         int newRow = 0;
         for (int i = 0; i < rows; i++) {
             if (validRows[i]) {
@@ -139,9 +115,7 @@ public class BoardMapper {
                 newRow++;
             }
         }
-
         return result;
-
     }
 
     public void initBoard() {
@@ -170,7 +144,23 @@ public class BoardMapper {
         return timeSinceStartOfGame;
     }
 
-    public void setTimeSinceStartOfGame(long l) {
-        this.timeSinceStartOfGame = l;
+    public void setTimeSinceStartOfGame(long time) {
+        this.timeSinceStartOfGame = time;
+    }
+
+    public int getCurrentRound() {
+        return currentRound;
+    }
+
+    public void setCurrentRound(int currentRound) {
+        this.currentRound = currentRound;
+    }
+
+    public int getShnuzes() {
+        return shnuzes;
+    }
+
+    public void setShnuzes(int shnuzes) {
+        this.shnuzes = shnuzes;
     }
 }

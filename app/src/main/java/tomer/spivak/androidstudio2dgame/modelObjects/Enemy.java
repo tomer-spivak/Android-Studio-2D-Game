@@ -217,7 +217,7 @@ public class Enemy extends ModelObject implements IDamager{
         enemyData.put("timeSinceLastAttack", attackComponent.getTimeSinceLastAttack());
         enemyData.put("timeSinceLastMove", timeSinceLastMove);
         enemyData.put("damage", attackComponent.getAttackDamage());
-        enemyData.put("type", "MONSTER");
+        enemyData.put("type", "monster");
         return enemyData;
     }
 

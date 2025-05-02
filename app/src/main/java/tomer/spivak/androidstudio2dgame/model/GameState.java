@@ -27,7 +27,7 @@ public class GameState {
         currentTimeOfGame = 0;
     }
 
-    private void initShnuzes() {
+    public void initShnuzes() {
         int difficulty = 4 - (this.difficulty.ordinal() + 1);
         this.shnuzes = difficulty * 5000;
     }
@@ -110,4 +110,12 @@ public class GameState {
         this.shnuzes -= shnuzes;
     }
 
+    public void setCurrentRound(int currentRound) {
+        this.currentRound = currentRound;
+    }
+
+    public void setShnuzes(int shnuzes) {
+        this.shnuzes = shnuzes;
+
+    }
 }

@@ -22,9 +22,14 @@ public class GameViewModel extends ViewModel {
         return gameState;
     }
 
-    public void initBoard(Cell[][] board, DifficultyLevel difficulty) {
+    public void initBoard(Cell[][] board, DifficultyLevel difficulty, int currentRound, int shnuzes) {
         gameManager.init(board, difficulty);
         gameState.setValue(gameManager.getState());
+        gameManager.setCurrentRound(currentRound);
+        if (shnuzes < 0)
+            gameManager.initShnuzes();
+        else
+            gameManager.setShnuzes(shnuzes);
     }
 
     public void selectBuilding(String type) {

@@ -46,7 +46,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
     private Bitmap backgroundBitmap;
     long timeTillNextRound = 0;
     int currentRound = 0;
-    int boardSize;
     GameViewListener listener;
     Context context;
     GameDrawerHelper gameDrawerHelper;
@@ -78,7 +77,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback,
         surfaceHolder.addCallback(this);
         gameLoop = new GameLoop(this, surfaceHolder, listener);
         touchManager = new TouchManager(context, this);
-        this.boardSize = boardSize;
         gridView = new CustomGridView(context, boardSize);
         this.listener = listener;
         this.soundEffects = soundEffects;

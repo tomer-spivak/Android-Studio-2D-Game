@@ -92,6 +92,7 @@ public class DialogManager {
             @Override
             public void onClick(View v) {
                 alertDialog.dismiss();
+                databaseRepository.logResults(viewModel);
                 finish(context);
             }
         });
@@ -118,7 +119,8 @@ public class DialogManager {
             return;
         Log.d("time", String.valueOf(gameState.getCurrentTimeOfGame()));
         databaseRepository.saveBoard(Objects.requireNonNull(gameState.getGrid()),
-                gameState.getDifficulty().name(), gameState.getCurrentTimeOfGame(),
+                gameState.getDifficulty().name(), gameState.getCurrentTimeOfGame(), gameState.getCurrentRound(),
+                gameState.getShnuzes(),
                 new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void unused) {
@@ -164,7 +166,6 @@ public class DialogManager {
                 .setCancelable(false)
                 .show();
     }
-
 
     public AlertDialog showLoadingBoardAlertDialog(Context context) {
         AlertDialog dialog = new AlertDialog.Builder(context)
@@ -239,11 +240,50 @@ public class DialogManager {
 
     }
 
-
     private void finish(Context context) {
         if (context instanceof Activity) {
             ((Activity) context).finish();
         }
     }
 
+    public void showWonAlertDialog(GameViewModel viewModel, GameView gameView, Context context) {
+        databaseRepository.logResults(viewModel);
+
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View dialogView = inflater.inflate(R.layout.alert_dialog_won, null);
+
+        AlertDialog alertDialog = new AlertDialog.Builder(context)
+                .setView(dialogView)
+                .setCancelable(false)
+                .create();
+
+        Button btnExitApp = dialogView.findViewById(R.id.exit_app_btn);
+        Button btnGoBack = dialogView.findViewById(R.id.go_back_btn);
+
+
+
+        btnExitApp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+                gameView.stopGameLoop();
+                finishAffinity((Activity) context);
+                System.exit(0);
+            }
+        });
+
+        btnGoBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                alertDialog.dismiss();
+                gameView.stopGameLoop();
+                finish(context);
+            }
+        });
+
+        alertDialog.show();
+
+
+    }
 }

@@ -77,6 +77,7 @@ public class DatabaseRepository {
 
 
     public void saveBoard(Cell[][] board, String difficulty, Long gameTime,
+                          int currentRound, int shnuzes,
                           OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
         if (user == null) return;
 
@@ -89,6 +90,7 @@ public class DatabaseRepository {
             boardData.put("row_" + i, rowData);
         }
 
+        // Save board structure
         db.collection("users")
                 .document(user.getUid())
                 .collection("board")
@@ -97,21 +99,18 @@ public class DatabaseRepository {
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
 
-        db.collection("users")
-                .document(user.getUid())
-                .collection("board")
-                .document("difficulty level")
-                .set(new HashMap<String, Object>() {{
-                    put("level", difficulty);
-                }});
+        // Save all game metadata in a single "meta" document
+        Map<String, Object> metaData = new HashMap<>();
+        metaData.put("level", difficulty);
+        metaData.put("millis from start of the game", gameTime);
+        metaData.put("currentRound", currentRound);
+        metaData.put("shnuzes", shnuzes);
 
         db.collection("users")
                 .document(user.getUid())
                 .collection("board")
-                .document("time of game")
-                .set(new HashMap<String, Object>() {{
-                    put("millis from start of the game", gameTime);
-                }});
+                .document("meta")
+                .set(metaData);
     }
 
     public void loadBoard(OnSuccessListener<DocumentSnapshot> onSuccess,
@@ -129,64 +128,46 @@ public class DatabaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
-    private void loadDifficultyLevel(OnSuccessListener<DocumentSnapshot> onSuccess) {
-        if (user == null) {
-            return;
-        }
+    public void loadDataFromDataBase(BoardMapper boardMapper,
+                                     OnBoardLoadedListener listener) {
+        if (user == null) return;
 
         db.collection("users")
                 .document(user.getUid())
                 .collection("board")
-                .document("difficulty level")
+                .document("meta")
                 .get()
-                .addOnSuccessListener(onSuccess);
-    }
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot metaSnapshot) {
+                        // Load all meta fields from one document
+                        String difficultyName = metaSnapshot.getString("level");
+                        Long gameTime = metaSnapshot.getLong("millis from start of the game");
+                        Long currentRound = metaSnapshot.getLong("currentRound");
+                        Long shnuzes = metaSnapshot.getLong("shnuzes");
 
-    public void loadBoardFromDataBase(BoardMapper boardMapper,
-                                      OnBoardLoadedListener listener) {
-        //if difficulty is null, it means that its in the database,
-        // and that we are currently in a game
-
-        loadDifficultyLevel(new OnSuccessListener<DocumentSnapshot>() {
-                @Override
-                public void onSuccess(DocumentSnapshot documentSnapshot) {
-                    String difficultyName = (String) documentSnapshot.get("level");
-                    DifficultyLevel difficultyLevel = DifficultyLevel
-                            .valueOf(difficultyName);
-                    boardMapper.setDifficulty(difficultyLevel);
-
-                    loadTimeOfGame(new OnSuccessListener<DocumentSnapshot>() {
-                        @Override
-                        public void onSuccess(DocumentSnapshot documentSnapshot) {
-                            Long timeOfGame =
-                                    (Long) documentSnapshot.get("millis from start of the game");
-                            boardMapper.setTimeSinceStartOfGame(timeOfGame);
-
-                            loadBoard(new OnSuccessListener<DocumentSnapshot>() {
-                                @Override
-                                public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                    createBoardInBoardMapper(boardMapper, documentSnapshot, listener);
-                                }
-                            }, null);
+                        if (difficultyName != null) {
+                            boardMapper.setDifficulty(DifficultyLevel.valueOf(difficultyName));
                         }
-                    });
+                        if (gameTime != null) {
+                            boardMapper.setTimeSinceStartOfGame(gameTime);
+                        }
+                        if (currentRound != null) {
+                            boardMapper.setCurrentRound(currentRound.intValue());
+                        }
+                        if (shnuzes != null) {
+                            boardMapper.setShnuzes(shnuzes.intValue());
+                        }
 
-
-                }
-            });
-    }
-
-    private void loadTimeOfGame(OnSuccessListener<DocumentSnapshot> onSuccess) {
-        if (user == null) {
-            return;
-        }
-
-        db.collection("users")
-                .document(user.getUid())
-                .collection("board")
-                .document("time of game")
-                .get()
-                .addOnSuccessListener(onSuccess);
+                        // Load board structure
+                        loadBoard(new OnSuccessListener<DocumentSnapshot>() {
+                            @Override
+                            public void onSuccess(DocumentSnapshot boardSnapshot) {
+                                createBoardInBoardMapper(boardMapper, boardSnapshot, listener);
+                            }
+                        }, null);
+                    }
+                });
     }
 
     private void createBoardInBoardMapper(BoardMapper boardMapper,

@@ -132,7 +132,7 @@ public class Turret extends Building implements IDamager {
     @Override
     public Object toMap() {
         Map<String,Object> turretData = (Map<String,Object>) super.toMap();
-        turretData.put("type", "LIGHTNINGTOWER");
+        turretData.put("type", "lightningtower");
         turretData.put("timeSinceLastAttack", attackComponent.getTimeSinceLastAttack());
         turretData.put("attackDamage", attackComponent.getAttackDamage());
         turretData.put("attackRange", attackRange);
