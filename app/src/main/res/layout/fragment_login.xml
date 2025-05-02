@@ -145,6 +145,18 @@
         android:layout_gravity="center"
 
         app:layout_constraintVertical_bias="0.2" />
+    <Button
+        android:id="@+id/btnGuestLogin"
+        android:visibility="visible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Continue as Guest"
+        android:fontFamily="@font/nikea"
+        android:textColor="#000a90"
+        android:backgroundTint="@color/login_sign_up_button_background"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="16dp" />
+
 
 
 </LinearLayout>

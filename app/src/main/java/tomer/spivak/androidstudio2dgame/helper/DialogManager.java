@@ -8,6 +8,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseUser;
 
 
 import java.util.Objects;
@@ -68,7 +71,9 @@ public class DialogManager {
 
 
     //checks if user wants to save his base
-    public void showExitAlertDialog(GameViewModel viewModel, Context context) {
+    public void showExitAlertDialog(GameViewModel viewModel, Context context, GameView gameView) {
+        int volume = gameView.getMusicService().getCurrentVolumeLevel();
+        gameView.pauseGameLoop();      // always stop immediately
         LayoutInflater inflater = LayoutInflater.from(context);
         View dialogView = inflater.inflate(R.layout.alert_dialog, null);
 
@@ -85,33 +90,58 @@ public class DialogManager {
             @Override
             public void onClick(View v) {
                 alertDialog.dismiss();
+                gameView.resumeGameLoop(volume);
             }
         });
 
         btnDontSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(!databaseRepository.isGuest())
+                {
+                    databaseRepository.logResults(viewModel);
+                    databaseRepository.removeBoard();
+                }
                 alertDialog.dismiss();
-                databaseRepository.logResults(viewModel);
+
+                gameView.stopGameLoop();
+
                 finish(context);
             }
         });
 
-        btnSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                alertDialog.dismiss();
-                if (viewModel.getGameState().getValue() == null ||
-                        viewModel.getGameState().getValue().getGrid() == null)
-                    return;
-
-                saveBoard(viewModel, null, context);
+        btnSave.setOnClickListener(v -> {
+            alertDialog.dismiss();
+            gameView.stopGameLoop();
+            
+            
+            FirebaseUser u = databaseRepository.getUserInstance();
+            // 1) offline? bail immediately
+            if (!isNetworkAvailable(context)) {
+                Toast.makeText(context, "No network, exiting as guest", Toast.LENGTH_SHORT).show();
+                finish(context);
+                return;
+            }
+            // 2) guest? just exit
+            if (u == null || u.isAnonymous()) {
+                finish(context);
+            }
+            // 3) real user & online? save to Firestore
+            else {
+                saveBoard(viewModel, gameView, context);
             }
         });
 
         alertDialog.show();
     }
+
+    public static boolean isNetworkAvailable(Context ctx) {
+        ConnectivityManager cm =
+                (ConnectivityManager)ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+        return ni != null && ni.isConnected();
+    }
+
 
     public void saveBoard(GameViewModel viewModel, GameView gameView, Context context) {
         GameState gameState = viewModel.getGameState().getValue();
@@ -132,36 +162,53 @@ public class DialogManager {
             @Override
             public void onFailure(@NonNull Exception e) {
                 Log.d("save", Objects.requireNonNull(e.getMessage()));
+                Toast.makeText(context, "failed", Toast.LENGTH_SHORT).show();
+                gameView.stopGameLoop();
+                finish(context);
             }
         });
         databaseRepository.logResults(viewModel);
     }
-
-    public void showPauseAlertDialog(GameView gameView, GameViewModel viewModel, float volume, SoundEffects soundEffects, Context context) {
+    public void showPauseAlertDialog(GameView gameView, GameViewModel viewModel, float volume,
+                                     SoundEffects soundEffects, Context context) {
 
         LayoutInflater inflater = LayoutInflater.from(context);
         View dialogView = inflater.inflate(R.layout.dialog_pause, null);
         SeekBar volumeSeekBar = dialogView.findViewById(R.id.volumeSeekBar);
-        volumeSeekBar.setProgress((int) volume); // currentVolumeLevel should be defined based on your app logic
-
+        volumeSeekBar.setProgress((int) volume);
         SeekBar soundEffectsSeekBar = dialogView.findViewById(R.id.soundEffectsSeekBar);
         soundEffectsSeekBar.setProgress(soundEffects.getVolumeLevel());
 
-
-        Log.d("music", "volume: " + volume);
         new AlertDialog.Builder(context)
                 .setTitle("Game Paused")
                 .setView(dialogView)
-                .setPositiveButton("Resume", (dialog, which) -> {
-                    Log.d("music", "v:" + volumeSeekBar.getProgress());
+                .setPositiveButton("Resume", (d, w) -> {
                     gameView.resumeGameLoop(volumeSeekBar.getProgress());
                     soundEffects.setVolume(soundEffectsSeekBar.getProgress() / 100f);
-                    dialog.dismiss();
+                    d.dismiss();
                 })
-                .setNegativeButton("Exit", (dialog, which) -> {
-                    saveBoard(viewModel, gameView, context);
-                    dialog.dismiss();
+                .setNegativeButton("Exit", (d, w) -> {
+                    // 1) Dismiss UI
+                    d.dismiss();
 
+                    // 2) Always stop the game loop and finish
+                    gameView.stopGameLoop();
+                    finish(context);
+
+                    // 3) Then *attempt* to save in the background
+                    GameState state = viewModel.getGameState().getValue();
+                    if (state != null && state.getGrid() != null) {
+                        databaseRepository.saveBoard(
+                                state.getGrid(),
+                                state.getDifficulty().name(),
+                                state.getCurrentTimeOfGame(),
+                                state.getCurrentRound(),
+                                state.getShnuzes(),
+                                /* onSuccess */ unused -> { /* no‑op */ },
+                                /* onFailure */ e -> Log.w("DBG", "offline save failed", e)
+                        );
+                        databaseRepository.logResults(viewModel);
+                    }
                 })
                 .setCancelable(false)
                 .show();
@@ -232,8 +279,9 @@ public class DialogManager {
             Intent intent = new Intent(context, GameActivity.class);
             intent.putExtra("difficultyLevel", selected.name());
             intent.putExtra("isContinue", false);
-            context.startActivity(intent);
             dialog.dismiss();
+            context.startActivity(intent);
+
         });
 
         dialog.show();

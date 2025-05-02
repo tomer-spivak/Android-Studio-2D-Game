@@ -114,7 +114,7 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                     btnSkipRound.setVisibility(View.VISIBLE);
                 } else {
                     Toast.makeText(context, "In order to start a game\n" +
-                            "you need to build something", Toast.LENGTH_SHORT).show();
+                            "you need to build something", Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -163,7 +163,8 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
             backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
                 @Override
                 public void handleOnBackPressed() {
-                    dialogManager.showExitAlertDialog(viewModel, context);
+
+                    dialogManager.showExitAlertDialog(viewModel, context, gameView);
                 }
             };
             getOnBackPressedDispatcher().addCallback(this, backPressedCallback);

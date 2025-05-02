@@ -152,7 +152,7 @@ public class SignUpFragment extends Fragment {
         ImageChooser.OnImageChosenListener listener = new ImageChooser.OnImageChosenListener() {
             @Override
             public void onImageChosen(Uri imageUri) {
-
+                Log.d("sigma", "ligma");
                 repository.signUpWithEmailPassword(etEmail.getText().toString(), etPassword.getText().toString(),
                         etUsername.getText().toString(), new OnSuccessListener() {
                             @Override

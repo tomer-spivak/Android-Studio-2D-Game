@@ -70,6 +70,16 @@ public class IntermediateActivity extends AppCompatActivity {
                     replaceFragment(new LeaderboardFragment(), true);
                 }
                 else if (id == R.id.go_to_game){
+                    Intent intent = getIntent();
+                    boolean isGuest = intent.getBooleanExtra("guest", false);
+                    if (isGuest) {
+                        Intent intent1 = new Intent(context, GameActivity.class);
+                        intent1.putExtra("isContinue", false);
+                        createNewGame();
+                        drawerLayout.closeDrawers();
+                        //startActivity(intent1);
+                        return true;
+                    }
                     databaseRepository.checkIfTheresAGame(new GameCheckCallback() {
                         @Override
                         public void onCheckCompleted(boolean gameExists) {
@@ -78,6 +88,8 @@ public class IntermediateActivity extends AppCompatActivity {
                                 dialog.show();
                             } else {
                                 createNewGame();
+                                drawerLayout.closeDrawers();
+
                             }
                         }
                     });
