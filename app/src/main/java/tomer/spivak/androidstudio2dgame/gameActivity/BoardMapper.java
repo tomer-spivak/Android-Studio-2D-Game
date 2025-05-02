@@ -11,7 +11,6 @@ import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.Direction;
 import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
-import tomer.spivak.androidstudio2dgame.modelEnums.EnemyType;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
@@ -62,7 +61,7 @@ public class BoardMapper {
                         String type = (String) objectMap.get("type");
                         object.setHealth(((Number) Objects.requireNonNull(objectMap.
                                 get("health"))).floatValue());
-                        if (isInEnum(type, EnemyType.class)) {
+                        if (type.equals("MONSTER")) {
                             Enemy enemy = (Enemy) ModelObjectFactory.create(type, pos, difficulty);
 
                             String stateString = Objects.requireNonNull(objectMap.get("enemyState"))
@@ -85,11 +84,8 @@ public class BoardMapper {
 
                             enemy.setTimeSinceLastMove(((Double) Objects.requireNonNull(objectMap.
                                     get("timeSinceLastMove"))).floatValue());
-
-
-
-
                         }
+
                         else {
                             isBoardEmpty = false;
                         }
@@ -103,15 +99,6 @@ public class BoardMapper {
                 }
             }
             board = removeNullRowsAndColumns(board);
-    }
-
-    public <T extends Enum<T>> boolean isInEnum(String value, Class<T> enumClass) {
-        for (T enumValue : Objects.requireNonNull(enumClass.getEnumConstants())) {
-            if (enumValue.name().equals(value)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public Cell[][] removeNullRowsAndColumns(Cell[][] array) {

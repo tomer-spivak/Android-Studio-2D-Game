@@ -1,14 +1,11 @@
 package tomer.spivak.androidstudio2dgame.model;
 
-import android.util.Log;
-
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
+import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
@@ -27,40 +24,46 @@ public class EnemyManager {
     }
 
     private void spawnEnemy(GameState gameState, String enemyType) {
-            Cell cellToSpawn = getRandomFramePointIndex(gameState.getGrid());
-            while(cellToSpawn.isOccupied()){
-                cellToSpawn = getRandomFramePointIndex(gameState.getGrid());
+        Cell[][] grid = gameState.getGrid();
+        int rows = grid.length;
+        int cols = grid[0].length;
+        int maxLevel = Math.min(rows, cols) / 2;  // number of concentric frames
+
+        Random rnd = new Random();
+        for (int level = 0; level < maxLevel; level++) {
+            List<Cell> freeCells = new ArrayList<>();
+
+            // collect border cells at this level
+            int r2 = rows - 1 - level;
+            int c2 = cols - 1 - level;
+
+            // top & bottom edges
+            for (int c = level; c <= c2; c++) {
+                if (!grid[level][c].isOccupied()) freeCells.add(grid[level][c]);
+                if (r2 != level && !grid[r2][c].isOccupied()) freeCells.add(grid[r2][c]);
             }
-            Enemy enemy = (Enemy) ModelObjectFactory.create(enemyType, new Position(0, 0),
-                    gameState.getDifficulty());
-            enemy.setSoundEffects(soundEffects);
-            cellToSpawn.spawnEnemy(enemy);
-            createPathForEnemy(gameState, enemy);
-    }
+            // left & right edges (excluding corners already done)
+            for (int r = level + 1; r <= r2 - 1; r++) {
+                if (!grid[r][level].isOccupied()) freeCells.add(grid[r][level]);
+                if (c2 != level && !grid[r][c2].isOccupied()) freeCells.add(grid[r][c2]);
+            }
 
-    public Cell getRandomFramePointIndex(Cell[][] centerCells) {
-            int rows = centerCells.length;
-            int cols = centerCells[0].length;
-            Log.d("debug", String.valueOf(rows));
-            Log.d("debug", String.valueOf(cols));
-            Random rand = new Random();
-
-            int leftColumnCount = rows - 2;
-            int rightColumnCount = rows - 2;
-            int totalFramePositions = cols + cols + leftColumnCount + rightColumnCount;
-
-            int randChoice = rand.nextInt(totalFramePositions);
-
-            if (randChoice < cols) {
-                return centerCells[0][randChoice];
-            } else if (randChoice < cols + cols) {
-                return centerCells[rows - 1][randChoice - cols];
-            } else if (randChoice < cols + cols + leftColumnCount) {
-                return centerCells[randChoice - cols - cols + 1][0];
-            } else {
-                return centerCells[randChoice - cols - cols - leftColumnCount + 1][cols - 1];
+            if (!freeCells.isEmpty()) {
+                Cell spawnCell = freeCells.get(rnd.nextInt(freeCells.size()));
+                Enemy enemy = (Enemy) ModelObjectFactory.create(
+                        enemyType, spawnCell.getPosition(),
+                        gameState.getDifficulty()
+                );
+                enemy.setSoundEffects(soundEffects);
+                spawnCell.spawnEnemy(enemy);
+                createPathForEnemy(gameState, enemy);
+                return;
             }
         }
+
+        // if we get here, *all* frames were full
+        gameState.setGameStatus(GameStatus.WON);
+    }
 
     public void updateEnemies(GameState current, long deltaTime) {
         List<Enemy> enemies = new ArrayList<>();
@@ -82,14 +85,13 @@ public class EnemyManager {
 
     }
 
+
     private void updateEnemyMovement(Enemy enemy, GameState current, long deltaTime) {
         List<Position> path = createPathForEnemy(current, enemy);
         int targetIndex = enemy.getCurrentTargetIndex();
 
         if (path == null || path.isEmpty() || targetIndex >= path.size()){
-            Building building = attemptAttack(current, enemy, deltaTime);
-            fixDirectionToBuilding(enemy, current, building);
-
+            attemptAttack(current, enemy, deltaTime);
             return;
         }
 
@@ -112,45 +114,41 @@ public class EnemyManager {
         }
     }
 
-    private Building attemptAttack(GameState current, Enemy enemy, long deltaTime) {
-        Cell currentEnemyCell = current.getCellAt(enemy.getPosition());
-        List<Cell> neighbors = currentEnemyCell.getNeighbors(current);
-
-        Set<Building> adjacentBuildings = new HashSet<>();
-
-        for (Cell neighbor : neighbors) {
-            ModelObject obj = neighbor.getObject();
-            if (obj instanceof Building) {
-                adjacentBuildings.add((Building) obj);
-            }
+    private void attemptAttack(GameState current, Enemy enemy, long deltaTime) {
+        Building buildingToAttack = pivotToAdjacentBuildings(enemy, current);
+        enemy.accumulateAttackTime(deltaTime);
+        if (enemy.canAttack()) {
+            enemy.attack(buildingToAttack);
         }
-        Building buildingToAttack = null;
-        if (!adjacentBuildings.isEmpty()) {
-            enemy.accumulateAttackTime(deltaTime);
+    }
 
-            for (Building building : adjacentBuildings) {
-                if (enemy.canAttack()) {
-                    buildingToAttack = building;
-                    enemy.attack(building);
+    private Building pivotToAdjacentBuildings(Enemy enemy, GameState current) {
+        Cell enemyCell = current.getCellAt(enemy.getPosition());
+        List<Cell> neighbors = enemyCell.getNeighbors(current);
+
+        Cell targetCell = null;
+        float minHealth = Integer.MAX_VALUE;
+
+        // find the building with least health
+        for (Cell cell : neighbors) {
+            if (cell.getObject() instanceof Building) {
+                Building b = (Building) cell.getObject();
+                if (b.getHealth() < minHealth) {
+                    minHealth = b.getHealth();
+                    targetCell = cell;
                 }
             }
         }
-        return buildingToAttack;
+
+        if (targetCell != null) {
+            // turn toward that building
+            enemy.updateDirection(enemy.getPosition(), targetCell.getPosition());
+            return (Building) targetCell.getObject();
+        }
+
+        return null;
     }
 
-    private void fixDirectionToBuilding(Enemy enemy, GameState current, Building building) {
-        if (building != null) {
-            enemy.updateDirection(enemy.getPosition(), building.getPosition());
-            return;
-        }
-        Cell enemyCell = current.getCellAt(enemy.getPosition());
-        List<Cell> buildingPotential = enemyCell.getNeighbors(current);
-        for (Cell cell : buildingPotential) {
-            if (cell.getObject() instanceof Building) {
-                enemy.updateDirection(enemy.getPosition(), cell.getPosition());
-            }
-        }
-    }
 
     private int moveEnemy(Cell currentCell, Cell nextCell, Enemy enemy, float timePerStep){
         currentCell.removeObject();
@@ -177,55 +175,9 @@ public class EnemyManager {
     }
 
     private List<Position> createPathForEnemy(GameState current, Enemy enemy) {
-        Pathfinder pathfinder = new Pathfinder(current);
-        Position closetBuilding = getClosetBuildingToEnemy(current, enemy, pathfinder);
-
-        List<Position> path = pathfinder.findPath(enemy.getPosition(), closetBuilding);
-
+        List<Position> path = new Pathfinder(current).findPathToClosestBuildingNeighbor(enemy.getPosition());
         enemy.setPath(path);
-        return enemy.getPath();
-    }
-
-    private Position getClosetBuildingToEnemy(GameState current, Enemy enemy,
-                                              Pathfinder pathfinder) {
-
-        List<Position> allBuildings = getBuildingPositions(current.getGrid());
-        if (allBuildings.isEmpty()){
-            return enemy.getPosition();
-        }
-        List<Position> buildingNeighbors = getNeighborPositions(allBuildings, current);
-
-        Position closest = pathfinder.findClosestBuilding(enemy.getPosition(), buildingNeighbors);
-
-        while (closest == null){
-            buildingNeighbors = getNeighborPositions(buildingNeighbors, current);
-            closest = pathfinder.findClosestBuilding(enemy.getPosition(), buildingNeighbors);
-        }
-        return closest;
-    }
-
-    private List<Position> getNeighborPositions(List<Position> positions, GameState current){
-        List<Position> buildingPositions = new ArrayList<>();
-        for (Position pos : positions) {
-            List<Position> neighbors = pos.getNeighbors();
-            for (Position neighbour : neighbors){
-                if (current.isValidPosition(neighbour))
-                    buildingPositions.add(neighbour);
-            }
-        }
-        return buildingPositions;
-    }
-
-    private List<Position> getBuildingPositions(Cell[][] grid) {
-        List<Position> buildingPositions = new ArrayList<>();
-        for (Cell[] cells : grid) {
-            for (Cell cell : cells) {
-                if (cell.isOccupied() && cell.getObject() instanceof Building) {
-                    buildingPositions.add(cell.getObject().getPosition());
-                }
-            }
-        }
-        return buildingPositions;
+        return path;
     }
 
     public void setSoundEffects(SoundEffects soundEffects) {

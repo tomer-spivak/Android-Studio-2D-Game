@@ -12,7 +12,8 @@ public abstract class ModelObject implements IDamageable {
     protected float health;
     protected float maxHealth;
     protected int soundStreamId = -1;
-    SoundEffects soundEffects;
+    protected SoundEffects soundEffects;
+    protected String type;
 
     public void setSoundStreamId(int soundStreamId) {
         this.soundStreamId = soundStreamId;
@@ -34,6 +35,7 @@ public abstract class ModelObject implements IDamageable {
 
     @Override
     public void takeDamage(float damage) {
+
         health -= damage;
         if (health <= 0) {
             onDeath();
@@ -78,5 +80,9 @@ public abstract class ModelObject implements IDamageable {
 
     public void stopSound() {
         soundEffects.stopSound(soundStreamId);
+    }
+
+    public String getType() {
+        return type;
     }
 }

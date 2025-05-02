@@ -1,8 +1,6 @@
 package tomer.spivak.androidstudio2dgame.model;
 
-import android.util.Log;
 
-import tomer.spivak.androidstudio2dgame.modelAnimations.CellAnimationManager;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
@@ -22,10 +20,12 @@ public class ModelGameManager {
     private SoundEffects soundEffects;
     private static final int NIGHT_THRESHOLD = 5000;
     private String selectedBuildingType;
+    private int lastRound;
 
     public void init(Cell[][] board, DifficultyLevel difficulty) {
         state = new GameState(board, NIGHT_THRESHOLD, difficulty);
         state.startTimerForNextRound();
+        lastRound = (board.length - 1) * 4;
     }
 
     public GameState getState() {
@@ -45,7 +45,6 @@ public class ModelGameManager {
     }
 
     private boolean canPlaceBuilding(GameState state) {
-        Log.d("type", selectedBuildingType);
         return selectedBuildingType != null && state.getTimeOfDay() && state.getShnuzes() >= ModelObjectFactory.getPrice(selectedBuildingType);
     }
 
@@ -90,10 +89,6 @@ public class ModelGameManager {
                 if (enemyManager.getEnemies(state).isEmpty()){
                     //won
                     initRoundVictory(state);
-                    state.setTimeOfDay(true);
-                    state.accumulateRound();
-                    state.startTimerForNextRound();
-                    state.addShnuzes(state.getCurrentRound() * 1000);
                 }
 
                 if (buildingsExist()){
@@ -143,7 +138,7 @@ public class ModelGameManager {
         ModelObject object = cell.getObject();
         if (object instanceof Enemy){
             Enemy enemy = (Enemy) object;
-            CellAnimationManager.executeEnemyDeathAnimation(cell);
+            cell.executeEnemyDeathAnimation();
             state.addShnuzes(enemy.getReward());
         }
 
@@ -154,12 +149,24 @@ public class ModelGameManager {
     }
 
     private void initRoundVictory(GameState state) {
-        state.setGameStatus(GameStatus.WON);
+        if (state.getCurrentRound() <= lastRound)
+            continueToNextRound();
+        else {
+            state.setGameStatus(GameStatus.WON);
+        }
+    }
+
+    private void continueToNextRound() {
+        state.setTimeOfDay(true);
+        state.accumulateRound();
+        state.startTimerForNextRound();
+        state.addShnuzes(state.getCurrentRound() * 1000);
     }
 
     private boolean buildingsExist() {
         return !getBuildingPositions(state.getGrid()).isEmpty();
     }
+
     private List<Position> getBuildingPositions(Cell[][] grid) {
         List<Position> buildingPositions = new ArrayList<>();
         for (Cell[] cells : grid) {
@@ -171,8 +178,6 @@ public class ModelGameManager {
         }
         return buildingPositions;
     }
-
-
 
     public void skipToNextRound() {
         state.startTimerForNextRound();

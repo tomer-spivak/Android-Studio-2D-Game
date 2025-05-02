@@ -9,9 +9,9 @@ import java.util.ArrayList;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
+import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
-import tomer.spivak.androidstudio2dgame.modelObjects.Ruin;
 import tomer.spivak.androidstudio2dgame.modelObjects.Turret;
 
 public class GameObjectManager {
@@ -110,20 +110,18 @@ public class GameObjectManager {
         if (object instanceof Enemy){
             Enemy enemy = (Enemy) object;
             gameObject = GameObjectFactory.create(context, centerCells[centerX][centerY],
-                    enemy.getType().name().toLowerCase(), scale,
+                    enemy.getType(), scale,
                     new Position(centerX, centerY),enemy.getEnemyState().
                             name().toLowerCase(),
                     enemy.getCurrentDirection().name().toLowerCase());
-        } else if (object instanceof Ruin){
-            Ruin ruin = (Ruin) object;
-            gameObject = GameObjectFactory.create(context, centerCells[centerX][centerY],
-                    ruin.getType().name().toLowerCase(), scale, new Position(centerX, centerY),
-                    ruin.getState().name().toLowerCase(), "");
+        } else if (object instanceof Building && !(object instanceof Turret)){
+            Building building = (Building) object;
+            gameObject = GameObjectFactory.create(context, centerCells[centerX][centerY], building.getType().toLowerCase(), scale,
+                    new Position(centerX, centerY), building.getState().name().toLowerCase(), "");
         } else if (object instanceof Turret) {
             Turret turret = (Turret) object;
-            gameObject = GameObjectFactory.create(context, centerCells[centerX][centerY],
-                    turret.getType().name().toLowerCase(), scale, new Position(centerX, centerY),
-                    turret.getState().name().toLowerCase(), "");
+            gameObject = GameObjectFactory.create(context, centerCells[centerX][centerY], turret.getType().toLowerCase(), scale,
+                    new Position(centerX, centerY), turret.getState().name().toLowerCase(), "");
         }
         addGameObject(gameObject);
     }

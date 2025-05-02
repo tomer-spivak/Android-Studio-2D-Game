@@ -4,31 +4,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.model.Position;
-import tomer.spivak.androidstudio2dgame.modelAnimations.BreatheFire;
-import tomer.spivak.androidstudio2dgame.modelEnums.AttackType;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
-import tomer.spivak.androidstudio2dgame.modelEnums.EnemyType;
-import tomer.spivak.androidstudio2dgame.modelEnums.RuinType;
-import tomer.spivak.androidstudio2dgame.modelEnums.TurretType;
 
 public class ModelObjectFactory {
     private static final Map<String, ModelObjectCreator> typeMap = new HashMap<>();
 
     static {
         typeMap.put("OBELISK", (position, difficulty) ->
-                new Ruin(getBuildingHealthByDifficulty(200, difficulty), position,
-                        RuinType.OBELISK, 1000));
+                new Building(getBuildingHealthByDifficulty(200, difficulty), position, 1000));
 
         typeMap.put("LIGHTNINGTOWER", (position, difficulty) ->
-                new AOETurret(getBuildingHealthByDifficulty(100, difficulty),
-                        getTurretDamageByDifficulty(20, difficulty), 4, position,
-                        TurretType.LIGHTNINGTOWER, 1500, AttackType.LIGHTNING, 3000));
+                new Turret(getBuildingHealthByDifficulty(100, difficulty), getTurretDamageByDifficulty(20, difficulty),
+                        4, position, 1500, 3000));
 
         typeMap.put("MONSTER", (position, difficulty) ->
-                new Enemy(getEnemyHealthByDifficulty(80, difficulty),
-                        getEnemyDamageByDifficulty(30, difficulty),
-                        getSpeedByDifficulty(3f, difficulty), position, EnemyType.MONSTER,
-                        500, new BreatheFire(), getRewardByDifficulty(100, difficulty)));
+                new Enemy(getEnemyHealthByDifficulty(80, difficulty), getEnemyDamageByDifficulty(30, difficulty),
+                      2.5f, position, 500, getRewardByDifficulty(100, difficulty)));
 
     }
 
@@ -82,14 +73,6 @@ public class ModelObjectFactory {
         switch (difficulty) {
             case EASY: return (int) (base * 1.25);
             case HARD: return (int) (base * 0.75);
-            default: return base;
-        }
-    }
-
-    private static float getSpeedByDifficulty(float base, DifficultyLevel difficulty) {
-        switch (difficulty) {
-            case EASY: return base * 0.75f;
-            case HARD: return base * 1.4f;
             default: return base;
         }
     }

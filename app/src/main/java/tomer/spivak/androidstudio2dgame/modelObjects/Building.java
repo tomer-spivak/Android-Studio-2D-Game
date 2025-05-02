@@ -1,11 +1,13 @@
 package tomer.spivak.androidstudio2dgame.modelObjects;
 
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.BuildingState;
 
-public abstract class Building extends ModelObject {
+public class Building extends ModelObject {
 
     protected BuildingState state;
     protected final int price;
@@ -14,6 +16,7 @@ public abstract class Building extends ModelObject {
         super(health, pos);
         this.state = BuildingState.IDLE;
         this.price = price;
+        this.type = "obelisk";
     }
 
     public BuildingState getState() {
@@ -26,6 +29,19 @@ public abstract class Building extends ModelObject {
 
     public int getPrice(){
        return price;
+    }
+
+    @Override
+    public void takeDamage(float damage) {
+        super.takeDamage(damage);
+        setState(BuildingState.HURT);
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                setState(BuildingState.IDLE);
+            }
+        }, 200);
     }
 
     @Override
