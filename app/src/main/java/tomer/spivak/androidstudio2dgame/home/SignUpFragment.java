@@ -1,14 +1,12 @@
 package tomer.spivak.androidstudio2dgame.home;
 
-
+import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-
-import android.text.Editable;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,181 +15,168 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.internal.TextWatcherAdapter;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
-import tomer.spivak.androidstudio2dgame.helper.DialogManager;
-import tomer.spivak.androidstudio2dgame.helper.ImageChooser;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 
 public class SignUpFragment extends Fragment {
-    DatabaseRepository repository;
+    private DatabaseRepository repository;
+    private ActivityResultLauncher<Intent> pickImageLauncher;
+    private String email, password, username;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // 1) Register the launcher once
+        pickImageLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        if (result.getResultCode() != Activity.RESULT_OK) return;
+                        Intent data = result.getData();
+                        Uri imageUri = null;
+
+                        // 2) Gallery result
+                        if (data != null && data.getData() != null) {
+                            imageUri = data.getData();
+                        }
+                        // 3) Camera result (tiny bitmap)
+                        else if (data != null && data.getExtras() != null) {
+                            Bitmap bmp = (Bitmap) data.getExtras().get("data");
+                            if (bmp != null) {
+                                imageUri = saveBitmapToFile(bmp);
+                            }
+                        }
+
+                        // 4) Finally, fire sign-up
+                        repository.signUpWithEmailPassword(
+                                email,
+                                password,
+                                username,
+                                new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void unused) {
+                                        startActivity(
+                                                new Intent(requireActivity(), IntermediateActivity.class)
+                                        );
+                                    }
+                                },
+                                requireContext(),
+                                imageUri
+                        );
+                    }
+                }
+        );
+    }
+
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState
+    ) {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
         repository = DatabaseRepository.getInstance(requireContext());
-        Button btnSignUp = view.findViewById(R.id.btnSignUp);
-        EditText etEmail = view.findViewById(R.id.etEmail);
+
+        EditText etEmail    = view.findViewById(R.id.etEmail);
         EditText etPassword = view.findViewById(R.id.etPassword);
         EditText etUsername = view.findViewById(R.id.etUsername);
-        TextView tvEmailError = view.findViewById(R.id.tvEmailError);
-        TextView tvPasswordError = view.findViewById(R.id.tvPasswordError);
-        TextView tvUsernameError = view.findViewById(R.id.tvUsernameError);
-        ImageChooser imageChooser = getImageChooser(etEmail, etPassword, etUsername);
+        TextView tvEmailErr = view.findViewById(R.id.tvEmailError);
+        TextView tvPassErr  = view.findViewById(R.id.tvPasswordError);
+        TextView tvNameErr  = view.findViewById(R.id.tvUsernameError);
+        Button   btnSignUp  = view.findViewById(R.id.btnSignUp);
 
-
-        TextWatcher textWatcherPassword = new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String email = etEmail.getText().toString().trim();
-                String pass = etPassword.getText().toString().trim();
-                String name = etUsername.getText().toString();
-                boolean isValid = validatePassword(pass, tvPasswordError) &&
-                        validateEmail(email, tvEmailError) &&
-                        validateUsername(name, tvUsernameError);
-                Log.d("TAG", "onTextChanged: " + isValid);
-                btnSignUp.setEnabled(isValid);
+        // Simplest form validation you already have:
+        TextWatcher combinedWatcher = new TextWatcherAdapter() {
+            @Override public void onTextChanged(CharSequence s, int i, int b, int c) {
+                email    = etEmail.getText().toString().trim();
+                password = etPassword.getText().toString().trim();
+                username = etUsername.getText().toString().trim();
+                boolean valid = validateEmail(email, tvEmailErr)
+                        && validatePassword(password, tvPassErr)
+                        && validateUsername(username, tvNameErr);
+                btnSignUp.setEnabled(valid);
             }
-            @Override
-            public void afterTextChanged(Editable s) { }
         };
-        TextWatcher textWatcherEmail = new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+        etEmail.addTextChangedListener(combinedWatcher);
+        etPassword.addTextChangedListener(combinedWatcher);
+        etUsername.addTextChangedListener(combinedWatcher);
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String email = etEmail.getText().toString().trim();
-                String pass = etPassword.getText().toString().trim();
-                String name = etUsername.getText().toString();
-                boolean isValid = validateEmail(email, tvEmailError) &&
-                        validatePassword(pass, tvPasswordError) &&
-                        validateUsername(name, tvUsernameError);
-                Log.d("TAG", "onTextChanged: " + isValid);
-                btnSignUp.setEnabled(isValid);
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) { }
-        };
-        TextWatcher textWatcherUsername = new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String email = etEmail.getText().toString().trim();
-                String pass = etPassword.getText().toString().trim();
-                String name = etUsername.getText().toString();
-                boolean isValid = validateUsername(name, tvUsernameError) &&
-                        validateEmail(email, tvEmailError) &&
-                        validatePassword(pass, tvPasswordError);
-                Log.d("TAG", "onTextChanged: " + isValid);
-                btnSignUp.setEnabled(isValid);
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) { }
-        };
-
-        etEmail.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    etEmail.addTextChangedListener(textWatcherEmail);
-                } else {
-                    validateEmail(etEmail.getText().toString(), tvEmailError);
-                }
-            }
-        });
-
-        etPassword.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    etPassword.addTextChangedListener(textWatcherPassword);
-                } else {
-                    validatePassword(etPassword.getText().toString(), tvPasswordError);
-                }
-            }
-        });
-
-        etUsername.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    etUsername.addTextChangedListener(textWatcherUsername);
-                } else {
-                    validateUsername(etUsername.getText().toString(), tvUsernameError);
-                }
-            }
-        });
-
-        btnSignUp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                DialogManager dialogManager = DialogManager.getInstance(repository);
-
-                dialogManager.showImagePickerDialog(imageChooser, getContext());
-            }
-        });
+        // 5) On “Sign Up” click, show our non-pausable chooser
+        btnSignUp.setOnClickListener(v -> showImageSourceChooser());
 
         return view;
     }
 
-    @NonNull
-    private ImageChooser getImageChooser(EditText etEmail, EditText etPassword, EditText etUsername) {
-        Fragment fragment = this;
-        ImageChooser.OnImageChosenListener listener = new ImageChooser.OnImageChosenListener() {
-            @Override
-            public void onImageChosen(Uri imageUri) {
-                Log.d("sigma", "ligma");
-                repository.signUpWithEmailPassword(etEmail.getText().toString(), etPassword.getText().toString(),
-                        etUsername.getText().toString(), new OnSuccessListener() {
-                            @Override
-                            public void onSuccess(Object o) {
-                                Intent intent = new Intent(getActivity(), IntermediateActivity.class);
-                                startActivity(intent);
-                            }
-                        }, getContext(), imageUri) ;
-            }
-        };
-        return new ImageChooser(fragment, listener);
+    private void showImageSourceChooser() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Choose Profile Image")
+                .setItems(new String[]{"Camera", "Gallery"}, (dlg, which) -> {
+                    Intent intent;
+                    if (which == 0) {
+                        intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    } else {
+                        intent = new Intent(Intent.ACTION_GET_CONTENT)
+                                .setType("image/*");
+                    }
+                    pickImageLauncher.launch(intent);
+                })
+                .setCancelable(true)
+                .show();
     }
 
-
-    private boolean validatePassword(String pass, TextView tvPasswordError) {
-        if (pass.length() < 6) {
-            tvPasswordError.setText("Password must be at least 6 characters");
-            return false;
-        }
-        tvPasswordError.setText("");
-        return true;
-    }
-
-    private boolean validateEmail(String email, TextView tvEmailError) {
-        Log.d("TAG", "validateEmail: " + email);
+    private boolean validateEmail(String email, TextView err) {
         if (!email.contains("@") || !email.substring(email.indexOf("@")).contains(".com")) {
-            tvEmailError.setText("Invalid Email");
+            err.setText("Invalid Email");
             return false;
         }
-        tvEmailError.setText("");
+        err.setText("");
         return true;
     }
 
-    private boolean validateUsername(String username, TextView tvUsernameError) {
-        if (username.length() < 3) {
-            tvUsernameError.setText("Username must be at least 3 characters");
+    private boolean validatePassword(String pass, TextView err) {
+        if (pass.length() < 6) {
+            err.setText("Password must be at least 6 characters");
             return false;
         }
-        tvUsernameError.setText("");
+        err.setText("");
         return true;
+    }
+
+    private boolean validateUsername(String name, TextView err) {
+        if (name.length() < 3) {
+            err.setText("Username must be at least 3 characters");
+            return false;
+        }
+        err.setText("");
+        return true;
+    }
+
+    private Uri saveBitmapToFile(Bitmap bitmap) {
+        try {
+            File file = new File(
+                    requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                    "signup_pic.jpg"
+            );
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            }
+            return Uri.fromFile(file);
+        } catch (IOException e) {
+            Log.e("SignUpFragment", "Error saving camera image", e);
+            return null;
+        }
     }
 }

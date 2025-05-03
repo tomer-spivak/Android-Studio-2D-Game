@@ -29,6 +29,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.storage.FirebaseStorage;
@@ -53,15 +54,12 @@ import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
 public class DatabaseRepository {
     private final FirebaseFirestore db;
-    private final FirebaseUser user;
     private AuthenticationHelper authHelper;
     private static DatabaseRepository instance;
-
 
     private DatabaseRepository(Context context){
         FirebaseApp.initializeApp(context);
         db = FirebaseFirestore.getInstance();
-        user = FirebaseAuth.getInstance().getCurrentUser();
     }
 
     public static synchronized DatabaseRepository getInstance(Context context) {
@@ -71,10 +69,10 @@ public class DatabaseRepository {
         return instance;
     }
 
-
-    public void saveBoard(Cell[][] board, String difficulty, Long gameTime, int currentRound, int shnuzes, OnSuccessListener<Void> onSuccess,
-                          OnFailureListener onFailure) {
-        if (user == null) return;
+    public void saveBoard(Cell[][] board, String difficulty, Long gameTime, int currentRound, int shnuzes,
+                          OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+        if (isGuest()) return;
+        FirebaseUser user = authHelper.getUserInstance();
 
         Map<String, Object> boardData = new HashMap<>();
         for (int i = 0; i < board.length; i++) {
@@ -109,9 +107,10 @@ public class DatabaseRepository {
     }
 
     public void loadBoard(OnSuccessListener<DocumentSnapshot> onSuccess, OnFailureListener onFailure) {
-        if (user == null) {
+        if (isGuest()) {
             return;
         }
+        FirebaseUser user = authHelper.getUserInstance();
 
         db.collection("users")
                 .document(user.getUid())
@@ -123,7 +122,8 @@ public class DatabaseRepository {
     }
 
     public void loadDataFromDataBase(BoardMapper boardMapper, OnBoardLoadedListener listener) {
-        if (user == null) return;
+        if (isGuest()) return;
+        FirebaseUser user = authHelper.getUserInstance();
 
         db.collection("users")
                 .document(user.getUid())
@@ -163,7 +163,8 @@ public class DatabaseRepository {
                 });
     }
 
-    private void createBoardInBoardMapper(BoardMapper boardMapper, DocumentSnapshot documentSnapshot, OnBoardLoadedListener listener) {
+    private void createBoardInBoardMapper(BoardMapper boardMapper, DocumentSnapshot documentSnapshot,
+                                          OnBoardLoadedListener listener) {
         if (documentSnapshot == null || !documentSnapshot.exists()){
             boardMapper.initBoard();
             return;
@@ -175,14 +176,14 @@ public class DatabaseRepository {
     }
 
     public void checkIfTheresAGame(GameCheckCallback callback) {
-        if (user == null) {
+        if (isGuest()) {
             callback.onCheckCompleted(false);
             return;
         }
-
+        FirebaseUser user = authHelper.getUserInstance();
         db.collection("users")
                 .document(user.getUid())
-                .collection("board")
+                .collection("currentGame")
                 .document("board objects")
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -190,69 +191,79 @@ public class DatabaseRepository {
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         callback.onCheckCompleted(documentSnapshot.exists() &&
                                 documentSnapshot.getData() != null);
+                        Log.d("frank", documentSnapshot.exists() + ", " + documentSnapshot.getData());
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         callback.onCheckCompleted(false);
+                        Log.d("frank", "fail");
                     }
                 });
     }
 
     public void removeBoard() {
-        if (user == null) return;
+        if (isGuest())
+            return;
+        FirebaseUser user = authHelper.getUserInstance();
         db.collection("users")
                 .document(user.getUid())
-                .collection("board")
+                .collection("currentGame")
                 .document("board objects")
                 .delete();
+
         db.collection("users")
                 .document(user.getUid())
-                .collection("board")
-                .document("difficulty level")
-                .delete();
-        db.collection("users")
-                .document(user.getUid())
-                .collection("board")
-                .document("time of game")
+                .collection("currentGame")
+                .document("meta")
                 .delete();
     }
 
     public void logResults(GameViewModel viewModel) {
-        if (user == null) return;
+        if (isGuest())
+            return;
+        FirebaseUser user = authHelper.getUserInstance();
         int round = viewModel.getRound();
-        db.collection("users").document(user.getUid())
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+        int enemiesDefeated = viewModel.getEnemiesDefeated();
+        Log.d("oof", "fuck");
+        db.collection("users").document(user.getUid()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    Log.d("oof", String.valueOf(documentSnapshot));
+                    if (documentSnapshot != null && documentSnapshot.exists()) {
+                        Map<String, Object> leaderboard = (Map<String, Object>) documentSnapshot.get("leaderboard");
+
+                        if (leaderboard == null) {
+                            leaderboard = new HashMap<>();
+                        }
+
+                        // Save round if needed
+                        Long maxRound = (Long) leaderboard.get("max round");
+                        if (maxRound == null || round > maxRound) {
+                            saveRound(round, user);
+                        }
+                        Log.d("oof", "wtf");
+                        // Always increment these
+                        db.collection("users").document(user.getUid()).update("leaderboard.enemies defeated", FieldValue.increment(enemiesDefeated));
+                        db.collection("users").document(user.getUid()).update("leaderboard.games played", FieldValue.increment(1));
+
+                    } else {
+                        // If document doesn't exist, initialize leaderboard
+                        saveRound(round, user);
+                        Map<String, Object> initData = new HashMap<>();
+                        initData.put("leaderboard.enemies defeated", enemiesDefeated);
+                        initData.put("leaderboard.games played", 1);
+                        db.collection("users").document(user.getUid()).set(initData, SetOptions.merge());
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
                     @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        handleLeaderboardData(documentSnapshot, round);
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d("oof", "shit: " + e.getMessage());
                     }
                 });
     }
 
-    private void handleLeaderboardData(DocumentSnapshot documentSnapshot, int round) {
-        if (documentSnapshot != null && documentSnapshot.exists()) {
-            Map<String, Object> leaderboard = (Map<String, Object>) documentSnapshot
-                    .get("leaderboard");
-
-            if (leaderboard != null) {
-                Long maxRound = (Long) leaderboard.get("max round");
-                if (maxRound == null)
-                    saveRound(round);
-                else if (round > maxRound) {
-                    saveRound(round);
-                }
-            } else {
-                saveRound(round);
-            }
-        } else {
-            saveRound(round);
-        }
-    }
-
-    private void saveRound(int round) {
+    private void saveRound(int round, FirebaseUser user) {
         Map<String, Object> leaderboard = new HashMap<>();
         leaderboard.put("max round", round);
 
@@ -269,13 +280,13 @@ public class DatabaseRepository {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         for (DocumentSnapshot document : task.getResult()) {
-                            Map<String, Object> leaderboard = (Map<String, Object>)
-                                    document.get("leaderboard");
+                            Map<String, Object> leaderboard = (Map<String, Object>) document.get("leaderboard");
                             if (leaderboard != null && leaderboard.get("max round") != null) {
-                                int maxRound = ((Number) Objects.
-                                        requireNonNull(leaderboard.get("max round"))).intValue();
+                                int maxRound = ((Number) Objects.requireNonNull(leaderboard.get("max round"))).intValue();
                                 String displayName = document.getString("displayName");
-                                maxRounds.add(new LeaderboardEntry(maxRound, displayName));
+                                int gamesPlayed = ((Number) Objects.requireNonNull(leaderboard.get("games played"))).intValue();
+                                int enemiesDefeated = ((Number) Objects.requireNonNull(leaderboard.get("enemies defeated"))).intValue();
+                                maxRounds.add(new LeaderboardEntry(maxRound, displayName, gamesPlayed, enemiesDefeated));
                             }
                         }
                         maxRounds.sort(Collections.reverseOrder());
@@ -308,6 +319,7 @@ public class DatabaseRepository {
 
     public void signUpWithEmailPassword(String string, String string1, String username, OnSuccessListener onSuccessListener, Context context,
                                         Uri uri) {
+        Log.d("sigma", "wtf");
         if (authHelper == null)
             authHelper = new AuthenticationHelper();
         authHelper.signUpWithEmailPassword(string, string1, username, onSuccessListener, context, uri);
@@ -496,6 +508,7 @@ public class DatabaseRepository {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
+
                             Toast.makeText(context, "failed to create a user: " + e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });

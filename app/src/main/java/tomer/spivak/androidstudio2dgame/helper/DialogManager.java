@@ -53,23 +53,6 @@ public class DialogManager {
         return instance;
     }
 
-    public void showImagePickerDialog(ImageChooser imageChooser, Context context) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Select Image")
-                .setItems(new CharSequence[]{"Take Photo", "Choose from Gallery"}, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0) {
-                            imageChooser.takePhoto();
-                        } else if (which == 1) {
-                            imageChooser.openGallery();
-                        }
-                    }
-                })
-                .show();
-    }
-
-
     //checks if user wants to save his base
     public void showExitAlertDialog(GameViewModel viewModel, Context context, GameView gameView) {
         int volume = gameView.getMusicService().getCurrentVolumeLevel();
@@ -192,8 +175,7 @@ public class DialogManager {
                     d.dismiss();
 
                     // 2) Always stop the game loop and finish
-                    gameView.stopGameLoop();
-                    finish(context);
+
 
                     // 3) Then *attempt* to save in the background
                     GameState state = viewModel.getGameState().getValue();
@@ -207,8 +189,12 @@ public class DialogManager {
                                 /* onSuccess */ unused -> { /* no‑op */ },
                                 /* onFailure */ e -> Log.w("DBG", "offline save failed", e)
                         );
+
                         databaseRepository.logResults(viewModel);
                     }
+
+                    gameView.stopGameLoop();
+                    finish(context);
                 })
                 .setCancelable(false)
                 .show();
@@ -226,7 +212,8 @@ public class DialogManager {
 
     public void showLostAlertDialog(GameViewModel viewModel, GameView gameView, Context context) {
         Log.d("debug", "tried to save");
-        databaseRepository.logResults(viewModel);
+        if(!databaseRepository.isGuest())
+            databaseRepository.logResults(viewModel);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Title")
@@ -295,7 +282,8 @@ public class DialogManager {
     }
 
     public void showWonAlertDialog(GameViewModel viewModel, GameView gameView, Context context) {
-        databaseRepository.logResults(viewModel);
+        if (!databaseRepository.isGuest())
+            databaseRepository.logResults(viewModel);
 
         LayoutInflater inflater = LayoutInflater.from(context);
         View dialogView = inflater.inflate(R.layout.alert_dialog_won, null);

@@ -63,4 +63,8 @@ public class GameViewModel extends ViewModel {
     public int getRound() {
         return gameManager.getRound();
     }
+
+    public int getEnemiesDefeated() {
+        return gameManager.getEnemiesDefeated();
+    }
 }

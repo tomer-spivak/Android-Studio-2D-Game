@@ -21,6 +21,7 @@ public class ModelGameManager {
     private static final int NIGHT_THRESHOLD = 5000;
     private String selectedBuildingType;
     private int lastRound;
+    int enemiesDefeated = 0;
 
     public void init(Cell[][] board, DifficultyLevel difficulty) {
         state = new GameState(board, NIGHT_THRESHOLD, difficulty);
@@ -140,6 +141,7 @@ public class ModelGameManager {
             Enemy enemy = (Enemy) object;
             cell.executeEnemyDeathAnimation();
             state.addShnuzes(enemy.getReward());
+            enemiesDefeated++;
         }
 
     }
@@ -222,5 +224,9 @@ public class ModelGameManager {
 
     public void initShnuzes() {
         state.initShnuzes();
+    }
+
+    public int getEnemiesDefeated() {
+        return enemiesDefeated;
     }
 }

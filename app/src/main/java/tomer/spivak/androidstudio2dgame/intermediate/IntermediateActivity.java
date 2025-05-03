@@ -18,6 +18,7 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,6 +29,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseUser;
 
 
 import tomer.spivak.androidstudio2dgame.R;
@@ -167,17 +169,30 @@ public class IntermediateActivity extends AppCompatActivity {
     }
 
     private void initHeader() {
-        TextView tvUsername = navigationView.getHeaderView(0).
-                findViewById(R.id.header_username);
-        ImageView ivProfile = navigationView.getHeaderView(0).findViewById(R.id.header_image);
+        FirebaseUser user = databaseRepository.getUserInstance();
+        if (user != null) {
+            user.reload()
+                    .addOnSuccessListener(aVoid -> actuallyPopulateHeader(user))
+                    .addOnFailureListener(e -> actuallyPopulateHeader(user));  // even on failure, use whatever you have
+        } else {
+            actuallyPopulateHeader(null);
+        }
+    }
 
-        String displayName = databaseRepository.getDisplayName();
+    private void actuallyPopulateHeader(@Nullable FirebaseUser user) {
+        TextView tvUsername =
+                navigationView.getHeaderView(0).findViewById(R.id.header_username);
+        ImageView ivProfile =
+                navigationView.getHeaderView(0).findViewById(R.id.header_image);
+
+        String displayName = user != null && user.getDisplayName() != null
+                ? user.getDisplayName()
+                : "guest";
         tvUsername.setText(displayName);
 
-        databaseRepository.fetchAndSetImage(ivProfile, context);
-
-
+        databaseRepository.fetchAndSetImage(ivProfile, this);
     }
+
 
     private void initDrawerToolBar() {
         navigationView = findViewById(R.id.navigation_view);

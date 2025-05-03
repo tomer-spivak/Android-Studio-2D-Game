@@ -2,35 +2,62 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
 
+    android:background="#4cc9f0"
+    android:padding="16dp"
 
+    >
 
-    <!-- Leaderboard Title -->
     <TextView
         android:layout_marginTop="50dp"
-        android:id="@+id/tvLeaderboardTitle"
+        android:id="@+id/leaderboardTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Leaderboard"
-        android:textSize="24sp"
-        android:textStyle="bold"
+        android:fontFamily="@font/nikea"
         android:gravity="center"
-        android:padding="16dp"
+        android:text="Leaderboard"
+        android:textColor="#f72585"
+        android:textSize="28sp"
+        android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- RecyclerView for Leaderboard Items -->
+    <EditText
+        android:id="@+id/searchBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Search players..."
+        android:padding="12dp"
+        android:drawableLeft="@android:drawable/ic_menu_search"
+        android:inputType="text"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/leaderboardTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- inside your ConstraintLayout, just below the title -->
+    <Spinner
+        android:id="@+id/spinnerSort"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:entries="@array/leaderboard_sort_options"
+        app:layout_constraintTop_toBottomOf="@id/searchBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"/>
+
+
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvLeaderboard"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="8dp"
-        app:layout_constraintTop_toBottomOf="@id/tvLeaderboardTitle"
+        app:layout_constraintTop_toBottomOf="@id/spinnerSort"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
+        app:layout_constraintEnd_toEndOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

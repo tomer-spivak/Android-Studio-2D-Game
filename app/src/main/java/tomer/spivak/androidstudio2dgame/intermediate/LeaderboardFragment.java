@@ -4,6 +4,9 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.EditText;
+import android.widget.Spinner;
 
 import androidx.fragment.app.Fragment;
 
@@ -12,6 +15,8 @@ import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.internal.TextWatcherAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,12 +31,46 @@ public class LeaderboardFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_leaderboard, container, false);
-        RecyclerView recyclerView = view.findViewById(R.id.rvLeaderboard);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new LeaderboardAdapter(leaderboardList);
-        recyclerView.setAdapter(adapter);
 
-        fetchLeaderboardData();
+        // RecyclerView
+        RecyclerView rv = view.findViewById(R.id.rvLeaderboard);
+        rv.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new LeaderboardAdapter(new ArrayList<>());
+        rv.setAdapter(adapter);
+
+        // Search bar
+        EditText searchBar = view.findViewById(R.id.searchBar);
+        searchBar.addTextChangedListener(new TextWatcherAdapter() {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                adapter.filter(s.toString());
+            }
+        });
+
+        // Sort spinner
+        Spinner spinner = view.findViewById(R.id.spinnerSort);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                switch (position) {
+                    case 1:
+                        adapter.sortBy(LeaderboardAdapter.SortType.GAMES_PLAYED);
+                        break;
+                    case 2:
+                        adapter.sortBy(LeaderboardAdapter.SortType.ENEMIES_DEFEATED);
+                        break;
+                    default:
+                        adapter.sortBy(LeaderboardAdapter.SortType.MAX_ROUND);
+                }
+            }
+        });
+
+        // Fetch and display data
+        DatabaseRepository.getInstance(requireContext())
+                .fetchLeaderboardFromDatabase(entries -> adapter.updateData(entries));
+
         return view;
     }
 
