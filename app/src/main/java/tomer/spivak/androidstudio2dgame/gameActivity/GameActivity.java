@@ -59,12 +59,17 @@ public class GameActivity extends AppCompatActivity{
     private  Button btnOpenMenu, btnStartGame, btnSkipRound;
     private  CardView cvSelectBuildingMenu;
 
+    //helper class which does firebase operations
     private DatabaseRepository databaseRepository;
 
     private boolean gameIsOnGoing = false;
 
+    //every time an enemy is defeated the firebase data gets incremented. so I need to check if there has been any change in
+    // the number of enemies Defeated, and in that case increment the data in firebase.
     private int enemiesDefeatedCache = 0;
-    private boolean startNewGame;
+
+    //continue a game after exiting and saving it
+    private boolean continueGame;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,9 +78,11 @@ public class GameActivity extends AppCompatActivity{
         setContentView(R.layout.activity_game);
         context = this;
 
+        //alert dialog that blocks the screen
         AlertDialog dialogLoadingBoard = new AlertDialog.Builder(context).setView(R.layout.alert_dialog_loading_board).setCancelable(false).create();
         dialogLoadingBoard.show();
 
+        //init views
         btnOpenMenu = findViewById(R.id.btnOpenMenu);
         btnStartGame = findViewById(R.id.btnStartGame);
         btnSkipRound = findViewById(R.id.btnSkipRound);
@@ -87,36 +94,27 @@ public class GameActivity extends AppCompatActivity{
 
         soundEffectsManager = new SoundEffectManager(this);
 
+        //init game view
         LinearLayout gameLayout = findViewById(R.id.gameLinearLayout);
-
         gameView = new GameView(context, boardSize, this, soundEffectsManager);
-
         gameLayout.addView(gameView);
-
 
         databaseRepository = DatabaseRepository.getInstance(context);
 
-
-
-
-
+        //init card view
         String[] buildingImages = {"obelisk", "lightning0tower"};
-
         RecyclerView buildingRecyclerView = findViewById(R.id.buildingRecyclerView);
         buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         buildingRecyclerView.setAdapter(new BuildingsRecyclerViewAdapter(this, buildingImages,  this));
 
 
-
-
-
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
 
-        startNewGame = !getIntent().getBooleanExtra("isContinue", false);
+        continueGame = getIntent().getBooleanExtra("isContinue", false);
 
 
 
-        if (startNewGame){
+        if (!continueGame){
             //you cant pass an enum through intent
             String difficultyLevelString = getIntent().getStringExtra("difficultyLevel");
             DifficultyLevel difficultyLevel = DifficultyLevel.valueOf(difficultyLevelString);
@@ -172,7 +170,7 @@ public class GameActivity extends AppCompatActivity{
                     Toast.makeText(context, "In order to start a game\n" +
                             "you need to build something", Toast.LENGTH_LONG).show();
                 }
-                if (startNewGame){
+                if (!continueGame){
                     databaseRepository.incrementGamesPlayed();
                 }
             }
