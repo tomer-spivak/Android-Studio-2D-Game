@@ -33,6 +33,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.Objects;
 
@@ -40,7 +41,6 @@ import java.util.Objects;
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
@@ -112,25 +112,13 @@ public class GameActivity extends AppCompatActivity{
 
         continueGame = getIntent().getBooleanExtra("isContinue", false);
 
-
-
-        if (!continueGame){
-            //you cant pass an enum through intent
+        DifficultyLevel difficultyLevel = null;
+        if (!continueGame) {
             String difficultyLevelString = getIntent().getStringExtra("difficultyLevel");
-            DifficultyLevel difficultyLevel = DifficultyLevel.valueOf(difficultyLevelString);
-
-            BoardMapper boardMapper = new BoardMapper(boardSize, difficultyLevel);
-            initBoardInViewModel(boardMapper, dialogLoadingBoard);
-        } else {
-            BoardMapper boardMapper = new BoardMapper(boardSize);
-            databaseRepository.loadDataFromDataBase(boardMapper, new OnBoardLoadedListener() {
-                @Override
-                public void onBoardLoaded(Cell[][] board) {
-                    Toast.makeText(context, "got board", Toast.LENGTH_SHORT).show();
-                    initBoardInViewModel(boardMapper, dialogLoadingBoard);
-                }
-            });
+            difficultyLevel = DifficultyLevel.valueOf(difficultyLevelString);
         }
+        initBoardInViewModel(!continueGame, boardSize, difficultyLevel, dialogLoadingBoard);
+
 
 
 
@@ -499,11 +487,23 @@ public class GameActivity extends AppCompatActivity{
             soundEffectsManager.onDestroy();
         }
     }
-    private void initBoardInViewModel(BoardMapper boardMapper, Dialog dialogLoadingBoard) {
-        viewModel.initBoard(boardMapper.getBoard().clone(), boardMapper.getDifficulty(),boardMapper.getCurrentRound(), boardMapper.getShnuzes());
-        viewModel.setSoundEffects(soundEffectsManager);
-        viewModel.tick(boardMapper.getTimeSinceStartOfGame());
-        viewModel.setDayTime(boardMapper.getDayTime());
+    private void initBoardInViewModel(boolean startNewGame, int boardSize, DifficultyLevel difficultyLevel, Dialog dialogLoadingBoard) {
+        if(!startNewGame){
+            OnBoardLoadedListener listener = new OnBoardLoadedListener() {
+                @Override
+                public void onBoardLoaded(DocumentSnapshot documentSnapshot, DifficultyLevel finalDifficultyLevel, Long finalTimeSinceGameStart,
+                                       int finalCurrentRound, int finalShnuzes, boolean finalDayTime) {
+                  viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, documentSnapshot.getData(), boardSize, finalDifficultyLevel,
+                          finalCurrentRound, finalShnuzes, finalTimeSinceGameStart, finalDayTime);
+               }
+            };
+            databaseRepository.loadCurrentGame(listener);
+        } else {
+            viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, null, boardSize, difficultyLevel, 1, -1,
+                    0L, true);
+        }
+
+
         dialogLoadingBoard.dismiss();
 
     }

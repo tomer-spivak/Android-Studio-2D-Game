@@ -43,7 +43,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.gameActivity.BoardMapper;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameCheckCallback;
 import tomer.spivak.androidstudio2dgame.gameActivity.OnBoardLoadedListener;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardCallback;
@@ -107,79 +106,62 @@ public class DatabaseRepository {
                 .set(metaData);
     }
 
-    public void loadBoard(OnSuccessListener<DocumentSnapshot> onSuccess, OnFailureListener onFailure) {
-        if (isGuest()) {
-            return;
-        }
-        FirebaseUser user = authHelper.getUserInstance();
-
-        db.collection("users")
-                .document(user.getUid())
-                .collection("currentGame")
-                .document("board objects")
-                .get()
-                .addOnSuccessListener(onSuccess)
-                .addOnFailureListener(onFailure);
-    }
-
-    public void loadDataFromDataBase(BoardMapper boardMapper, OnBoardLoadedListener listener) {
+    public void loadCurrentGame(OnBoardLoadedListener listener) {
         if (isGuest()) return;
         FirebaseUser user = authHelper.getUserInstance();
 
+        // 1) Load meta, apply to boardMapper
         db.collection("users")
                 .document(user.getUid())
                 .collection("currentGame")
                 .document("meta")
                 .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot metaSnapshot) {
-                        // Load all meta fields from one document
-                        String difficultyName = metaSnapshot.getString("level");
-                        Long gameTime = metaSnapshot.getLong("millis from start of the game");
-                        Long currentRound = metaSnapshot.getLong("currentRound");
-                        Long shnuzes = metaSnapshot.getLong("shnuzes");
-                        boolean dayTime = Boolean.TRUE.equals(metaSnapshot.getBoolean("dayTime"));
-                        if (difficultyName != null) {
-                            boardMapper.setDifficulty(DifficultyLevel.valueOf(difficultyName));
-                        }
-                        if (gameTime != null) {
-                            boardMapper.setTimeSinceStartOfGame(gameTime);
-                        }
-                        if (currentRound != null) {
-                            boardMapper.setCurrentRound(currentRound.intValue());
-                        }
-                        if (shnuzes != null) {
-                            boardMapper.setShnuzes(shnuzes.intValue());
-                        }
-                        boardMapper.setDayTime(dayTime);
-                        Log.d("wtf", "diff: " + boardMapper.getDifficulty());
-                        Log.d("wtf", "time: " + boardMapper.getTimeSinceStartOfGame());
-                        Log.d("wtf", "currentRound: " + boardMapper.getCurrentRound());
-                        Log.d("wtf", "shnuz" + boardMapper.getShnuzes());
+                .addOnSuccessListener(metaSnap -> {
+                    String difficultyName = metaSnap.getString("level");
+                    Long gameTime        = metaSnap.getLong("millis from start of the game");
+                    Long currentRoundL    = metaSnap.getLong("currentRound");
+                    Long shnuzesL         = metaSnap.getLong("shnuzes");
+                    Boolean dt           = metaSnap.getBoolean("dayTime");
+                    DifficultyLevel difficultyLevel = DifficultyLevel.MEDIUM;
+                    long timeSinceGameStart = 0L;
+                    int currentRound = 1, shnuzes = -1;
+                    boolean dayTime = true;
+                    if (difficultyName != null)
+                        difficultyLevel = DifficultyLevel.valueOf(difficultyName);
+                    if (gameTime     != null)
+                        timeSinceGameStart = gameTime;
+                    if (currentRoundL != null)
+                        currentRound = (currentRoundL.intValue());
+                    if (shnuzesL      != null)
+                        shnuzes = (shnuzesL.intValue());
+                    dayTime = (Boolean.TRUE.equals(dt));
 
-                        // Load board structure
-                        loadBoard(new OnSuccessListener<DocumentSnapshot>() {
-                            @Override
-                            public void onSuccess(DocumentSnapshot boardSnapshot) {
-                                createBoardInBoardMapper(boardMapper, boardSnapshot, listener);
-                            }
-                        }, null);
-                    }
-                });
+                    // 2) Now load the actual board cells
+                    DifficultyLevel finalDifficultyLevel = difficultyLevel;
+                    Long finalTimeSinceGameStart = timeSinceGameStart;
+                    int finalCurrentRound = currentRound;
+                    int finalShnuzes = shnuzes;
+                    boolean finalDayTime = dayTime;
+                    db.collection("users")
+                            .document(user.getUid())
+                            .collection("currentGame")
+                            .document("board objects")
+                            .get()
+                            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                @Override
+                                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                    listener.onBoardLoaded(documentSnapshot, finalDifficultyLevel, finalTimeSinceGameStart, finalCurrentRound,
+                                            finalShnuzes, finalDayTime);
+                                }
+                            });
+                    // if you want to handle board‐load failure too, addOnFailureListener(...)
+
+                })
+        // optionally handle meta‐load failure here:
+        // .addOnFailureListener(...)
+        ;
     }
 
-    private void createBoardInBoardMapper(BoardMapper boardMapper, DocumentSnapshot documentSnapshot,
-                                          OnBoardLoadedListener listener) {
-        if (documentSnapshot == null || !documentSnapshot.exists()){
-            boardMapper.initBoard();
-            return;
-        }
-        Map<String, Object> data = documentSnapshot.getData();
-        boardMapper.createBoard(data);
-        Cell[][] board = boardMapper.getBoard();
-        listener.onBoardLoaded(board);
-    }
 
     public void checkIfTheresAGame(GameCheckCallback callback) {
         if (isGuest()) {
