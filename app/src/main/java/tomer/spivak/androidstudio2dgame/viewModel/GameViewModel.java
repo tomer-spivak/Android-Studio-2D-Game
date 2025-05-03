@@ -7,8 +7,8 @@ import androidx.lifecycle.ViewModel;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
-import tomer.spivak.androidstudio2dgame.music.SoundEffects;
 import tomer.spivak.androidstudio2dgame.model.ModelGameManager;
+import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 
 public class GameViewModel extends ViewModel {
     private final MutableLiveData<GameState> gameState = new MutableLiveData<>();
@@ -52,7 +52,7 @@ public class GameViewModel extends ViewModel {
         gameState.postValue(gameManager.getState());
     }
 
-    public void setSoundEffects(SoundEffects effects) {
+    public void setSoundEffects(SoundEffectManager effects) {
         gameManager.setSoundEffects(effects);
     }
 

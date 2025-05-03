@@ -20,16 +20,19 @@ import tomer.spivak.androidstudio2dgame.R;
 public class BuildingsRecyclerViewAdapter extends
         RecyclerView.Adapter<BuildingsRecyclerViewAdapter.BuildingViewHolder> {
 
+
     private final Context context;
     private final ArrayList<String> buildingArrayList;
-    private final OnItemClickListener listener;
     private View selectedBuilding;
+    private final GameActivity gameActivity; // Add reference to Activity
 
-    public BuildingsRecyclerViewAdapter(Context context, ArrayList<String> buildingArrayList,
-                                            OnItemClickListener listener) {
+    // Updated constructor
+    public BuildingsRecyclerViewAdapter(Context context,
+                                        ArrayList<String> buildingArrayList,
+                                        GameActivity activity) {
         this.context = context;
         this.buildingArrayList = buildingArrayList;
-        this.listener = listener;
+        this.gameActivity = activity; // Store activity reference
     }
 
     @NonNull
@@ -95,9 +98,11 @@ public class BuildingsRecyclerViewAdapter extends
             itemView.setSelected(true);
 
             int position = getAdapterPosition();
-            if (position != RecyclerView.NO_POSITION && listener != null) {
+            if (position != RecyclerView.NO_POSITION) {
                 String buildingImageURL = buildingArrayList.get(position);
-                listener.onBuildingRecyclerViewItemClick(buildingImageURL, position);
+                // Directly call Activity methods
+                gameActivity.onBuildingSelected(buildingImageURL.replace("0", ""));
+                gameActivity.closeBuildingMenu(); // New helper method
             }
         }
     }

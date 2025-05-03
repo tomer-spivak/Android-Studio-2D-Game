@@ -10,10 +10,10 @@ import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
-import tomer.spivak.androidstudio2dgame.music.SoundEffects;
+import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 
 public class EnemyManager {
-    SoundEffects soundEffects;
+    SoundEffectManager soundEffects;
 
 
     public void spawnEnemies(GameState gameState, int amount) {
@@ -212,7 +212,7 @@ public class EnemyManager {
         return path;
     }
 
-    public void setSoundEffects(SoundEffects soundEffects) {
+    public void setSoundEffects(SoundEffectManager soundEffects) {
         this.soundEffects = soundEffects;
     }
 }

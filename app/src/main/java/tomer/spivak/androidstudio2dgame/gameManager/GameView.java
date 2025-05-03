@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchManager;
+import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
 import tomer.spivak.androidstudio2dgame.music.MusicService;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
@@ -27,7 +28,7 @@ import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectManager;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
-import tomer.spivak.androidstudio2dgame.music.SoundEffects;
+import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -35,8 +36,12 @@ import android.os.Looper;
 public class GameView extends SurfaceView implements SurfaceHolder.Callback, TouchManager.TouchListener {
     private final GameLoop gameLoop;
     private final CustomGridView gridView;
+
+    //custom class that handles touch events (scrolls, zoom)
     private final TouchManager touchManager;
-    private final SoundEffects soundEffects;
+
+    //
+    private final SoundEffectManager soundEffects;
     GameObjectManager gameObjectManager;
     private Float scale = 1F;
     private final Bitmap morningBackground;
@@ -45,11 +50,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     long timeTillNextRound = 0;
     int currentRound = 0;
     int boardSize;
-    GameViewListener listener;
     Context context;
     GameDrawerHelper gameDrawerHelper;
     private int shnuzes = 0;
-
+    GameActivity gameActivity;
     private MusicService musicService;
     private final Intent musicIntent;
 
@@ -69,22 +73,21 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     };
 
 
-    public GameView(Context context, int boardSize, GameViewListener listener, SoundEffects soundEffects) {
+    public GameView(Context context, int boardSize, GameActivity gameActivity, SoundEffectManager soundEffects) {
         super(context);
         this.context = context;
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
-        gameLoop = new GameLoop(this, surfaceHolder, listener);
+        gameLoop = new GameLoop(this, surfaceHolder, gameActivity);
         touchManager = new TouchManager(context, this);
         this.boardSize = boardSize;
         gridView = new CustomGridView(context, boardSize);
-        this.listener = listener;
         this.soundEffects = soundEffects;
         morningBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_morning);
         nightBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_night);
         backgroundBitmap = morningBackground;
         gameObjectManager = new GameObjectManager(context, boardSize, gridView.getCenterCells());
-
+        this.gameActivity = gameActivity;
         gameDrawerHelper = new GameDrawerHelper(gameObjectManager);
 
         musicIntent = new Intent(getContext(), MusicService.class);
@@ -138,7 +141,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         if (cellCenterPointArray == null)
             return;
         Point cellPoint = cellCenterPointArray[1];
-        listener.onCellClicked(cellPoint.x, cellPoint.y);
+        gameActivity.onCellClicked(cellPoint.x, cellPoint.y);
     }
 
     public void unpackGameState(GameState gameState) {

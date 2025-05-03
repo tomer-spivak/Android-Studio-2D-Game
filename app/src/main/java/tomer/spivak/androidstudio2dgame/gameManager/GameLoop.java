@@ -5,6 +5,8 @@ import android.graphics.Canvas;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
+
 public class GameLoop implements Runnable {
 
     //limits the number frames possible
@@ -26,12 +28,12 @@ public class GameLoop implements Runnable {
     private Thread gameThread;
 
     //listener that updates the game state. its implemented in the game activity
-    private final GameViewListener listener;
+    private final GameActivity gameActivity;
 
-    public GameLoop(GameView gameView, SurfaceHolder surfaceHolder, GameViewListener listener) {
+    public GameLoop(GameView gameView, SurfaceHolder surfaceHolder, GameActivity gameActivity) {
         this.surfaceHolder = surfaceHolder;
         this.gameView = gameView;
-        this.listener = listener;
+        this.gameActivity = gameActivity;
     }
 
     //function that starts the game loop
@@ -60,7 +62,7 @@ public class GameLoop implements Runnable {
                 //locks the canvas to only this thread and avoids any race conditions
                 synchronized (surfaceHolder) {
                     //update the game state
-                    listener.updateGameState(deltaTime);
+                    gameActivity.updateGameState(deltaTime);
                     //draws on the canvas
                     gameView.draw(canvas);
                 }

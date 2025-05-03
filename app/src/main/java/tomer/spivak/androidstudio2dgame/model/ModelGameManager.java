@@ -7,7 +7,7 @@ import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
-import tomer.spivak.androidstudio2dgame.music.SoundEffects;
+import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,11 +17,17 @@ public class ModelGameManager {
     private GameState state;
     private final EnemyManager enemyManager = new EnemyManager();
     private final TurretManager turretManager = new TurretManager();
-    private SoundEffects soundEffects;
+    private SoundEffectManager soundEffects;
     private static final int NIGHT_THRESHOLD = 5000;
     private String selectedBuildingType;
     private int lastRound;
     int enemiesDefeated = 0;
+
+
+    public ModelGameManager() {
+
+    }
+
 
     public void init(Cell[][] board, DifficultyLevel difficulty) {
         state = new GameState(board, NIGHT_THRESHOLD, difficulty);
@@ -186,7 +192,7 @@ public class ModelGameManager {
         state.decreaseTimeToNextRound(state.getTimeToNextRound() - 1);
     }
 
-    public void setSoundEffects(SoundEffects effects) {
+    public void setSoundEffects(SoundEffectManager effects) {
         this.soundEffects = effects;
         if (state == null)
             return;
