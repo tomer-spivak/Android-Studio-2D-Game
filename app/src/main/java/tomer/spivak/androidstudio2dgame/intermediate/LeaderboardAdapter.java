@@ -9,7 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -83,6 +82,9 @@ public class LeaderboardAdapter
     public void onBindViewHolder(
             @NonNull LeaderboardViewHolder holder, int position
     ) {
+        // position is 0-based, so rank is position+1
+        holder.rankTextView.setText((position + 1) + ".");
+
         LeaderboardEntry entry = filteredList.get(position);
         holder.usernameTextView.setText(entry.getDisplayName());
         holder.maxRoundTextView.setText("🏆 Max Round: " + entry.getMaxRound());
@@ -90,19 +92,22 @@ public class LeaderboardAdapter
         holder.enemiesDefeatedTextView.setText("💀 Defeated: " + entry.getEnemiesDefeated());
     }
 
+
     @Override
     public int getItemCount() {
         return filteredList.size();
     }
 
     static class LeaderboardViewHolder extends RecyclerView.ViewHolder {
-        TextView usernameTextView,
+        TextView rankTextView,
+                usernameTextView,
                 gamesPlayedTextView,
                 enemiesDefeatedTextView,
                 maxRoundTextView;
 
         public LeaderboardViewHolder(@NonNull View itemView) {
             super(itemView);
+            rankTextView          = itemView.findViewById(R.id.tvRank);
             usernameTextView      = itemView.findViewById(R.id.usernameTextView);
             gamesPlayedTextView   = itemView.findViewById(R.id.tvGamesPlayed);
             enemiesDefeatedTextView = itemView.findViewById(R.id.tvEnemiesDefeated);

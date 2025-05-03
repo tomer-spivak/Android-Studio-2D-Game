@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 
@@ -27,6 +28,7 @@ public class LeaderboardFragment extends Fragment {
     private final ArrayList<LeaderboardEntry> leaderboardList = new ArrayList<>();
     DatabaseRepository databaseRepository = DatabaseRepository.getInstance(getContext());
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -47,8 +49,25 @@ public class LeaderboardFragment extends Fragment {
             }
         });
 
-        // Sort spinner
+        // 1) Set up Spinner with a custom item layout
         Spinner spinner = view.findViewById(R.id.spinnerSort);
+        String[] options = getResources().getStringArray(R.array.leaderboard_sort_options);
+
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
+                requireContext(),
+                R.layout.spinner_item,      // your custom “closed” view (TextView @android:id/text1)
+                android.R.id.text1,           // or android.R.id.text1 if you switched IDs
+                options
+        );
+
+// use your brand-new dropdown layout:
+        spinnerAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+
+        spinner.setAdapter(spinnerAdapter);
+
+
+
+        // 2) Listen for selections
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onNothingSelected(AdapterView<?> parent) {}
 
