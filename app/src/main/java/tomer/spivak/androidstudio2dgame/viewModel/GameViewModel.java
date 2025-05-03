@@ -22,7 +22,7 @@ import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 
 public class GameViewModel extends ViewModel {
-    private final MutableLiveData<GameState> gameState = new MutableLiveData<>();
+    private final MutableLiveData<GameState> viewModelGameState = new MutableLiveData<>();
     private final ModelGameManager gameManager;
 
     public GameViewModel() {
@@ -30,19 +30,7 @@ public class GameViewModel extends ViewModel {
     }
 
     public LiveData<GameState> getGameState() {
-        return gameState;
-    }
-
-
-
-    public void initBoard(Cell[][] board, DifficultyLevel difficulty, int currentRound, int shnuzes) {
-        gameManager.init(board, difficulty);
-        gameState.setValue(gameManager.getState());
-        gameManager.setCurrentRound(currentRound);
-        if (shnuzes < 0)
-            gameManager.initShnuzes();
-        else
-            gameManager.setShnuzes(shnuzes);
+        return viewModelGameState;
     }
 
     public void selectBuilding(String type) {
@@ -52,17 +40,17 @@ public class GameViewModel extends ViewModel {
     public void onCellClicked(int row, int col) {
         gameManager.handleCellClick(row, col);
         gameManager.setSelectedBuildingType(null);
-        gameState.postValue(gameManager.getState());
+        viewModelGameState.postValue(gameManager.getState());
     }
 
     public void tick(long deltaTime) {
         gameManager.update(deltaTime);
-        gameState.postValue(gameManager.getState());
+        viewModelGameState.postValue(gameManager.getState());
     }
 
     public void skipToNextRound() {
         gameManager.skipToNextRound();
-        gameState.postValue(gameManager.getState());
+        viewModelGameState.postValue(gameManager.getState());
     }
 
 
@@ -72,7 +60,14 @@ public class GameViewModel extends ViewModel {
 
     public void initModelBoardWithDataFromDataBase(SoundEffectManager soundEffectsManager, Map<String, Object> data, int boardSize,
                                                    DifficultyLevel difficultyLevel, int currentRound, int shnuzes, Long timeSinceGameStart, boolean dayTime){
-        initBoard(createBoard(data, boardSize, difficultyLevel), difficultyLevel, currentRound, shnuzes);
+        Cell[][] board = createBoard(data, boardSize, difficultyLevel);
+        gameManager.init(board, difficultyLevel);
+        viewModelGameState.setValue(gameManager.getState());
+        gameManager.setCurrentRound(currentRound);
+        if (shnuzes < 0)
+            gameManager.initShnuzes();
+        else
+            gameManager.setShnuzes(shnuzes);
         setSoundEffects(soundEffectsManager);
         tick(timeSinceGameStart);
         setDayTime(dayTime);

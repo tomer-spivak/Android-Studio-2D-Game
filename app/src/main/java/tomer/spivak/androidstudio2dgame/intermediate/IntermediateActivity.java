@@ -113,6 +113,7 @@ public class IntermediateActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         Intent intent = new Intent(context, GameActivity.class);
                         intent.putExtra("isContinue", true);
+                        intent.putExtra("difficultyLevel", DifficultyLevel.MEDIUM);
                         startActivity(intent);
                     }
                 });

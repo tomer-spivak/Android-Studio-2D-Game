@@ -1,14 +1,11 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -32,10 +29,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 
-import java.util.Objects;
 
 
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
@@ -110,22 +105,39 @@ public class GameActivity extends AppCompatActivity{
 
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
 
+        //did the user continue a game or started a new one
         continueGame = getIntent().getBooleanExtra("isContinue", false);
 
-        DifficultyLevel difficultyLevel = null;
-        if (!continueGame) {
-            String difficultyLevelString = getIntent().getStringExtra("difficultyLevel");
-            difficultyLevel = DifficultyLevel.valueOf(difficultyLevelString);
+        if(continueGame){
+            //we need a listener that will tell us if the board was loaded, and if so get all the data.
+            OnBoardLoadedListener listener = new OnBoardLoadedListener() {
+                @Override
+                public void onBoardLoaded(DocumentSnapshot documentSnapshot, DifficultyLevel finalDifficultyLevel, Long finalTimeSinceGameStart,
+                                          int finalCurrentRound, int finalShnuzes, boolean finalDayTime) {
+                    //init the board in the model
+                    viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, documentSnapshot.getData(), boardSize, finalDifficultyLevel,
+                            finalCurrentRound, finalShnuzes, finalTimeSinceGameStart, finalDayTime);
+                    //loading finish
+                    dialogLoadingBoard.dismiss();
+                }
+            };
+            databaseRepository.loadCurrentGame(listener);
+        } else {
+            //start a new game, we can take get the difficulty selected
+            DifficultyLevel difficultyLevel = DifficultyLevel.valueOf(getIntent().getStringExtra("difficultyLevel"));
+            //init the board in the model with default values
+            viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, null, boardSize, difficultyLevel,
+                    1, -1, 0L, true);
+            //loading finish
+            dialogLoadingBoard.dismiss();
         }
-        initBoardInViewModel(!continueGame, boardSize, difficultyLevel, dialogLoadingBoard);
 
-
-
-
+        //start observing changes in model
         viewModel.getGameState().observe(this, new Observer<GameState>() {
             @Override
             public void onChanged(GameState gameState) {
-                gameView.unpackGameState(gameState);
+                //update game view
+                gameView.updateFromGameState(gameState);
                 if (gameState.getGameStatus() == GameStatus.LOST) {
                     triggerDefeat();
                 } else if (gameState.getGameStatus() == GameStatus.WON)  {
@@ -136,34 +148,40 @@ public class GameActivity extends AppCompatActivity{
                     enemiesDefeatedCache = enemiesDefeated;
                     databaseRepository.incrementEnemiesDefeated();
                 }
-
-                updateUiForTimeOfDay(gameState.isDayTime());
+                //update UI
+                if (gameState.isDayTime()) {
+                    btnOpenMenu.setVisibility(View.VISIBLE);
+                    //we need to check if the start game button appears.
+                    // if it does the game hasn't started yet, and so we cant skip to the next round.
+                    if (btnStartGame.getVisibility() == View.GONE)
+                        btnSkipRound.setVisibility(View.VISIBLE);
+                } else {
+                    btnOpenMenu.setVisibility(View.GONE);
+                    btnSkipRound.setVisibility(View.GONE);
+                    cvSelectBuildingMenu.setVisibility(View.GONE);
+                }
             }
         });
-
-
-
-
-
-
 
         btnStartGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (canStartGame()) {
+                //if the game can be started (if there are any buildings) start the game
+                if (viewModel.canStartGame()) {
                     gameIsOnGoing = true;
                     btnStartGame.setVisibility(View.GONE);
                     btnSkipRound.setVisibility(View.VISIBLE);
+
+                    //if this is a new game update the database
+                    if (!continueGame){
+                        databaseRepository.incrementGamesPlayed();
+                    }
                 } else {
-                    Toast.makeText(context, "In order to start a game\n" +
-                            "you need to build something", Toast.LENGTH_LONG).show();
-                }
-                if (!continueGame){
-                    databaseRepository.incrementGamesPlayed();
+                    Toast.makeText(context, "In order to start a game\n" + "you need to build something",
+                            Toast.LENGTH_LONG).show();
                 }
             }
         });
-
 
         btnOpenMenu.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -172,14 +190,12 @@ public class GameActivity extends AppCompatActivity{
             }
         });
 
-
         btnCloseMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 cvSelectBuildingMenu.setVisibility(View.GONE);
             }
         });
-
 
         btnSkipRound.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -189,12 +205,10 @@ public class GameActivity extends AppCompatActivity{
             }
         });
 
-
         btnPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 float volume = gameView.getMusicService().getCurrentVolumeLevel();
-                Log.d("music", "volume: " + volume);
                 gameView.pauseGameLoop();
 
                 LayoutInflater inflater = LayoutInflater.from(context);
@@ -204,139 +218,125 @@ public class GameActivity extends AppCompatActivity{
                 SeekBar soundEffectsSeekBar = dialogView.findViewById(R.id.soundEffectsSeekBar);
                 soundEffectsSeekBar.setProgress(soundEffectsManager.getVolumeLevel());
 
-                new AlertDialog.Builder(context)
-                        .setTitle("Game Paused")
-                        .setView(dialogView)
-                        .setPositiveButton("Resume", (d, w) -> {
-                            gameView.resumeGameLoop(volumeSeekBar.getProgress());
-                            soundEffectsManager.setVolume(soundEffectsSeekBar.getProgress() / 100f);
-                            d.dismiss();
-                        })
-                        .setNegativeButton("Exit", (d, w) -> {
-                            // 1) Dismiss UI
-                            d.dismiss();
-
-                            // 2) Always stop the game loop and finish
-
-
-                            // 3) Then *attempt* to save in the background
-                            GameState state = viewModel.getGameState().getValue();
-                            if (state != null && state.getGrid() != null) {
-                                databaseRepository.saveBoard(
-                                        state.getGrid(),
-                                        state.getDifficulty().name(),
-                                        state.getCurrentTimeOfGame(),
-                                        state.getCurrentRound(),
-                                        state.getShnuzes(), state.getDayTime(),
-                                        /* onSuccess */ unused -> { /* no‑op */ },
-                                        /* onFailure */ e -> Log.w("DBG", "offline save failed", e)
-                                );
-
-                                databaseRepository.logResults(viewModel);
+                new AlertDialog.Builder(context).setTitle("Game Paused").setView(dialogView)
+                        .setPositiveButton("resume", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                gameView.resumeGameLoop(volumeSeekBar.getProgress());
+                                soundEffectsManager.setVolume(soundEffectsSeekBar.getProgress() / 100f);
+                                dialog.dismiss();
                             }
-
-                            gameView.stopGameLoop();
-                            finish();
+                        })
+                        .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                GameState state = viewModel.getGameState().getValue();
+                                if (state != null) {
+                                    databaseRepository.saveBoard(state,
+                                            new OnSuccessListener<Void>() {
+                                                @Override
+                                                public void onSuccess(Void unused) {
+                                                    databaseRepository.logResults(viewModel);
+                                                    gameView.stopGameLoop();
+                                                    dialog.dismiss();
+                                                    finish();
+                                                }
+                                            },
+                                            new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    Toast.makeText(context, "Saving failed: " + e.getMessage(),
+                                                            Toast.LENGTH_SHORT).show();
+                                                }
+                                            }
+                                    );
+                                } else {
+                                    gameView.stopGameLoop();
+                                    finish();
+                                }
+                            }
                         })
                         .setCancelable(false)
                         .show();
             }
         });
+        //overiding the back button
+        OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
+            @Override
+            public void handleOnBackPressed() {
+                int volume = gameView.getMusicService().getCurrentVolumeLevel();
+                gameView.pauseGameLoop();
 
+                LayoutInflater inflater = LayoutInflater.from(context);
+                View dialogView = inflater.inflate(R.layout.alert_dialog_back, null);
 
+                AlertDialog alertDialog = new AlertDialog.Builder(context).setView(dialogView).setCancelable(false).create();
 
+                Button btnCancel = dialogView.findViewById(R.id.dialog_cancel);
+                Button btnDiscardSave = dialogView.findViewById(R.id.dialog_exit_without_saving);
+                Button btnSave = dialogView.findViewById(R.id.dialog_exit_with_saving);
 
+                btnCancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        alertDialog.dismiss();
+                        gameView.resumeGameLoop(volume);
+                    }
+                });
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)  {
-            /* enabled by default */
-            //
-            OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
-                @Override
-                public void handleOnBackPressed() {
-
-                    int volume = gameView.getMusicService().getCurrentVolumeLevel();
-                    gameView.pauseGameLoop();      // always stop immediately
-                    LayoutInflater inflater = LayoutInflater.from(context);
-                    View dialogView = inflater.inflate(R.layout.alert_dialog, null);
-
-                    AlertDialog alertDialog = new AlertDialog.Builder(context)
-                            .setView(dialogView)
-                            .setCancelable(false)
-                            .create();
-
-                    Button btnCancel = dialogView.findViewById(R.id.dialog_cancel);
-                    Button btnDontSave = dialogView.findViewById(R.id.dialog_exit_without_saving);
-                    Button btnSave = dialogView.findViewById(R.id.dialog_exit_with_saving);
-
-                    btnCancel.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            alertDialog.dismiss();
-                            gameView.resumeGameLoop(volume);
-                        }
-                    });
-
-                    btnDontSave.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if(!databaseRepository.isGuest())
-                            {
-                                databaseRepository.logResults(viewModel);
-                                databaseRepository.removeBoard();
-                            }
-                            alertDialog.dismiss();
-
-                            gameView.stopGameLoop();
-
-                            finish();
-                        }
-                    });
-
-                    btnSave.setOnClickListener(v -> {
+                btnDiscardSave.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        //logs in the leaderboard
+                        databaseRepository.logResults(viewModel);
+                        //removes the save
+                        databaseRepository.removeBoard();
                         alertDialog.dismiss();
                         gameView.stopGameLoop();
+                        finish();
+                    }
+                });
 
-
-                        FirebaseUser u = databaseRepository.getUserInstance();
-                        // 1) offline? bail immediately
-                        if (!isNetworkAvailable(context)) {
-                            Toast.makeText(context, "No network, exiting as guest", Toast.LENGTH_SHORT).show();
+                btnSave.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        alertDialog.dismiss();
+                        GameState gameState = viewModel.getGameState().getValue();
+                        if (gameState != null) {
+                            databaseRepository.saveBoard(
+                                    gameState,
+                                    new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void unused) {
+                                            databaseRepository.logResults(viewModel);
+                                            gameView.stopGameLoop();
+                                            Toast.makeText(context, "Game saved successfully", Toast.LENGTH_SHORT).show();
+                                            finish();
+                                        }
+                                    },
+                                    new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Toast.makeText(context, "Failed to save game: " + e.getMessage(),
+                                                    Toast.LENGTH_SHORT).show();
+                                            gameView.stopGameLoop();
+                                            finish();
+                                        }
+                                    }
+                            );
+                        } else {
+                            gameView.stopGameLoop();
                             finish();
-                            return;
                         }
-                        // 2) guest? just exit
-                        if (u == null || u.isAnonymous()) {
-                            finish();
-                        }
-                        // 3) real user & online? save to Firestore
-                        else {
-                            saveBoard(viewModel, gameView, context);
-                        }
-                    });
-
-                    alertDialog.show();
-                }
-            };
-            getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
-        }
-
+                    }
+                });
+                alertDialog.show();
+            }
+        };
+        //assigns the callback
+        getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
     }
 
-
-
-    private void updateUiForTimeOfDay(boolean isDayTime) {
-        if (isDayTime) {
-            btnOpenMenu.setVisibility(View.VISIBLE);
-            //we need to check if the start game button appears.
-            // if it does the game hasn't started yet, and so we cant skip to the next round.
-            if(btnStartGame.getVisibility() == View.GONE)
-                btnSkipRound.setVisibility(View.VISIBLE);
-        } else {
-            btnOpenMenu.setVisibility(View.GONE);
-            btnSkipRound.setVisibility(View.GONE);
-            cvSelectBuildingMenu.setVisibility(View.GONE);
-        }
-    }
     private void triggerVictory() {
         databaseRepository.removeBoard();
         databaseRepository.logResults(viewModel);
@@ -404,53 +404,10 @@ public class GameActivity extends AppCompatActivity{
 
         alertDialog.show();
     }
-    public static boolean isNetworkAvailable(Context ctx) {
-        ConnectivityManager cm =
-                (ConnectivityManager)ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo ni = cm.getActiveNetworkInfo();
-        return ni != null && ni.isConnected();
-    }
-
-
-    public void saveBoard(GameViewModel viewModel, GameView gameView, Context context) {
-        GameState gameState = viewModel.getGameState().getValue();
-        if (gameState == null || gameState.getGrid() == null)
-            return;
-        Log.d("time", String.valueOf(gameState.getCurrentTimeOfGame()));
-        databaseRepository.saveBoard(Objects.requireNonNull(gameState.getGrid()),
-                gameState.getDifficulty().name(), gameState.getCurrentTimeOfGame(), gameState.getCurrentRound(),
-                gameState.getShnuzes(), gameState.getDayTime(),
-                new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void unused) {
-                        gameView.stopGameLoop();
-                        finish();
-                        Toast.makeText(context, "success", Toast.LENGTH_SHORT).show();
-                    }
-                }, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d("save", Objects.requireNonNull(e.getMessage()));
-                        Toast.makeText(context, "failed", Toast.LENGTH_SHORT).show();
-                        gameView.stopGameLoop();
-                        finish();
-                    }
-                });
-        databaseRepository.logResults(viewModel);
-    }
 
     public void closeBuildingMenu() {
         cvSelectBuildingMenu.setVisibility(View.GONE);
     }
-
-
-
-
-
-    private boolean canStartGame() {
-        return viewModel.canStartGame();
-    }
-
 
     @Override
     protected void onResume() {
@@ -458,11 +415,9 @@ public class GameActivity extends AppCompatActivity{
         if (gameView != null) {
             SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
             float volume = prefs.getFloat("volume", 0.07f) ;
-            Log.d("volume", "get" +volume);
             gameView.resumeGameLoop(volume * 100);
         }
     }
-
 
     @Override
     protected void onPause() {
@@ -471,41 +426,23 @@ public class GameActivity extends AppCompatActivity{
         }
         super.onPause();
     }
-
-
-
-
-
-
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        GameState gameState = viewModel.getGameState().getValue();
+
+        if (gameState != null) {
+            databaseRepository.saveBoard(gameState, null, null);
+        }
+
         if (gameView != null) {
             gameView.stopGameLoop();
         }
+
         if (soundEffectsManager != null) {
             soundEffectsManager.onDestroy();
         }
-    }
-    private void initBoardInViewModel(boolean startNewGame, int boardSize, DifficultyLevel difficultyLevel, Dialog dialogLoadingBoard) {
-        if(!startNewGame){
-            OnBoardLoadedListener listener = new OnBoardLoadedListener() {
-                @Override
-                public void onBoardLoaded(DocumentSnapshot documentSnapshot, DifficultyLevel finalDifficultyLevel, Long finalTimeSinceGameStart,
-                                       int finalCurrentRound, int finalShnuzes, boolean finalDayTime) {
-                  viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, documentSnapshot.getData(), boardSize, finalDifficultyLevel,
-                          finalCurrentRound, finalShnuzes, finalTimeSinceGameStart, finalDayTime);
-               }
-            };
-            databaseRepository.loadCurrentGame(listener);
-        } else {
-            viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, null, boardSize, difficultyLevel, 1, -1,
-                    0L, true);
-        }
 
-
-        dialogLoadingBoard.dismiss();
-
+        super.onDestroy();
     }
 
     public void onCellClicked(int row, int col) {
@@ -516,11 +453,9 @@ public class GameActivity extends AppCompatActivity{
         viewModel.selectBuilding(buildingType);
     }
 
-
     public void updateGameState(long elapsedTime) {
         if (gameIsOnGoing)
             viewModel.tick(elapsedTime);
     }
-
 
 }

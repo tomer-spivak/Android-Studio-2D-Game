@@ -28,10 +28,12 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -48,6 +50,7 @@ import tomer.spivak.androidstudio2dgame.gameActivity.OnBoardLoadedListener;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardCallback;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;
+import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
@@ -68,44 +71,75 @@ public class DatabaseRepository {
         return instance;
     }
 
-    public void saveBoard(Cell[][] board, String difficulty, Long gameTime, int currentRound, int shnuzes, boolean dayTime,
-                          OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
-        if (isGuest()) return;
-        FirebaseUser user = authHelper.getUserInstance();
+    // In DatabaseRepository.java
+    public void saveBoard(GameState gameState,
+                          OnSuccessListener<Void> onSuccess,
+                          OnFailureListener onFailure) {
+        if (isGuest()) {
+            Log.d("DB", "Guest user - skip save");
+            return;
+        }
 
+        FirebaseUser user = getUserInstance();
+        if (user == null || gameState == null) {
+            if (onFailure != null) {
+                onFailure.onFailure(new Exception("Invalid save conditions"));
+            }
+            return;
+        }
+
+        // Convert game state to database format
+        Map<String, Object> boardData = convertBoardToMap(gameState.getGrid());
+        Map<String, Object> metaData = createMetaData(gameState);
+
+        // Use batched write for atomic operation
+        WriteBatch batch = db.batch();
+
+        DocumentReference boardRef = db.collection("users")
+                .document(user.getUid())
+                .collection("currentGame")
+                .document("board objects");
+
+        DocumentReference metaRef = db.collection("users")
+                .document(user.getUid())
+                .collection("currentGame")
+                .document("meta");
+
+        batch.set(boardRef, boardData, SetOptions.merge());
+        batch.set(metaRef, metaData, SetOptions.merge());
+
+        batch.commit()
+                .addOnSuccessListener(unused -> {
+                    Log.d("DB", "Save successful");
+                    if (onSuccess != null) onSuccess.onSuccess(unused);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("DB", "Save failed", e);
+                    if (onFailure != null) onFailure.onFailure(e);
+                });
+    }
+
+    private Map<String, Object> convertBoardToMap(Cell[][] grid) {
         Map<String, Object> boardData = new HashMap<>();
-        for (int i = 0; i < board.length; i++) {
+        for (int i = 0; i < grid.length; i++) {
             List<Map<String, Object>> rowData = new ArrayList<>();
-            for (int j = 0; j < board[i].length; j++) {
-                rowData.add(board[i][j].toMap());
+            for (int j = 0; j < grid[i].length; j++) {
+                rowData.add(grid[i][j].toMap());
             }
             boardData.put("row_" + i, rowData);
         }
-
-        // Save board structure
-        db.collection("users")
-                .document(user.getUid())
-                .collection("currentGame")
-                .document("board objects")
-                .set(boardData)
-                .addOnSuccessListener(onSuccess)
-                .addOnFailureListener(onFailure);
-
-        // Save all game metadata in a single "meta" document
-        Map<String, Object> metaData = new HashMap<>();
-        metaData.put("level", difficulty);
-        metaData.put("millis from start of the game", gameTime);
-        metaData.put("currentRound", currentRound);
-        metaData.put("shnuzes", shnuzes);
-        metaData.put("dayTime", dayTime);
-
-        db.collection("users")
-                .document(user.getUid())
-                .collection("currentGame")
-                .document("meta")
-                .set(metaData);
+        return boardData;
     }
 
+    private Map<String, Object> createMetaData(GameState gameState) {
+        Map<String, Object> metaData = new HashMap<>();
+        metaData.put("level", gameState.getDifficulty().name());
+        metaData.put("millis from start of the game", gameState.getCurrentTimeOfGame());
+        metaData.put("currentRound", gameState.getCurrentRound());
+        metaData.put("shnuzes", gameState.getShnuzes());
+        metaData.put("dayTime", gameState.getDayTime());
+        return metaData;
+    }
     public void loadCurrentGame(OnBoardLoadedListener listener) {
         if (isGuest()) return;
         FirebaseUser user = authHelper.getUserInstance();
@@ -125,7 +159,7 @@ public class DatabaseRepository {
                     DifficultyLevel difficultyLevel = DifficultyLevel.MEDIUM;
                     long timeSinceGameStart = 0L;
                     int currentRound = 1, shnuzes = -1;
-                    boolean dayTime = true;
+                    boolean dayTime;
                     if (difficultyName != null)
                         difficultyLevel = DifficultyLevel.valueOf(difficultyName);
                     if (gameTime     != null)
@@ -154,12 +188,7 @@ public class DatabaseRepository {
                                             finalShnuzes, finalDayTime);
                                 }
                             });
-                    // if you want to handle board‐load failure too, addOnFailureListener(...)
-
-                })
-        // optionally handle meta‐load failure here:
-        // .addOnFailureListener(...)
-        ;
+                });
     }
 
 
@@ -210,55 +239,33 @@ public class DatabaseRepository {
 
 
 
-    public void logResults(GameViewModel viewModel) {
-        if (isGuest())
-            return;
+    public void logResults(GameViewModel vm) {
+        if (isGuest()) return;
+
         FirebaseUser user = authHelper.getUserInstance();
-        int round = viewModel.getRound();
-        Log.d("oof", "fuck");
-        db.collection("users").document(user.getUid()).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    Log.d("oof", String.valueOf(documentSnapshot));
-                    if (documentSnapshot != null && documentSnapshot.exists()) {
-                        Map<String, Object> leaderboard = (Map<String, Object>) documentSnapshot.get("leaderboard");
+        int round = vm.getRound();
 
-                        if (leaderboard == null) {
-                            leaderboard = new HashMap<>();
-                        }
+        db.collection("users").document(user.getUid())
+                .get()
+                .addOnSuccessListener(doc -> {
+                    Map<String,Object> lb = doc.exists()
+                            ? (Map<String,Object>)doc.get("leaderboard")
+                            : null;
 
-                        // Save round if needed
-                        Long maxRound = (Long) leaderboard.get("max round");
-                        if (maxRound == null || round > maxRound) {
-                            saveRound(round, user);
-                        }
-                        Log.d("oof", "wtf");
-                        // Always increment these
+                    // update max round
+                    Long maxR = lb == null ? null : (Long)lb.get("max round");
+                    if (maxR == null || round > maxR) {
+                        Map<String, Object> leaderboard = new HashMap<>();
+                        leaderboard.put("max round", round);
 
-                    } else {
-                        // If document doesn't exist, initialize leaderboard
-                        saveRound(round, user);
-                        Map<String, Object> initData = new HashMap<>();
-                        initData.put("leaderboard.enemies defeated", 0);
-                        initData.put("leaderboard.games played", 1);
-                        db.collection("users").document(user.getUid()).set(initData, SetOptions.merge());
+                        db.collection("users").document(user.getUid()).set(Collections
+                                .singletonMap("leaderboard", leaderboard), SetOptions
+                                .merge());
                     }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d("oof", "shit: " + e.getMessage());
-                    }
-                });
+                })
+                .addOnFailureListener(e -> Log.w("DB", "logResults failed", e));
     }
 
-    private void saveRound(int round, FirebaseUser user) {
-        Map<String, Object> leaderboard = new HashMap<>();
-        leaderboard.put("max round", round);
-
-        db.collection("users").document(user.getUid()).set(Collections
-                .singletonMap("leaderboard", leaderboard), SetOptions
-                .merge());
-
-    }
 
     public void fetchLeaderboardFromDatabase(final LeaderboardCallback callback) {
         final List<LeaderboardEntry> maxRounds = new ArrayList<>();

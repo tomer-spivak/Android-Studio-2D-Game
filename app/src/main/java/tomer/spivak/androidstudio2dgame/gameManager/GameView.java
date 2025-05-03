@@ -144,26 +144,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         gameActivity.onCellClicked(cellPoint.x, cellPoint.y);
     }
 
-    public void unpackGameState(GameState gameState) {
-        updateBoard(gameState.getGrid());
-        boolean timeOfDay = gameState.isDayTime();
-        if (timeOfDay){
-            currentRound = -1;
-            timeTillNextRound = gameState.getTimeToNextRound();
-            backgroundBitmap = morningBackground;
-        } else {
-            timeTillNextRound = -1;
-            currentRound = gameState.getCurrentRound();
-            backgroundBitmap = nightBackground;
-        }
-        if (gameState.getGameStatus() == GameStatus.LOST){
-            Toast.makeText(context, "lost", Toast.LENGTH_SHORT).show();
-            Log.d("lost", "lost");
-            stopGameLoop();
-        }
-        shnuzes = gameState.getShnuzes();
-    }
-
     public void updateBoard(Cell[][] board) {
         gameObjectManager.updateGameBoardFromBoard(board, scale);
     }
@@ -204,7 +184,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     }
 
     public void pauseGameLoop() {
-        Log.d("music", String.valueOf(musicService));
         soundEffects.pauseSoundEffects();
 
         if (musicService != null) {
@@ -250,5 +229,25 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     public MusicService getMusicService() {
         return musicService;
+    }
+
+    public void updateFromGameState(GameState gameState) {
+        updateBoard(gameState.getGrid());
+        boolean timeOfDay = gameState.isDayTime();
+        if (timeOfDay){
+            currentRound = -1;
+            timeTillNextRound = gameState.getTimeToNextRound();
+            backgroundBitmap = morningBackground;
+        } else {
+            timeTillNextRound = -1;
+            currentRound = gameState.getCurrentRound();
+            backgroundBitmap = nightBackground;
+        }
+        if (gameState.getGameStatus() == GameStatus.LOST){
+            Toast.makeText(context, "lost", Toast.LENGTH_SHORT).show();
+            Log.d("lost", "lost");
+            stopGameLoop();
+        }
+        shnuzes = gameState.getShnuzes();
     }
 }

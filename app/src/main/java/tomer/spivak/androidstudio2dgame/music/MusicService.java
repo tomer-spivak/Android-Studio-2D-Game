@@ -115,7 +115,6 @@ public class MusicService extends Service {
                 if (!mediaPlayer.isPlaying()) {
                     mediaPlayer.start();
                     mediaPlayer.setVolume(volume, volume);
-
                 }
             } catch (IllegalStateException e) {
                 Log.d("music", "MediaPlayer resume failed: " + e.getMessage());
