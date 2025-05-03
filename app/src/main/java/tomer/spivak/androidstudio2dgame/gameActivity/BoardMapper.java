@@ -15,23 +15,34 @@ import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 
 public class BoardMapper {
-    final int boardSize;
-    Long timeSinceStartOfGame;
-    DifficultyLevel difficulty;
-    Cell[][] board;
-    boolean isBoardEmpty = true;
-    private int currentRound;
-    private int shnuzes;
+    private final int boardSize;
+    private Long timeSinceStartOfGame = 0L;
+    private DifficultyLevel difficultyLevel;
+    private Cell[][] board;
+    private int currentRound = 1;
+    private int shnuzes = -1;
+    private boolean dayTime = true;
 
     public BoardMapper(int boardSize, DifficultyLevel difficulty) {
         this.boardSize = boardSize;
-        this.difficulty = difficulty;
+        this.difficultyLevel = difficulty;
         this.board = new Cell[boardSize][boardSize];
+        initBoard();
     }
 
     public BoardMapper(int boardSize) {
         this.boardSize = boardSize;
         this.board = new Cell[boardSize][boardSize];
+    }
+
+    public void initBoard() {
+        Cell[][] board = new Cell[boardSize][boardSize];
+        for (int i = 0; i < boardSize; i++) {
+            for (int j = 0; j < boardSize; j++) {
+                board[i][j] = new Cell(new Position(i, j));
+            }
+        }
+        this.board = board;
     }
 
     public void createBoard(Map<String, Object> data) {
@@ -51,12 +62,12 @@ public class BoardMapper {
                 HashMap objectMap = (HashMap) (col.get("object"));
 
                 if (objectMap != null) {
-                    ModelObject object = ModelObjectFactory.create((String) objectMap.get("type"), pos, difficulty);
+                    ModelObject object = ModelObjectFactory.create((String) objectMap.get("type"), pos, difficultyLevel);
                     String type = (String) objectMap.get("type");
                     object.setHealth(((Number) Objects.requireNonNull(objectMap.get("health"))).floatValue());
 
                     if (type.equals("monster")) {
-                        Enemy enemy = (Enemy) ModelObjectFactory.create(type, pos, difficulty);
+                        Enemy enemy = (Enemy) ModelObjectFactory.create(type, pos, difficultyLevel);
 
                         enemy.setState(EnemyState.valueOf(objectMap.get("enemyState").toString()));
                         enemy.setCurrentDirection(Direction.valueOf(objectMap.get("currentDirection").toString()));
@@ -69,7 +80,6 @@ public class BoardMapper {
                         board[pos.getX()][pos.getY()] = new Cell(pos, object);
                     }
 
-                    isBoardEmpty = false;
                 } else {
                     board[pos.getX()][pos.getY()] = new Cell(pos);
                 }
@@ -118,26 +128,16 @@ public class BoardMapper {
         return result;
     }
 
-    public void initBoard() {
-        Cell[][] board = new Cell[boardSize][boardSize];
-        for (int i = 0; i < boardSize; i++) {
-            for (int j = 0; j < boardSize; j++) {
-                board[i][j] = new Cell(new Position(i, j));
-            }
-        }
-        this.board = board;
-    }
-
     public Cell[][] getBoard() {
         return board;
     }
 
     public DifficultyLevel getDifficulty() {
-        return difficulty;
+        return difficultyLevel;
     }
 
     public void setDifficulty(DifficultyLevel difficulty) {
-        this.difficulty = difficulty;
+        this.difficultyLevel = difficulty;
     }
 
     public Long getTimeSinceStartOfGame() {
@@ -162,5 +162,13 @@ public class BoardMapper {
 
     public void setShnuzes(int shnuzes) {
         this.shnuzes = shnuzes;
+    }
+
+    public void setDayTime(boolean dayTime) {
+        this.dayTime = dayTime;
+    }
+
+    public boolean getDayTime() {
+        return dayTime;
     }
 }

@@ -69,7 +69,7 @@ public class DatabaseRepository {
         return instance;
     }
 
-    public void saveBoard(Cell[][] board, String difficulty, Long gameTime, int currentRound, int shnuzes,
+    public void saveBoard(Cell[][] board, String difficulty, Long gameTime, int currentRound, int shnuzes, boolean dayTime,
                           OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
         if (isGuest()) return;
         FirebaseUser user = authHelper.getUserInstance();
@@ -98,6 +98,7 @@ public class DatabaseRepository {
         metaData.put("millis from start of the game", gameTime);
         metaData.put("currentRound", currentRound);
         metaData.put("shnuzes", shnuzes);
+        metaData.put("dayTime", dayTime);
 
         db.collection("users")
                 .document(user.getUid())
@@ -138,7 +139,7 @@ public class DatabaseRepository {
                         Long gameTime = metaSnapshot.getLong("millis from start of the game");
                         Long currentRound = metaSnapshot.getLong("currentRound");
                         Long shnuzes = metaSnapshot.getLong("shnuzes");
-
+                        boolean dayTime = Boolean.TRUE.equals(metaSnapshot.getBoolean("dayTime"));
                         if (difficultyName != null) {
                             boardMapper.setDifficulty(DifficultyLevel.valueOf(difficultyName));
                         }
@@ -151,6 +152,11 @@ public class DatabaseRepository {
                         if (shnuzes != null) {
                             boardMapper.setShnuzes(shnuzes.intValue());
                         }
+                        boardMapper.setDayTime(dayTime);
+                        Log.d("wtf", "diff: " + boardMapper.getDifficulty());
+                        Log.d("wtf", "time: " + boardMapper.getTimeSinceStartOfGame());
+                        Log.d("wtf", "currentRound: " + boardMapper.getCurrentRound());
+                        Log.d("wtf", "shnuz" + boardMapper.getShnuzes());
 
                         // Load board structure
                         loadBoard(new OnSuccessListener<DocumentSnapshot>() {
@@ -220,12 +226,13 @@ public class DatabaseRepository {
                 .delete();
     }
 
+
+
     public void logResults(GameViewModel viewModel) {
         if (isGuest())
             return;
         FirebaseUser user = authHelper.getUserInstance();
         int round = viewModel.getRound();
-        int enemiesDefeated = viewModel.getEnemiesDefeated();
         Log.d("oof", "fuck");
         db.collection("users").document(user.getUid()).get()
                 .addOnSuccessListener(documentSnapshot -> {
@@ -244,14 +251,12 @@ public class DatabaseRepository {
                         }
                         Log.d("oof", "wtf");
                         // Always increment these
-                        db.collection("users").document(user.getUid()).update("leaderboard.enemies defeated", FieldValue.increment(enemiesDefeated));
-                        db.collection("users").document(user.getUid()).update("leaderboard.games played", FieldValue.increment(1));
 
                     } else {
                         // If document doesn't exist, initialize leaderboard
                         saveRound(round, user);
                         Map<String, Object> initData = new HashMap<>();
-                        initData.put("leaderboard.enemies defeated", enemiesDefeated);
+                        initData.put("leaderboard.enemies defeated", 0);
                         initData.put("leaderboard.games played", 1);
                         db.collection("users").document(user.getUid()).set(initData, SetOptions.merge());
                     }
@@ -295,14 +300,6 @@ public class DatabaseRepository {
                         callback.onLeaderboardFetched(new ArrayList<>());
                     }
                 });
-    }
-
-    public String getDisplayName() {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser == null) {
-            return "guest";
-        }
-        return currentUser.getDisplayName();
     }
 
     public void handleGoogleSignInResult(Intent data, GoogleSignInCallback googleSignInCallback) {
@@ -401,6 +398,18 @@ public class DatabaseRepository {
             authHelper = new AuthenticationHelper();
         }
         return authHelper.isGuest();
+    }
+
+    public void incrementEnemiesDefeated() {
+        FirebaseUser user = getUserInstance();
+        db.collection("users").document(user.getUid()).update("leaderboard.enemies defeated", FieldValue.increment(1));
+    }
+
+    public void incrementGamesPlayed() {
+        FirebaseUser user = getUserInstance();
+
+        db.collection("users").document(user.getUid()).update("leaderboard.games played", FieldValue.increment(1));
+
     }
 
     public interface GoogleSignInCallback {

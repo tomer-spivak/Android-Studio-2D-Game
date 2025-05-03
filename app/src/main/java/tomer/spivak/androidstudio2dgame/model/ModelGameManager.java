@@ -21,13 +21,10 @@ public class ModelGameManager {
     private static final int NIGHT_THRESHOLD = 5000;
     private String selectedBuildingType;
     private int lastRound;
-    int enemiesDefeated = 0;
-
 
     public ModelGameManager() {
 
     }
-
 
     public void init(Cell[][] board, DifficultyLevel difficulty) {
         state = new GameState(board, NIGHT_THRESHOLD, difficulty);
@@ -52,7 +49,8 @@ public class ModelGameManager {
     }
 
     private boolean canPlaceBuilding(GameState state) {
-        return selectedBuildingType != null && state.getTimeOfDay() && state.getShnuzes() >= ModelObjectFactory.getPrice(selectedBuildingType);
+        return selectedBuildingType != null && state.isDayTime() && state.getShnuzes() >=
+                ModelObjectFactory.getPrice(selectedBuildingType);
     }
 
     private void removeBuilding(Cell selectedCell, GameState state) {
@@ -70,7 +68,7 @@ public class ModelGameManager {
         if (num < 2)
             return;
 
-        if (selectedCell.getObject() instanceof Building && state.getTimeOfDay()){
+        if (selectedCell.getObject() instanceof Building && state.isDayTime()){
             Building building = (Building) selectedCell.getObject();
             building.stopSound();
             building.setSoundEffects(null);
@@ -92,7 +90,7 @@ public class ModelGameManager {
     public void update(long deltaTime) {
         if (state != null) {
             state.addTime(deltaTime);
-            if (!state.getTimeOfDay()){
+            if (!state.isDayTime()){
                 if (enemyManager.getEnemies(state).isEmpty()){
                     //won
                     initRoundVictory(state);
@@ -111,7 +109,7 @@ public class ModelGameManager {
             else {
                 state.decreaseTimeToNextRound(deltaTime);
                 if (state.getTimeToNextRound() <= 0){
-                    state.setTimeOfDay(false);
+                    state.setDayTime(false);
                     startNight(state);
                 }
             }
@@ -119,11 +117,14 @@ public class ModelGameManager {
     }
 
     private void startNight(GameState state) {
-        state.setTimeOfDay(false);
+        state.setDayTime(false);
         int amount = state.getRound();
-        enemyManager.spawnEnemies(state, amount);
+        if (!enemiesExist())
+            enemyManager.spawnEnemies(state, amount);
 
     }
+
+
 
     private void clearDeadObjects(GameState state) {
         Cell[][] grid = state.getGrid();
@@ -147,7 +148,7 @@ public class ModelGameManager {
             Enemy enemy = (Enemy) object;
             cell.executeEnemyDeathAnimation();
             state.addShnuzes(enemy.getReward());
-            enemiesDefeated++;
+            state.incrimentEnemiesDefeated();
         }
 
     }
@@ -165,7 +166,7 @@ public class ModelGameManager {
     }
 
     private void continueToNextRound() {
-        state.setTimeOfDay(true);
+        state.setDayTime(true);
         state.accumulateRound();
         state.startTimerForNextRound();
         state.addShnuzes(state.getCurrentRound() * 1000);
@@ -174,7 +175,16 @@ public class ModelGameManager {
     private boolean buildingsExist() {
         return !getBuildingPositions(state.getGrid()).isEmpty();
     }
-
+    private boolean enemiesExist() {
+        Cell[][] board = state.getGrid();
+        for (Cell[] row: board){
+            for (Cell cell: row){
+                if (cell.getObject() instanceof Enemy)
+                    return true;
+            }
+        }
+        return false;
+    }
     private List<Position> getBuildingPositions(Cell[][] grid) {
         List<Position> buildingPositions = new ArrayList<>();
         for (Cell[] cells : grid) {
@@ -232,7 +242,7 @@ public class ModelGameManager {
         state.initShnuzes();
     }
 
-    public int getEnemiesDefeated() {
-        return enemiesDefeated;
+    public void setDayTime(boolean dayTime) {
+        state.setDayTime(dayTime);
     }
 }

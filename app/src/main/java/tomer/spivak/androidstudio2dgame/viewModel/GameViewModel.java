@@ -64,7 +64,7 @@ public class GameViewModel extends ViewModel {
         return gameManager.getRound();
     }
 
-    public int getEnemiesDefeated() {
-        return gameManager.getEnemiesDefeated();
+    public void setDayTime(boolean dayTime) {
+        gameManager.setDayTime(dayTime);
     }
 }

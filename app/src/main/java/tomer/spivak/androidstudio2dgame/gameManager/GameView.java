@@ -146,7 +146,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     public void unpackGameState(GameState gameState) {
         updateBoard(gameState.getGrid());
-        boolean timeOfDay = gameState.getTimeOfDay();
+        boolean timeOfDay = gameState.isDayTime();
         if (timeOfDay){
             currentRound = -1;
             timeTillNextRound = gameState.getTimeToNextRound();

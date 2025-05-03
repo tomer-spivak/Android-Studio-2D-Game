@@ -95,7 +95,7 @@
         android:layout_margin="16dp" />
 
     <Button
-        android:id="@+id/btnPopUpMenu"
+        android:id="@+id/btnOpenMenu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/custom_button_background"

@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
-import java.util.ArrayList;
 
 import tomer.spivak.androidstudio2dgame.R;
 
@@ -22,16 +21,16 @@ public class BuildingsRecyclerViewAdapter extends
 
 
     private final Context context;
-    private final ArrayList<String> buildingArrayList;
+    private final String[] buildingImages;
     private View selectedBuilding;
     private final GameActivity gameActivity; // Add reference to Activity
 
     // Updated constructor
     public BuildingsRecyclerViewAdapter(Context context,
-                                        ArrayList<String> buildingArrayList,
+                                        String[] buildingImages,
                                         GameActivity activity) {
         this.context = context;
-        this.buildingArrayList = buildingArrayList;
+        this.buildingImages = buildingImages;
         this.gameActivity = activity; // Store activity reference
     }
 
@@ -44,7 +43,7 @@ public class BuildingsRecyclerViewAdapter extends
 
     @Override
     public void onBindViewHolder(@NonNull BuildingViewHolder holder, int position) {
-        String imageName = buildingArrayList.get(position).toLowerCase();
+        String imageName = buildingImages[(position)].toLowerCase();
         int resourceId = context.getResources().getIdentifier(imageName, "drawable", context.getPackageName());
         Log.d("debug", imageName);
         Glide.with(context)
@@ -73,7 +72,7 @@ public class BuildingsRecyclerViewAdapter extends
 
     @Override
     public int getItemCount() {
-        return buildingArrayList.size();
+        return buildingImages.length;
     }
 
     public class BuildingViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -99,7 +98,7 @@ public class BuildingsRecyclerViewAdapter extends
 
             int position = getAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
-                String buildingImageURL = buildingArrayList.get(position);
+                String buildingImageURL = buildingImages[position];
                 // Directly call Activity methods
                 gameActivity.onBuildingSelected(buildingImageURL.replace("0", ""));
                 gameActivity.closeBuildingMenu(); // New helper method
