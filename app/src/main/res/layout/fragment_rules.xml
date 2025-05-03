@@ -38,46 +38,145 @@
             android:layout_height="wrap_content"
             android:text="Building Your Base"/>
 
-        <TextView
-            style="@style/BodyText"
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/tutorial_base_building_text"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                style="@style/BodyText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/tutorial_base_building_text" />
+
+            <ImageView
+                android:src="@drawable/tutorial_image_one"
+                android:layout_width="150dp"
+                android:layout_height="250dp"
+                android:scaleType="centerCrop" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                style="@style/BodyText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/tutorial_base_building_text2" />
+
+            <ImageView
+                android:src="@drawable/tutorial_image_two"
+                android:layout_width="150dp"
+                android:layout_height="200dp"
+                android:scaleType="centerCrop" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                style="@style/BodyText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/tutorial_base_building_text3" />
+
+            <ImageView
+                android:src="@drawable/tutorial_image_three"
+                android:layout_width="match_parent"
+                android:layout_height="170dp"
+                android:scaleType="centerCrop" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                style="@style/BodyText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/tutorial_base_building_text4" />
+
+            <ImageView
+                android:src="@drawable/tutorial_image_four"
+                android:layout_width="match_parent"
+                android:layout_height="170dp"
+                android:scaleType="centerCrop" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                style="@style/BodyText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/tutorial_base_building_text6" />
+
+            <ImageView
+                android:src="@drawable/tutorial_image_five"
+                android:layout_width="match_parent"
+                android:layout_height="170dp"
+                android:scaleType="centerCrop" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                style="@style/BodyText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/tutorial_base_building_text7" />
+
+            <ImageView
+                android:src="@drawable/tutorial_image_six"
+                android:layout_width="match_parent"
+                android:layout_height="170dp"
+                android:scaleType="centerCrop" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                style="@style/BodyText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/tutorial_base_building_text8" />
+
+            <ImageView
+                android:src="@drawable/tutorial_image_seven"
+                android:layout_width="match_parent"
+                android:layout_height="170dp"
+                android:scaleType="centerCrop" />
+        </LinearLayout>
 
         <TextView
             style="@style/BodyText"
+            android:text="@string/tutorial_base_building_text9"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/tutorial_placing_buildings"/>
-
-        <TextView
-            style="@style/BodyText"
-            android:text="@string/tutorial_start_playing_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <TextView
-            style="@style/BodyText"
-            android:text="@string/tutorial_skip_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <TextView
-            style="@style/BodyText"
-            android:text="@string/tutorial_pause_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <!-- Combat Section -->
-        <TextView
-            style="@style/SectionHeader"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Combat System"/>
-
-        <TextView
-            style="@style/BodyText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/tutorial_combat_text"/>
+            android:layout_marginBottom="50dp" />
 
     </LinearLayout>
 </ScrollView>

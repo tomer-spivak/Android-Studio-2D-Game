@@ -3,6 +3,7 @@ package tomer.spivak.androidstudio2dgame.GridView;
 import android.content.Context;
 import android.graphics.Canvas;
 
+import android.graphics.Paint;
 import android.graphics.Point;
 
 import androidx.core.content.ContextCompat;
@@ -45,6 +46,8 @@ public class DrawGridView {
         float topLeftGrassX = cellCenter.x - bitmap.getWidth() / 2;
         float topLeftGrassY = cellCenter.y - bitmap.getHeight() / 2;
         canvas.drawBitmap(bitmap.getBitmap(), topLeftGrassX, topLeftGrassY, null);
+        Paint paint = new Paint();
+        canvas.drawText(cellCenter.x + " " + cellCenter.y, topLeftGrassX, topLeftGrassY, paint);
     }
 
 

@@ -7,8 +7,8 @@ import androidx.lifecycle.ViewModel;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
-import tomer.spivak.androidstudio2dgame.music.SoundEffects;
 import tomer.spivak.androidstudio2dgame.model.ModelGameManager;
+import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 
 public class GameViewModel extends ViewModel {
     private final MutableLiveData<GameState> gameState = new MutableLiveData<>();
@@ -22,9 +22,14 @@ public class GameViewModel extends ViewModel {
         return gameState;
     }
 
-    public void initBoard(Cell[][] board, DifficultyLevel difficulty) {
+    public void initBoard(Cell[][] board, DifficultyLevel difficulty, int currentRound, int shnuzes) {
         gameManager.init(board, difficulty);
         gameState.setValue(gameManager.getState());
+        gameManager.setCurrentRound(currentRound);
+        if (shnuzes < 0)
+            gameManager.initShnuzes();
+        else
+            gameManager.setShnuzes(shnuzes);
     }
 
     public void selectBuilding(String type) {
@@ -47,7 +52,7 @@ public class GameViewModel extends ViewModel {
         gameState.postValue(gameManager.getState());
     }
 
-    public void setSoundEffects(SoundEffects effects) {
+    public void setSoundEffects(SoundEffectManager effects) {
         gameManager.setSoundEffects(effects);
     }
 
@@ -57,5 +62,9 @@ public class GameViewModel extends ViewModel {
 
     public int getRound() {
         return gameManager.getRound();
+    }
+
+    public void setDayTime(boolean dayTime) {
+        gameManager.setDayTime(dayTime);
     }
 }

@@ -9,7 +9,7 @@ import java.util.List;
 
 import tomer.spivak.androidstudio2dgame.R;
 
-public class SoundEffects {
+public class SoundEffectManager {
     private SoundPool soundPool;
     private final int enemyAttackSound;
     private final int turretAttackSound;
@@ -17,7 +17,7 @@ public class SoundEffects {
     private float volume;
 
 
-    public SoundEffects(Context context) {
+    public SoundEffectManager(Context context) {
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_GAME)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)

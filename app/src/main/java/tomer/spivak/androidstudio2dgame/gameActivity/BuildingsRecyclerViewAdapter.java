@@ -13,23 +13,25 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
-import java.util.ArrayList;
 
 import tomer.spivak.androidstudio2dgame.R;
 
 public class BuildingsRecyclerViewAdapter extends
         RecyclerView.Adapter<BuildingsRecyclerViewAdapter.BuildingViewHolder> {
 
-    private final Context context;
-    private final ArrayList<String> buildingArrayList;
-    private final OnItemClickListener listener;
-    private View selectedBuilding;
 
-    public BuildingsRecyclerViewAdapter(Context context, ArrayList<String> buildingArrayList,
-                                            OnItemClickListener listener) {
+    private final Context context;
+    private final String[] buildingImages;
+    private View selectedBuilding;
+    private final GameActivity gameActivity; // Add reference to Activity
+
+    // Updated constructor
+    public BuildingsRecyclerViewAdapter(Context context,
+                                        String[] buildingImages,
+                                        GameActivity activity) {
         this.context = context;
-        this.buildingArrayList = buildingArrayList;
-        this.listener = listener;
+        this.buildingImages = buildingImages;
+        this.gameActivity = activity; // Store activity reference
     }
 
     @NonNull
@@ -41,7 +43,7 @@ public class BuildingsRecyclerViewAdapter extends
 
     @Override
     public void onBindViewHolder(@NonNull BuildingViewHolder holder, int position) {
-        String imageName = buildingArrayList.get(position).toLowerCase();
+        String imageName = buildingImages[(position)].toLowerCase();
         int resourceId = context.getResources().getIdentifier(imageName, "drawable", context.getPackageName());
         Log.d("debug", imageName);
         Glide.with(context)
@@ -70,7 +72,7 @@ public class BuildingsRecyclerViewAdapter extends
 
     @Override
     public int getItemCount() {
-        return buildingArrayList.size();
+        return buildingImages.length;
     }
 
     public class BuildingViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -95,9 +97,11 @@ public class BuildingsRecyclerViewAdapter extends
             itemView.setSelected(true);
 
             int position = getAdapterPosition();
-            if (position != RecyclerView.NO_POSITION && listener != null) {
-                String buildingImageURL = buildingArrayList.get(position);
-                listener.onBuildingRecyclerViewItemClick(buildingImageURL, position);
+            if (position != RecyclerView.NO_POSITION) {
+                String buildingImageURL = buildingImages[position];
+                // Directly call Activity methods
+                gameActivity.onBuildingSelected(buildingImageURL.replace("0", ""));
+                gameActivity.closeBuildingMenu(); // New helper method
             }
         }
     }

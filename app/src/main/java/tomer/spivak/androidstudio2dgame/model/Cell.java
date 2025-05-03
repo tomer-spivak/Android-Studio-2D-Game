@@ -6,11 +6,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import tomer.spivak.androidstudio2dgame.modelEnums.AttackType;
 import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
-import tomer.spivak.androidstudio2dgame.modelAnimations.CellAnimationManager;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 
@@ -103,8 +107,44 @@ public class Cell {
         this.object = null;
     }
 
-    public void cellAttacked(AttackType attackType) {
-        CellAnimationManager.executeAttackedAnimation(this, attackType);
+    public void executeBurntAnimation() {
+        setState(CellState.BURNT);
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                setState(CellState.NORMAL);
+            }
+        }, 200);
     }
+
+    public void executeEnemyDeathAnimation() {
+        final CellState[] states = {
+                CellState.ENEMYDEATH1,
+                CellState.ENEMYDEATH2,
+                CellState.ENEMYDEATH3,
+        };
+
+        final int cyclesToRun = 3;
+        final int stepsPerCycle = states.length;
+        final int totalSteps = cyclesToRun * stepsPerCycle;
+        final AtomicInteger stepCounter = new AtomicInteger(0);
+
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                int step = stepCounter.getAndIncrement();
+                if (step < totalSteps) {
+                    int stateIndex = step % stepsPerCycle;
+                    setState(states[stateIndex]);
+                } else {
+                    setState(CellState.NORMAL);
+                    scheduler.shutdown();
+                }
+            }
+        }, 0, 300, TimeUnit.MILLISECONDS);
+    }
+
 }
 

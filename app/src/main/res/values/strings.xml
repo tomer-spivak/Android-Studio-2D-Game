@@ -44,8 +44,40 @@
 
     <string name="tutorial_basics">The game is based around designing a base that can withstand the waves of enemies which attack you</string>
     <string name="tutorial_base_building_text">Welcome to the Base Building Tutorial! In this guide, you will learn the fundamental steps to construct and manage your base efficiently.
-First of all, you need to choose where on the board you want to place your first building. Then you have to choose the buildings you want to use.
+        In order to start the game you need to press the button at the top left corner of the screen, and then click on the fourth icon.</string>
+    <string name="tutorial_base_building_text2">
+    after clicking, you will be greeted by an alert
+        dialog which will ask you what is the difficulty level you want to play at. </string>
+    <string name="tutorial_base_building_text3">
+    after selecting a difficulty level, you will be redirected to the game screen. In the game screen you will have to choose which buildings to build
+        (either the high durability but with no attacking power obelisk or the low durability but with high attacking power lightning tower)
     </string>
+    <string name="tutorial_base_building_text4">
+        after selecting a building you need to choose where to put it on the board.
+        If you want to return to the building selection you need to press the button at the bottom right corner of the screen.
+        If you want to actually start the game, you need to press the button at top right of the screen, and then the timer will commence.
+
+    </string>
+
+    <string name="tutorial_base_building_text6">
+        after that you will have the option of skipping to the next round.
+        at any time if you want to pause the game you can press the button at the left top corner of the screen
+    </string>
+
+    <string name="tutorial_base_building_text7">
+        here you can change the sound settings
+    </string>
+
+    <string name="tutorial_base_building_text8">
+        when the timer hits zero, the monsters appear. If the base you built can\'t withstand the monsters, you lose.
+    </string>
+
+    <string name="tutorial_base_building_text9">
+        The number of points you get is the number of round you survived. eventually, there is a stopping point, but its very hard to get there.
+    </string>
+
+
+
     <string name="tutorial_placing_buildings">In order to place a building, You need to press the button at the right bottom corner of the screen</string>
     <string name="tutorial_start_playing_text">Now all we ned to do is press the button at the right top corner of the screen and start playing the game </string>
     <string name="tutorial_skip_text">You can also press the button at the right top corner of the screen to skip to the next round</string>

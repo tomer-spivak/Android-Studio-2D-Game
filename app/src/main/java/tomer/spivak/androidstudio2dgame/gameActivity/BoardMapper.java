@@ -1,6 +1,5 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,24 +10,24 @@ import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.Direction;
 import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
-import tomer.spivak.androidstudio2dgame.modelEnums.EnemyType;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 
 public class BoardMapper {
-    final int boardSize;
-    Long timeSinceStartOfGame;
-    DifficultyLevel difficulty;
-    Cell[][] board;
-    boolean isBoardEmpty = true;
+    private final int boardSize;
+    private Long timeSinceStartOfGame = 0L;
+    private DifficultyLevel difficultyLevel;
+    private Cell[][] board;
+    private int currentRound = 1;
+    private int shnuzes = -1;
+    private boolean dayTime = true;
 
     public BoardMapper(int boardSize, DifficultyLevel difficulty) {
         this.boardSize = boardSize;
-
-        this.difficulty = difficulty;
-        board = new Cell[boardSize][boardSize];
-
+        this.difficultyLevel = difficulty;
+        this.board = new Cell[boardSize][boardSize];
+        initBoard();
     }
 
     public BoardMapper(int boardSize) {
@@ -36,82 +35,57 @@ public class BoardMapper {
         this.board = new Cell[boardSize][boardSize];
     }
 
-
-    public void createBoard(Map<String, Object> data){
-
-        board = new Cell[boardSize][boardSize];
-
-            for (Map.Entry<String, Object> entry : Objects.requireNonNull(data).entrySet()) {
-                Object rowData = entry.getValue();
-                List<Map<String, Object>> rowList = (List<Map<String, Object>>) rowData;
-
-                for (Map<String, Object> col : rowList) {
-                    HashMap map = (HashMap) col.get("position");
-                    Position pos = new Position(((Long)(Objects.
-                            requireNonNull(Objects.requireNonNull(map).get("x"))))
-                            .intValue(), ((Long)(Objects.requireNonNull(map.get("y"))))
-                            .intValue());
-                    if (pos.getX() >= boardSize || pos.getY() >= boardSize)
-                        continue;
-                    HashMap objectMap = (HashMap)(col.get("object"));
-
-                    if (objectMap != null){
-
-                        ModelObject object = ModelObjectFactory.create((String)
-                                objectMap.get("type"), pos, difficulty);
-                        String type = (String) objectMap.get("type");
-                        object.setHealth(((Number) Objects.requireNonNull(objectMap.
-                                get("health"))).floatValue());
-                        if (isInEnum(type, EnemyType.class)) {
-                            Enemy enemy = (Enemy) ModelObjectFactory.create(type, pos, difficulty);
-
-                            String stateString = Objects.requireNonNull(objectMap.get("enemyState"))
-                                    .toString();
-                            EnemyState state = EnemyState.valueOf(stateString);
-                            enemy.setState(state);
-
-                            String directionString = Objects.requireNonNull(objectMap.
-                                    get("currentDirection")).toString();
-                            Direction direction = Direction.valueOf(directionString);
-                            enemy.setCurrentDirection(direction);
-
-
-                            enemy.setCurrentTargetIndex(((Number) Objects.
-                                    requireNonNull(objectMap.get("currentTargetIndex")))
-                                    .intValue());
-
-                            enemy.setTimeSinceLastAttack(((Double) Objects.requireNonNull(objectMap.
-                                    get("timeSinceLastAttack"))).floatValue());
-
-                            enemy.setTimeSinceLastMove(((Double) Objects.requireNonNull(objectMap.
-                                    get("timeSinceLastMove"))).floatValue());
-
-
-
-
-                        }
-                        else {
-                            isBoardEmpty = false;
-                        }
-
-                        board[pos.getX()][pos.getY()] = new Cell(pos, object);
-
-                    }
-                    else {
-                        board[pos.getX()][pos.getY()] = new Cell(pos);
-                    }
-                }
-            }
-            board = removeNullRowsAndColumns(board);
-    }
-
-    public <T extends Enum<T>> boolean isInEnum(String value, Class<T> enumClass) {
-        for (T enumValue : Objects.requireNonNull(enumClass.getEnumConstants())) {
-            if (enumValue.name().equals(value)) {
-                return true;
+    public void initBoard() {
+        Cell[][] board = new Cell[boardSize][boardSize];
+        for (int i = 0; i < boardSize; i++) {
+            for (int j = 0; j < boardSize; j++) {
+                board[i][j] = new Cell(new Position(i, j));
             }
         }
-        return false;
+        this.board = board;
+    }
+
+    public void createBoard(Map<String, Object> data) {
+        board = new Cell[boardSize][boardSize];
+
+        for (Map.Entry<String, Object> entry : Objects.requireNonNull(data).entrySet()) {
+            Object rowData = entry.getValue();
+            List<Map<String, Object>> rowList = (List<Map<String, Object>>) rowData;
+
+            for (Map<String, Object> col : rowList) {
+                HashMap map = (HashMap) col.get("position");
+                Position pos = new Position(((Long) Objects.requireNonNull(map.get("x"))).intValue(),
+                        ((Long) Objects.requireNonNull(map.get("y"))).intValue());
+
+                if (pos.getX() >= boardSize || pos.getY() >= boardSize) continue;
+
+                HashMap objectMap = (HashMap) (col.get("object"));
+
+                if (objectMap != null) {
+                    ModelObject object = ModelObjectFactory.create((String) objectMap.get("type"), pos, difficultyLevel);
+                    String type = (String) objectMap.get("type");
+                    object.setHealth(((Number) Objects.requireNonNull(objectMap.get("health"))).floatValue());
+
+                    if (type.equals("monster")) {
+                        Enemy enemy = (Enemy) ModelObjectFactory.create(type, pos, difficultyLevel);
+
+                        enemy.setState(EnemyState.valueOf(objectMap.get("enemyState").toString()));
+                        enemy.setCurrentDirection(Direction.valueOf(objectMap.get("currentDirection").toString()));
+                        enemy.setCurrentTargetIndex(((Number) objectMap.get("currentTargetIndex")).intValue());
+                        enemy.setTimeSinceLastAttack(((Double) objectMap.get("timeSinceLastAttack")).floatValue());
+                        enemy.setTimeSinceLastMove(((Double) objectMap.get("timeSinceLastMove")).floatValue());
+
+                        board[pos.getX()][pos.getY()] = new Cell(pos, enemy);
+                    } else {
+                        board[pos.getX()][pos.getY()] = new Cell(pos, object);
+                    }
+
+                } else {
+                    board[pos.getX()][pos.getY()] = new Cell(pos);
+                }
+            }
+        }
+        board = removeNullRowsAndColumns(board);
     }
 
     public Cell[][] removeNullRowsAndColumns(Cell[][] array) {
@@ -139,7 +113,6 @@ public class BoardMapper {
         for (boolean col : validCols) if (col) validColCount++;
 
         Cell[][] result = new Cell[validRowCount][validColCount];
-
         int newRow = 0;
         for (int i = 0; i < rows; i++) {
             if (validRows[i]) {
@@ -152,19 +125,7 @@ public class BoardMapper {
                 newRow++;
             }
         }
-
         return result;
-
-    }
-
-    public void initBoard() {
-        Cell[][] board = new Cell[boardSize][boardSize];
-        for (int i = 0; i < boardSize; i++) {
-            for (int j = 0; j < boardSize; j++) {
-                board[i][j] = new Cell(new Position(i, j));
-            }
-        }
-        this.board = board;
     }
 
     public Cell[][] getBoard() {
@@ -172,18 +133,42 @@ public class BoardMapper {
     }
 
     public DifficultyLevel getDifficulty() {
-        return difficulty;
+        return difficultyLevel;
     }
 
     public void setDifficulty(DifficultyLevel difficulty) {
-        this.difficulty = difficulty;
+        this.difficultyLevel = difficulty;
     }
 
     public Long getTimeSinceStartOfGame() {
         return timeSinceStartOfGame;
     }
 
-    public void setTimeSinceStartOfGame(long l) {
-        this.timeSinceStartOfGame = l;
+    public void setTimeSinceStartOfGame(long time) {
+        this.timeSinceStartOfGame = time;
+    }
+
+    public int getCurrentRound() {
+        return currentRound;
+    }
+
+    public void setCurrentRound(int currentRound) {
+        this.currentRound = currentRound;
+    }
+
+    public int getShnuzes() {
+        return shnuzes;
+    }
+
+    public void setShnuzes(int shnuzes) {
+        this.shnuzes = shnuzes;
+    }
+
+    public void setDayTime(boolean dayTime) {
+        this.dayTime = dayTime;
+    }
+
+    public boolean getDayTime() {
+        return dayTime;
     }
 }

@@ -5,11 +5,16 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.window.OnBackInvokedCallback;
 
@@ -18,6 +23,7 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,13 +34,14 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseUser;
 
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameCheckCallback;
-import tomer.spivak.androidstudio2dgame.helper.DialogManager;
+import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 
 public class IntermediateActivity extends AppCompatActivity {
 
@@ -45,7 +52,6 @@ public class IntermediateActivity extends AppCompatActivity {
 
     DatabaseRepository databaseRepository;
 
-    DialogManager dialogManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +62,6 @@ public class IntermediateActivity extends AppCompatActivity {
 
         context = this;
         databaseRepository = DatabaseRepository.getInstance(context);
-        dialogManager = DialogManager.getInstance(databaseRepository);
         init();
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -70,6 +75,16 @@ public class IntermediateActivity extends AppCompatActivity {
                     replaceFragment(new LeaderboardFragment(), true);
                 }
                 else if (id == R.id.go_to_game){
+                    Intent intent = getIntent();
+                    boolean isGuest = intent.getBooleanExtra("guest", false);
+                    if (isGuest) {
+                        Intent intent1 = new Intent(context, GameActivity.class);
+                        intent1.putExtra("isContinue", false);
+                        createNewGame();
+                        drawerLayout.closeDrawers();
+                        //startActivity(intent1);
+                        return true;
+                    }
                     databaseRepository.checkIfTheresAGame(new GameCheckCallback() {
                         @Override
                         public void onCheckCompleted(boolean gameExists) {
@@ -78,6 +93,8 @@ public class IntermediateActivity extends AppCompatActivity {
                                 dialog.show();
                             } else {
                                 createNewGame();
+                                drawerLayout.closeDrawers();
+
                             }
                         }
                     });
@@ -109,7 +126,40 @@ public class IntermediateActivity extends AppCompatActivity {
             }
 
             private void createNewGame() {
-                dialogManager.showDifficultyAlertDialog(context);
+                LayoutInflater inflater = LayoutInflater.from(context);
+                View dialogView = inflater.inflate(R.layout.alert_dialog_difficulty, null);
+
+                RadioGroup group = dialogView.findViewById(R.id.difficultyGroup);
+                Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+                Button continueButton = dialogView.findViewById(R.id.continueButton);
+
+                AlertDialog dialog = new AlertDialog.Builder(context)
+                        .setView(dialogView)
+                        .create();
+
+                if (dialog.getWindow() != null) {
+                    dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                }
+
+                cancelButton.setOnClickListener(v -> dialog.dismiss());
+
+                continueButton.setOnClickListener(v -> {
+                    DifficultyLevel selected = DifficultyLevel.EASY;
+                    int checkedId = group.getCheckedRadioButtonId();
+                    if (checkedId == R.id.normal) {
+                        selected = DifficultyLevel.MEDIUM;
+                    } else if (checkedId == R.id.hard) {
+                        selected = DifficultyLevel.HARD;
+                    }
+                    Intent intent = new Intent(context, GameActivity.class);
+                    intent.putExtra("difficultyLevel", selected.name());
+                    intent.putExtra("isContinue", false);
+                    dialog.dismiss();
+                    context.startActivity(intent);
+
+                });
+
+                dialog.show();
             }
         });
 
@@ -155,17 +205,30 @@ public class IntermediateActivity extends AppCompatActivity {
     }
 
     private void initHeader() {
-        TextView tvUsername = navigationView.getHeaderView(0).
-                findViewById(R.id.header_username);
-        ImageView ivProfile = navigationView.getHeaderView(0).findViewById(R.id.header_image);
+        FirebaseUser user = databaseRepository.getUserInstance();
+        if (user != null) {
+            user.reload()
+                    .addOnSuccessListener(aVoid -> actuallyPopulateHeader(user))
+                    .addOnFailureListener(e -> actuallyPopulateHeader(user));  // even on failure, use whatever you have
+        } else {
+            actuallyPopulateHeader(null);
+        }
+    }
 
-        String displayName = databaseRepository.getDisplayName();
+    private void actuallyPopulateHeader(@Nullable FirebaseUser user) {
+        TextView tvUsername =
+                navigationView.getHeaderView(0).findViewById(R.id.header_username);
+        ImageView ivProfile =
+                navigationView.getHeaderView(0).findViewById(R.id.header_image);
+
+        String displayName = user != null && user.getDisplayName() != null
+                ? user.getDisplayName()
+                : "guest";
         tvUsername.setText(displayName);
 
-        databaseRepository.fetchAndSetImage(ivProfile, context);
-
-
+        databaseRepository.fetchAndSetImage(ivProfile, this);
     }
+
 
     private void initDrawerToolBar() {
         navigationView = findViewById(R.id.navigation_view);

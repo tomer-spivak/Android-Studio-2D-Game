@@ -11,10 +11,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -47,6 +47,7 @@ public class LoginFragment extends Fragment {
 
         Button btn = view.findViewById(R.id.btnLogin);
         Button btnGoogleLogin = view.findViewById(R.id.btnGoogleLogin);
+        Button btnGuestLogin = view.findViewById(R.id.btnGuestLogin);
 
 
         EditText etEmail = view.findViewById(R.id.etUsername);
@@ -122,8 +123,8 @@ public class LoginFragment extends Fragment {
                         etPassword.getText().toString(), new OnSuccessListener() {
                             @Override
                             public void onSuccess(Object o) {
-                                Intent intent = new Intent(getActivity(),
-                                        IntermediateActivity.class);
+                                Intent intent = new Intent(getActivity(), IntermediateActivity.class);
+                                intent.putExtra("guest", false);
                                 startActivity(intent);
                             }
                         }, new OnFailureListener() {
@@ -133,11 +134,12 @@ public class LoginFragment extends Fragment {
                                 View layout = inflater.inflate(R.layout.custom_toast, null);
 
                                 TextView text = layout.findViewById(R.id.toast_text);
-                                text.setText("Couldn't Log in");
+                                text.setText("Couldn't Log in" + e.getMessage());
                                 Toast toast = new Toast(getContext());
                                 toast.setDuration(Toast.LENGTH_SHORT);
                                 toast.setView(layout);
                                 toast.show();
+                                btnGuestLogin.setVisibility(View.VISIBLE);
                             }
                         });
             }
@@ -146,16 +148,22 @@ public class LoginFragment extends Fragment {
         Button btnForgotPassword = view.findViewById(R.id.btnForgotPassword);
 
         btnForgotPassword.setOnClickListener(v -> {
+            // Create the EditText for email input
             EditText editTextEmail = new EditText(v.getContext());
+            // Set the input type to email
+            editTextEmail.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+
+            // Build the AlertDialog
             AlertDialog.Builder passwordResetDialog = new AlertDialog.Builder(v.getContext());
             passwordResetDialog.setTitle("Reset Password");
             passwordResetDialog.setMessage("Enter your email to receive a reset link.");
             passwordResetDialog.setView(editTextEmail);
 
-
+            // Positive button action
             passwordResetDialog.setPositiveButton("Send", (dialog, which) -> {
                 String email = editTextEmail.getText().toString().trim();
                 if (!email.isEmpty()) {
+                    // Call your password reset function
                     databaseRepository.forgotPassword(email, new OnSuccessListener() {
                         @Override
                         public void onSuccess(Object o) {
@@ -165,8 +173,8 @@ public class LoginFragment extends Fragment {
                     }, new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(getContext(), "Error: " + e.getMessage(),
-                                    Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_LONG)
+                                    .show();
                         }
                     });
                 } else {
@@ -175,14 +183,10 @@ public class LoginFragment extends Fragment {
                 }
             });
 
-            passwordResetDialog.setNegativeButton("Cancel",
-                    new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
+            // Negative button action
+            passwordResetDialog.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
 
+            // Show the dialog
             passwordResetDialog.create().show();
         });
 
@@ -198,11 +202,13 @@ public class LoginFragment extends Fragment {
                         @Override
                         public void onSuccess() {
                             Intent intent = new Intent(getContext(), IntermediateActivity.class);
+                            intent.putExtra("guest", false);
                             startActivity(intent);
                         }
 
                         @Override
                         public void onFailure(Exception e) {
+                            btnGuestLogin.setVisibility(View.VISIBLE);
                             Log.w("TAG", "Google sign-in failed", e);
                         }
                     });
@@ -218,6 +224,14 @@ public class LoginFragment extends Fragment {
             }
         });
 
+        btnGuestLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), IntermediateActivity.class);
+                intent.putExtra("guest", true);
+                startActivity(intent);
+            }
+        });
 
         return view;
     }

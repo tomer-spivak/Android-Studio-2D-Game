@@ -9,17 +9,18 @@ import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 public class GameState {
     private final Cell[][] grid;
     private final int nightThreshold;
-    private boolean timeOfDay;
+    private boolean isDayTime;
     private long timeToNextRound;
     private GameStatus gameStatus;
     private int currentRound;
     private final DifficultyLevel difficulty;
     private long currentTimeOfGame;
     private int shnuzes;
+    private int enemiesDefeated = 0;
 
     public GameState(Cell[][] grid, int nightThreshold, DifficultyLevel difficulty) {
         this.grid = grid;
-        this.timeOfDay = true;
+        this.isDayTime = true;
         this.currentRound = 1;
         this.nightThreshold = nightThreshold;
         this.difficulty = difficulty;
@@ -27,7 +28,7 @@ public class GameState {
         currentTimeOfGame = 0;
     }
 
-    private void initShnuzes() {
+    public void initShnuzes() {
         int difficulty = 4 - (this.difficulty.ordinal() + 1);
         this.shnuzes = difficulty * 5000;
     }
@@ -49,12 +50,8 @@ public class GameState {
         return shnuzes;
     }
 
-    public boolean getTimeOfDay() {
-        return timeOfDay;
-    }
-
-    public void setTimeOfDay(boolean b) {
-        this.timeOfDay = b;
+    public void setDayTime(boolean b) {
+        this.isDayTime = b;
     }
 
     public GameStatus getGameStatus() {
@@ -78,6 +75,7 @@ public class GameState {
     }
 
     public void startTimerForNextRound() {
+        currentTimeOfGame = 0;
         this.timeToNextRound = (long) nightThreshold * currentRound;
     }
 
@@ -110,4 +108,27 @@ public class GameState {
         this.shnuzes -= shnuzes;
     }
 
+    public void setCurrentRound(int currentRound) {
+        this.currentRound = currentRound;
+    }
+
+    public void setShnuzes(int shnuzes) {
+        this.shnuzes = shnuzes;
+
+    }
+
+    public boolean isDayTime() {
+        return isDayTime;
+    }
+
+    public boolean getDayTime() {
+        return isDayTime;
+    }
+    public void incrimentEnemiesDefeated(){
+        enemiesDefeated++;
+    }
+
+    public int getEnemiesDefeated() {
+        return enemiesDefeated;
+    }
 }

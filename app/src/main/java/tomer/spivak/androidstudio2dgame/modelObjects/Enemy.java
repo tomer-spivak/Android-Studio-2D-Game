@@ -10,88 +10,120 @@ import java.util.TimerTask;
 
 import tomer.spivak.androidstudio2dgame.model.AttackComponent;
 import tomer.spivak.androidstudio2dgame.model.Position;
-import tomer.spivak.androidstudio2dgame.modelAnimations.EnemyAttackAnimation;
 import tomer.spivak.androidstudio2dgame.modelEnums.Direction;
 import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
-import tomer.spivak.androidstudio2dgame.modelEnums.EnemyType;
 
 public class Enemy extends ModelObject implements IDamager{
     protected final float movementSpeed;
     protected Direction currentDirection;
     protected EnemyState state;
-    private final EnemyType type;
     protected List<Position> path;
     protected int currentTargetIndex = 0;
     protected float timeSinceLastMove = 0;
     private final AttackComponent attackComponent;
-    private final EnemyAttackAnimation attackAnimation;
-    private EnemyAttackAnimation activeAttackAnimation = null;
     private final int reward;
+    private long attackAnimationElapsedTime;
+    private boolean attackAnimationRunning = false;
+    private Building target;
 
-
-    public Enemy(float health, float damage, float movementSpeed, Position pos,
-                 EnemyType enemyType, float attackCooldown, EnemyAttackAnimation attackAnimation, int reward) {
+    public Enemy(float health, float damage, float movementSpeed, Position pos, float attackCooldown, int reward) {
         super(health, pos);
         this.reward = reward;
         attackComponent = new AttackComponent(damage, attackCooldown);
         this.movementSpeed = movementSpeed;
-        this.type = enemyType;
         this.currentDirection = Direction.UPLEFT;
         this.state = EnemyState.IDLE;
-        this.attackAnimation = attackAnimation;
-
-        attackComponent.setAttackDamage(damage/attackAnimation.getRepeatCount());
+        this.type = "monster";
+        attackComponent.setAttackDamage(damage/10);
     }
 
     public void accumulateAttackTime(long deltaTime) {
-        if (state == EnemyState.ATTACKING1 || state == EnemyState.ATTACKING2 || state == EnemyState.ATTACKING3 || state == EnemyState.ATTACKING4)
+        if (state == EnemyState.ATTACKING1 || state == EnemyState.ATTACKING2 || state == EnemyState.ATTACKING3 ||
+                state == EnemyState.ATTACKING4)
             return;
         attackComponent.accumulateAttackTime(deltaTime);
     }
 
     public boolean canAttack() {
-        Log.d("enemy", "attack time: " + attackComponent.getAttackTime());
         return attackComponent.canAttack() && (state == EnemyState.IDLE);
     }
 
-    public void updateDirection(Position prevPos) {
-        updateDirection(prevPos, pos);
-    }
-
     public void updateDirection(Position prevPos, Position nextPos) {
+        int dx = nextPos.getX() - prevPos.getX();
+        int dy = nextPos.getY() - prevPos.getY();
+        Direction chosen;
         if (prevPos.getX() > nextPos.getX()){
-            setCurrentDirection(Direction.UPRIGHT);
+            chosen = Direction.UPRIGHT;
         } else if(prevPos.getX() < nextPos.getX()){
-            setCurrentDirection(Direction.DOWNLEFT);
+            chosen = Direction.DOWNLEFT;
         } else {
             if (nextPos.getY() < prevPos.getY()){
-                setCurrentDirection(Direction.UPLEFT);
+                chosen = Direction.UPLEFT;
             } else
-                setCurrentDirection(Direction.DOWNRIGHT);
+                chosen = Direction.DOWNRIGHT;
         }
+
+        Log.d("Facing",
+                String.format("dX=%d dY=%d → %s (prev=(%d,%d), next=(%d,%d))",
+                        dx, dy, chosen.name(),
+                        prevPos.getX(), prevPos.getY(), nextPos.getX(), nextPos.getY()));
+        setCurrentDirection(chosen);
+        // (your quadrant logic here, setting `chosen`)
+
+
     }
 
     @Override
     public void dealDamage(IDamageable target) {
-
         attackComponent.dealDamage(target);
     }
 
-    public void attack(Building building) {
-        Log.d("enemy", "enemy is attacking");
+    public void attack(Building target) {
         setSoundStreamId(soundEffects.playEnemyAttackSound());
-        activeAttackAnimation = attackAnimation;
-        activeAttackAnimation.execute(this, building);
+        Log.d("target", "sigma");
+        executeAttackAnimation(target);
+    }
+
+    private void executeAttackAnimation(Building target) {
+        this.target = target;
+
+        resetAttackTimer();
+        setState(EnemyState.ATTACKING1);
+        attackAnimationElapsedTime = 0;
+        attackAnimationRunning = true;
     }
 
     public void update(long deltaTime){
-        if (state != EnemyState.HURT)
+        if (attackAnimationRunning) {
             updateAnimation(deltaTime);
+        }
+
     }
 
     public void updateAnimation(long deltaTime) {
-        if (activeAttackAnimation != null && activeAttackAnimation.isRunning()) {
-            activeAttackAnimation.update(deltaTime);
+
+        attackAnimationElapsedTime += deltaTime;
+
+        int initDelay = 500;
+        int stepDelay = 150;
+        if (attackAnimationElapsedTime < initDelay) {
+            setState(EnemyState.ATTACKING1);
+        } else if (attackAnimationElapsedTime < initDelay + initDelay) {
+            setState(EnemyState.ATTACKING2);
+        } else if (attackAnimationElapsedTime < initDelay + initDelay + (20 * stepDelay)) {
+            long t = attackAnimationElapsedTime - 2 * initDelay;
+            long cycleTime = t % (2 * stepDelay);
+
+            if (cycleTime < stepDelay) {
+                setState(EnemyState.ATTACKING3);
+            } else {
+                setState(EnemyState.ATTACKING4);
+                dealDamage(target);
+            }
+        } else {
+            setState(EnemyState.IDLE);
+            attackAnimationRunning = false;
+            resetAttackTimer();
         }
     }
 
@@ -106,26 +138,19 @@ public class Enemy extends ModelObject implements IDamager{
         }
         EnemyState currentState = getEnemyState();
         setState(EnemyState.HURT);
+        boolean save = attackAnimationRunning;
+        attackAnimationRunning = false;
         soundEffects.pauseSoundEffect(soundStreamId);
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
+                attackAnimationRunning = save;
                 setState(currentState);
                 soundEffects.resumeSoundEffect(soundStreamId);
             }
         }, 1000);
     }
-
-    @Override
-    void onDeath() {
-        super.onDeath();
-        if (activeAttackAnimation != null) {
-            activeAttackAnimation.cancelAnimation();
-            activeAttackAnimation = null;
-        }
-    }
-
 
     public int getReward() {
         return reward;
@@ -134,6 +159,7 @@ public class Enemy extends ModelObject implements IDamager{
     public List<Position> getPath() {
         return path;
     }
+
     public void setPath(List<Position> path) {
         this.path = path;
         this.currentTargetIndex = 0;
@@ -181,10 +207,6 @@ public class Enemy extends ModelObject implements IDamager{
         return movementSpeed;
     }
 
-    public EnemyType getType() {
-        return type;
-    }
-
     public EnemyState getEnemyState() {
         return state;
     }
@@ -203,7 +225,7 @@ public class Enemy extends ModelObject implements IDamager{
         enemyData.put("timeSinceLastAttack", attackComponent.getTimeSinceLastAttack());
         enemyData.put("timeSinceLastMove", timeSinceLastMove);
         enemyData.put("damage", attackComponent.getAttackDamage());
-        enemyData.put("type", type.name());
+        enemyData.put("type", "monster");
         return enemyData;
     }
 

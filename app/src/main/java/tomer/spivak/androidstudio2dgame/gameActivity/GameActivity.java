@@ -1,22 +1,26 @@
-
-
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
-
+import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
@@ -26,74 +30,46 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
-import java.util.ArrayList;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseUser;
 
-
+import java.util.Objects;
 
 
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
-import tomer.spivak.androidstudio2dgame.helper.DialogManager;
-import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
+import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
-import tomer.spivak.androidstudio2dgame.gameManager.GameViewListener;
 import tomer.spivak.androidstudio2dgame.model.GameState;
-import tomer.spivak.androidstudio2dgame.music.SoundEffects;
 
+public class GameActivity extends AppCompatActivity{
+    private Context context;
 
-public class GameActivity extends AppCompatActivity implements OnItemClickListener,
-        GameViewListener {
+    private GameView gameView;
 
-
-    Context context;
-    GameView gameView;
     private GameViewModel viewModel;
-    private SoundEffects soundEffects;
 
-    Button btnChooseBuildingsCardView;
-    Button btnStartGame;
-    Button btnSkipRound;
-    Button btnPause;
-    LinearLayout gameLayout;
+    private SoundEffectManager soundEffectsManager;
 
+    private  Button btnOpenMenu, btnStartGame, btnSkipRound;
+    private  CardView cvSelectBuildingMenu;
 
-    ArrayList<String> buildingImagesURL = new ArrayList<>();
+    //helper class which does firebase operations
+    private DatabaseRepository databaseRepository;
 
+    private boolean gameIsOnGoing = false;
 
-    CardView cvSelectBuildingMenu;
+    //every time an enemy is defeated the firebase data gets incremented. so I need to check if there has been any change in
+    // the number of enemies Defeated, and in that case increment the data in firebase.
+    private int enemiesDefeatedCache = 0;
 
-
-    ImageButton btnCloseMenu;
-
-
-    BuildingsRecyclerViewAdapter adapter;
-
-
-    RecyclerView buildingRecyclerView;
-
-
-    OnBackPressedCallback backPressedCallback;
-
-
-    DatabaseRepository databaseRepository;
-
-
-    int boardSize;
-
-
-    boolean gameIsOnGoing = false;
-
-
-    DialogManager dialogManager;
-
-
-
-
-
+    //continue a game after exiting and saving it
+    private boolean continueGame;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,7 +78,85 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         setContentView(R.layout.activity_game);
         context = this;
 
-        init();
+        //alert dialog that blocks the screen
+        AlertDialog dialogLoadingBoard = new AlertDialog.Builder(context).setView(R.layout.alert_dialog_loading_board).setCancelable(false).create();
+        dialogLoadingBoard.show();
+
+        //init views
+        btnOpenMenu = findViewById(R.id.btnOpenMenu);
+        btnStartGame = findViewById(R.id.btnStartGame);
+        btnSkipRound = findViewById(R.id.btnSkipRound);
+        Button btnPause = findViewById(R.id.btnPause);
+        ImageButton btnCloseMenu = findViewById(R.id.btnCloseMenu);
+        cvSelectBuildingMenu = findViewById(R.id.cvSelectBuildingMenu);
+
+        int boardSize = 14;
+
+        soundEffectsManager = new SoundEffectManager(this);
+
+        //init game view
+        LinearLayout gameLayout = findViewById(R.id.gameLinearLayout);
+        gameView = new GameView(context, boardSize, this, soundEffectsManager);
+        gameLayout.addView(gameView);
+
+        databaseRepository = DatabaseRepository.getInstance(context);
+
+        //init card view
+        String[] buildingImages = {"obelisk", "lightning0tower"};
+        RecyclerView buildingRecyclerView = findViewById(R.id.buildingRecyclerView);
+        buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        buildingRecyclerView.setAdapter(new BuildingsRecyclerViewAdapter(this, buildingImages,  this));
+
+
+        viewModel = new ViewModelProvider(this).get(GameViewModel.class);
+
+        continueGame = getIntent().getBooleanExtra("isContinue", false);
+
+
+
+        if (!continueGame){
+            //you cant pass an enum through intent
+            String difficultyLevelString = getIntent().getStringExtra("difficultyLevel");
+            DifficultyLevel difficultyLevel = DifficultyLevel.valueOf(difficultyLevelString);
+
+            BoardMapper boardMapper = new BoardMapper(boardSize, difficultyLevel);
+            initBoardInViewModel(boardMapper, dialogLoadingBoard);
+        } else {
+            BoardMapper boardMapper = new BoardMapper(boardSize);
+            databaseRepository.loadDataFromDataBase(boardMapper, new OnBoardLoadedListener() {
+                @Override
+                public void onBoardLoaded(Cell[][] board) {
+                    Toast.makeText(context, "got board", Toast.LENGTH_SHORT).show();
+                    initBoardInViewModel(boardMapper, dialogLoadingBoard);
+                }
+            });
+        }
+
+
+
+        viewModel.getGameState().observe(this, new Observer<GameState>() {
+            @Override
+            public void onChanged(GameState gameState) {
+                gameView.unpackGameState(gameState);
+                if (gameState.getGameStatus() == GameStatus.LOST) {
+                    triggerDefeat();
+                } else if (gameState.getGameStatus() == GameStatus.WON)  {
+                    triggerVictory();
+                }
+                int enemiesDefeated = gameState.getEnemiesDefeated();
+                if (enemiesDefeated == enemiesDefeatedCache + 1){
+                    enemiesDefeatedCache = enemiesDefeated;
+                    databaseRepository.incrementEnemiesDefeated();
+                }
+
+                updateUiForTimeOfDay(gameState.isDayTime());
+            }
+        });
+
+
+
+
+
 
 
         btnStartGame.setOnClickListener(new View.OnClickListener() {
@@ -114,13 +168,16 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                     btnSkipRound.setVisibility(View.VISIBLE);
                 } else {
                     Toast.makeText(context, "In order to start a game\n" +
-                            "you need to build something", Toast.LENGTH_SHORT).show();
+                            "you need to build something", Toast.LENGTH_LONG).show();
+                }
+                if (!continueGame){
+                    databaseRepository.incrementGamesPlayed();
                 }
             }
         });
 
 
-        btnChooseBuildingsCardView.setOnClickListener(new View.OnClickListener() {
+        btnOpenMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 cvSelectBuildingMenu.setVisibility(View.VISIBLE);
@@ -151,7 +208,50 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
                 float volume = gameView.getMusicService().getCurrentVolumeLevel();
                 Log.d("music", "volume: " + volume);
                 gameView.pauseGameLoop();
-                dialogManager.showPauseAlertDialog(gameView, viewModel, volume, soundEffects, context);
+
+                LayoutInflater inflater = LayoutInflater.from(context);
+                View dialogView = inflater.inflate(R.layout.dialog_pause, null);
+                SeekBar volumeSeekBar = dialogView.findViewById(R.id.volumeSeekBar);
+                volumeSeekBar.setProgress((int) volume);
+                SeekBar soundEffectsSeekBar = dialogView.findViewById(R.id.soundEffectsSeekBar);
+                soundEffectsSeekBar.setProgress(soundEffectsManager.getVolumeLevel());
+
+                new AlertDialog.Builder(context)
+                        .setTitle("Game Paused")
+                        .setView(dialogView)
+                        .setPositiveButton("Resume", (d, w) -> {
+                            gameView.resumeGameLoop(volumeSeekBar.getProgress());
+                            soundEffectsManager.setVolume(soundEffectsSeekBar.getProgress() / 100f);
+                            d.dismiss();
+                        })
+                        .setNegativeButton("Exit", (d, w) -> {
+                            // 1) Dismiss UI
+                            d.dismiss();
+
+                            // 2) Always stop the game loop and finish
+
+
+                            // 3) Then *attempt* to save in the background
+                            GameState state = viewModel.getGameState().getValue();
+                            if (state != null && state.getGrid() != null) {
+                                databaseRepository.saveBoard(
+                                        state.getGrid(),
+                                        state.getDifficulty().name(),
+                                        state.getCurrentTimeOfGame(),
+                                        state.getCurrentRound(),
+                                        state.getShnuzes(), state.getDayTime(),
+                                        /* onSuccess */ unused -> { /* no‑op */ },
+                                        /* onFailure */ e -> Log.w("DBG", "offline save failed", e)
+                                );
+
+                                databaseRepository.logResults(viewModel);
+                            }
+
+                            gameView.stopGameLoop();
+                            finish();
+                        })
+                        .setCancelable(false)
+                        .show();
             }
         });
 
@@ -160,10 +260,73 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)  {
-            backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
+            /* enabled by default */
+            //
+            OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
                 @Override
                 public void handleOnBackPressed() {
-                    dialogManager.showExitAlertDialog(viewModel, context);
+
+                    int volume = gameView.getMusicService().getCurrentVolumeLevel();
+                    gameView.pauseGameLoop();      // always stop immediately
+                    LayoutInflater inflater = LayoutInflater.from(context);
+                    View dialogView = inflater.inflate(R.layout.alert_dialog, null);
+
+                    AlertDialog alertDialog = new AlertDialog.Builder(context)
+                            .setView(dialogView)
+                            .setCancelable(false)
+                            .create();
+
+                    Button btnCancel = dialogView.findViewById(R.id.dialog_cancel);
+                    Button btnDontSave = dialogView.findViewById(R.id.dialog_exit_without_saving);
+                    Button btnSave = dialogView.findViewById(R.id.dialog_exit_with_saving);
+
+                    btnCancel.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            alertDialog.dismiss();
+                            gameView.resumeGameLoop(volume);
+                        }
+                    });
+
+                    btnDontSave.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if(!databaseRepository.isGuest())
+                            {
+                                databaseRepository.logResults(viewModel);
+                                databaseRepository.removeBoard();
+                            }
+                            alertDialog.dismiss();
+
+                            gameView.stopGameLoop();
+
+                            finish();
+                        }
+                    });
+
+                    btnSave.setOnClickListener(v -> {
+                        alertDialog.dismiss();
+                        gameView.stopGameLoop();
+
+
+                        FirebaseUser u = databaseRepository.getUserInstance();
+                        // 1) offline? bail immediately
+                        if (!isNetworkAvailable(context)) {
+                            Toast.makeText(context, "No network, exiting as guest", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
+                        }
+                        // 2) guest? just exit
+                        if (u == null || u.isAnonymous()) {
+                            finish();
+                        }
+                        // 3) real user & online? save to Firestore
+                        else {
+                            saveBoard(viewModel, gameView, context);
+                        }
+                    });
+
+                    alertDialog.show();
                 }
             };
             getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
@@ -171,6 +334,126 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
 
     }
 
+
+
+    private void updateUiForTimeOfDay(boolean isDayTime) {
+        if (isDayTime) {
+            btnOpenMenu.setVisibility(View.VISIBLE);
+            //we need to check if the start game button appears.
+            // if it does the game hasn't started yet, and so we cant skip to the next round.
+            if(btnStartGame.getVisibility() == View.GONE)
+                btnSkipRound.setVisibility(View.VISIBLE);
+        } else {
+            btnOpenMenu.setVisibility(View.GONE);
+            btnSkipRound.setVisibility(View.GONE);
+            cvSelectBuildingMenu.setVisibility(View.GONE);
+        }
+    }
+    private void triggerVictory() {
+        databaseRepository.removeBoard();
+        databaseRepository.logResults(viewModel);
+
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View dialogView = inflater.inflate(R.layout.alert_dialog_won, null);
+
+        AlertDialog alertDialog = new AlertDialog.Builder(context).setView(dialogView).setCancelable(false).create();
+
+        Button btnExitApp = dialogView.findViewById(R.id.exit_app_btn);
+        Button btnGoBack = dialogView.findViewById(R.id.go_back_btn);
+
+        btnExitApp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+                gameView.stopGameLoop();
+                finishAffinity();
+                System.exit(0);
+            }
+        });
+
+        btnGoBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+                gameView.stopGameLoop();
+                if (context instanceof Activity) {
+                    ((Activity) context).finish();
+                }
+            }
+        });
+
+        alertDialog.show();
+    }
+
+    private void triggerDefeat() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.alert_dialog_defeat, null);
+
+        Button btnMenu = dialogView.findViewById(R.id.btnMenu);
+        Button btnExit = dialogView.findViewById(R.id.btnExit);
+
+        AlertDialog alertDialog = builder.setView(dialogView).setCancelable(false).create();
+
+        btnMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                databaseRepository.logResults(viewModel);
+                databaseRepository.removeBoard();
+                alertDialog.dismiss();
+                finish();
+            }
+        });
+
+        btnExit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                gameView.stopGameLoop();
+                alertDialog.dismiss();
+                finishAffinity();
+                System.exit(0);
+            }
+        });
+
+        alertDialog.show();
+    }
+    public static boolean isNetworkAvailable(Context ctx) {
+        ConnectivityManager cm =
+                (ConnectivityManager)ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+        return ni != null && ni.isConnected();
+    }
+
+
+    public void saveBoard(GameViewModel viewModel, GameView gameView, Context context) {
+        GameState gameState = viewModel.getGameState().getValue();
+        if (gameState == null || gameState.getGrid() == null)
+            return;
+        Log.d("time", String.valueOf(gameState.getCurrentTimeOfGame()));
+        databaseRepository.saveBoard(Objects.requireNonNull(gameState.getGrid()),
+                gameState.getDifficulty().name(), gameState.getCurrentTimeOfGame(), gameState.getCurrentRound(),
+                gameState.getShnuzes(), gameState.getDayTime(),
+                new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        gameView.stopGameLoop();
+                        finish();
+                        Toast.makeText(context, "success", Toast.LENGTH_SHORT).show();
+                    }
+                }, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d("save", Objects.requireNonNull(e.getMessage()));
+                        Toast.makeText(context, "failed", Toast.LENGTH_SHORT).show();
+                        gameView.stopGameLoop();
+                        finish();
+                    }
+                });
+        databaseRepository.logResults(viewModel);
+    }
+
+    public void closeBuildingMenu() {
+        cvSelectBuildingMenu.setVisibility(View.GONE);
+    }
 
 
 
@@ -212,182 +495,32 @@ public class GameActivity extends AppCompatActivity implements OnItemClickListen
         if (gameView != null) {
             gameView.stopGameLoop();
         }
-        if (soundEffects != null) {
-            soundEffects.onDestroy();
+        if (soundEffectsManager != null) {
+            soundEffectsManager.onDestroy();
         }
     }
+    private void initBoardInViewModel(BoardMapper boardMapper, Dialog dialogLoadingBoard) {
+        viewModel.initBoard(boardMapper.getBoard().clone(), boardMapper.getDifficulty(),boardMapper.getCurrentRound(), boardMapper.getShnuzes());
+        viewModel.setSoundEffects(soundEffectsManager);
+        viewModel.tick(boardMapper.getTimeSinceStartOfGame());
+        viewModel.setDayTime(boardMapper.getDayTime());
+        dialogLoadingBoard.dismiss();
 
-
-    private void init(){
-        hideSystemUI();
-        initViews();
-        initGame();
     }
 
-
-    private void initViews() {
-        btnChooseBuildingsCardView = findViewById(R.id.btnPopUpMenu);
-        cvSelectBuildingMenu = findViewById(R.id.cvSelectBuildingMenu);
-        btnCloseMenu = findViewById(R.id.btnCloseMenu);
-        buildingRecyclerView = findViewById(R.id.buildingRecyclerView);
-    }
-
-
-    private void initGame() {
-        boardSize = 14;
-        gameLayout = findViewById(R.id.gameLinearLayout);
-        soundEffects = new SoundEffects(this);
-        gameView = new GameView(context, boardSize, this, soundEffects);
-        gameLayout.addView(gameView);
-        viewModel = new ViewModelProvider(this).get(GameViewModel.class);
-        databaseRepository = DatabaseRepository.getInstance(context);
-        dialogManager = DialogManager.getInstance(databaseRepository);
-
-
-        btnStartGame = findViewById(R.id.btnStartGame);
-        btnSkipRound = findViewById(R.id.btnSkipRound);
-        btnPause = findViewById(R.id.btnPause);
-        observeViewModel();
-        initPlacingBuilding();
-
-
-
-
-        String difficultyName = getIntent().getStringExtra("difficultyLevel");
-        boolean isContinue = getIntent().getBooleanExtra("isContinue", false);
-        BoardMapper boardMapper;
-        final DifficultyLevel[] difficulty = new DifficultyLevel[1];
-        AlertDialog loadingDialog = dialogManager.showLoadingBoardAlertDialog(context);
-        if (!isContinue){
-            difficulty[0] = DifficultyLevel.valueOf(difficultyName);
-            boardMapper = new BoardMapper(boardSize, difficulty[0]);
-            boardMapper.initBoard();
-            initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0], 0L);
-        } else {
-            boardMapper = new BoardMapper(boardSize);
-            databaseRepository.loadBoardFromDataBase(boardMapper, new OnBoardLoadedListener() {
-                @Override
-                public void onBoardLoaded(Cell[][] board) {
-                    Toast.makeText(context, "got board", Toast.LENGTH_SHORT).show();
-                    difficulty[0] = boardMapper.getDifficulty();
-                    Long timeSinceStartOfGame = boardMapper.getTimeSinceStartOfGame();
-                    initBoardInViewModel(boardMapper.getBoard(), loadingDialog, difficulty[0], timeSinceStartOfGame);
-                }
-            });
-        }
-    }
-
-
-    private void initBoardInViewModel(Cell[][] board, AlertDialog dialog,
-                                      DifficultyLevel difficulty, Long timeSinceStartOfGame) {
-        gameView.updateBoard(board);
-        viewModel.initBoard(board.clone(), difficulty);
-        viewModel.tick(timeSinceStartOfGame);
-        dialog.dismiss();
-        viewModel.setSoundEffects(soundEffects);
-    }
-
-
-    private void hideSystemUI() {
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_IMMERSIVE
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-        );
-    }
-
-
-    private void initPlacingBuilding() {
-        initBuildingToChoose();
-        adapter = new BuildingsRecyclerViewAdapter(context, buildingImagesURL, this);
-        buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this,
-                LinearLayoutManager.HORIZONTAL, false));
-        buildingRecyclerView.setAdapter(adapter);
-    }
-
-
-    private void initBuildingToChoose() {
-        String obelisk = "OBELISK";
-        String archerTower = "LIGHTNING0TOWER";
-        buildingImagesURL.add(obelisk);
-        buildingImagesURL.add(archerTower);
-    }
-
-
-    @Override
-    public void onBuildingRecyclerViewItemClick(String buildingImageURL, int position) {
-        onBuildingSelected(buildingImageURL.replace("0", ""));
-        cvSelectBuildingMenu.setVisibility(View.GONE);
-    }
-
-
-    private void observeViewModel() {
-        viewModel.getGameState().observe(this, new Observer<GameState>() {
-            @Override
-            public void onChanged(GameState gameState) {
-                gameView.unpackGameState(gameState);
-                if (gameState.getGameStatus() == GameStatus.LOST) {
-                    Toast.makeText(context, "You Lost", Toast.LENGTH_SHORT).show();
-                    databaseRepository.removeBoard();
-                    dialogManager.showLostAlertDialog(viewModel, gameView, context);
-                }
-                if (gameState.getTimeOfDay()) {
-                    if (btnChooseBuildingsCardView.getVisibility() == View.GONE)
-                        btnChooseBuildingsCardView.setVisibility(View.VISIBLE);
-                    if (btnStartGame.getVisibility() == View.GONE && btnSkipRound.getVisibility() != View.VISIBLE) {
-                        btnSkipRound.setVisibility(View.VISIBLE);
-                    }
-                } else {
-                    if (cvSelectBuildingMenu.getVisibility() == View.VISIBLE)
-                        cvSelectBuildingMenu.setVisibility(View.GONE);
-                    if (btnChooseBuildingsCardView.getVisibility() != View.GONE)
-                        btnChooseBuildingsCardView.setVisibility(View.GONE);
-                    if (btnSkipRound.getVisibility() == View.VISIBLE) {
-                        btnSkipRound.setVisibility(View.GONE);
-                    }
-                }
-
-
-                checkDeadObjects(gameState);
-            }
-        });
-    }
-
-
-    private void checkDeadObjects(GameState gameState) {
-        Cell[][] grid = gameState.getGrid();
-        for (Cell[] row : grid) {
-            for (Cell cell : row) {
-                ModelObject object = cell.getObject();
-                if (object == null)
-                    continue;
-                boolean dead = object.getHealth() <= 0;
-                Log.d("dead", "Object health: " + object.getHealth());
-                Log.d("dead", "Object is dead: " + dead);
-            }
-        }
-    }
-
-
-    @Override
     public void onCellClicked(int row, int col) {
         viewModel.onCellClicked(row, col);
     }
 
-
-    @Override
     public void onBuildingSelected(String buildingType) {
         viewModel.selectBuilding(buildingType);
     }
 
 
-    @Override
     public void updateGameState(long elapsedTime) {
         if (gameIsOnGoing)
             viewModel.tick(elapsedTime);
     }
+
+
 }

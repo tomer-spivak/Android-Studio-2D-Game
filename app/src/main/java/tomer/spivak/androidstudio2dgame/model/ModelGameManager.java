@@ -1,15 +1,13 @@
 package tomer.spivak.androidstudio2dgame.model;
 
-import android.util.Log;
 
-import tomer.spivak.androidstudio2dgame.modelAnimations.CellAnimationManager;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
-import tomer.spivak.androidstudio2dgame.music.SoundEffects;
+import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,13 +17,19 @@ public class ModelGameManager {
     private GameState state;
     private final EnemyManager enemyManager = new EnemyManager();
     private final TurretManager turretManager = new TurretManager();
-    private SoundEffects soundEffects;
+    private SoundEffectManager soundEffects;
     private static final int NIGHT_THRESHOLD = 5000;
     private String selectedBuildingType;
+    private int lastRound;
+
+    public ModelGameManager() {
+
+    }
 
     public void init(Cell[][] board, DifficultyLevel difficulty) {
         state = new GameState(board, NIGHT_THRESHOLD, difficulty);
         state.startTimerForNextRound();
+        lastRound = (board.length - 1) * 4;
     }
 
     public GameState getState() {
@@ -45,8 +49,8 @@ public class ModelGameManager {
     }
 
     private boolean canPlaceBuilding(GameState state) {
-        Log.d("type", selectedBuildingType);
-        return selectedBuildingType != null && state.getTimeOfDay() && state.getShnuzes() >= ModelObjectFactory.getPrice(selectedBuildingType);
+        return selectedBuildingType != null && state.isDayTime() && state.getShnuzes() >=
+                ModelObjectFactory.getPrice(selectedBuildingType);
     }
 
     private void removeBuilding(Cell selectedCell, GameState state) {
@@ -64,7 +68,7 @@ public class ModelGameManager {
         if (num < 2)
             return;
 
-        if (selectedCell.getObject() instanceof Building && state.getTimeOfDay()){
+        if (selectedCell.getObject() instanceof Building && state.isDayTime()){
             Building building = (Building) selectedCell.getObject();
             building.stopSound();
             building.setSoundEffects(null);
@@ -86,14 +90,10 @@ public class ModelGameManager {
     public void update(long deltaTime) {
         if (state != null) {
             state.addTime(deltaTime);
-            if (!state.getTimeOfDay()){
+            if (!state.isDayTime()){
                 if (enemyManager.getEnemies(state).isEmpty()){
                     //won
                     initRoundVictory(state);
-                    state.setTimeOfDay(true);
-                    state.accumulateRound();
-                    state.startTimerForNextRound();
-                    state.addShnuzes(state.getCurrentRound() * 1000);
                 }
 
                 if (buildingsExist()){
@@ -109,7 +109,7 @@ public class ModelGameManager {
             else {
                 state.decreaseTimeToNextRound(deltaTime);
                 if (state.getTimeToNextRound() <= 0){
-                    state.setTimeOfDay(false);
+                    state.setDayTime(false);
                     startNight(state);
                 }
             }
@@ -117,11 +117,14 @@ public class ModelGameManager {
     }
 
     private void startNight(GameState state) {
-        state.setTimeOfDay(false);
+        state.setDayTime(false);
         int amount = state.getRound();
-        enemyManager.spawnEnemies(state, amount);
+        if (!enemiesExist())
+            enemyManager.spawnEnemies(state, amount);
 
     }
+
+
 
     private void clearDeadObjects(GameState state) {
         Cell[][] grid = state.getGrid();
@@ -143,8 +146,9 @@ public class ModelGameManager {
         ModelObject object = cell.getObject();
         if (object instanceof Enemy){
             Enemy enemy = (Enemy) object;
-            CellAnimationManager.executeEnemyDeathAnimation(cell);
+            cell.executeEnemyDeathAnimation();
             state.addShnuzes(enemy.getReward());
+            state.incrimentEnemiesDefeated();
         }
 
     }
@@ -154,11 +158,32 @@ public class ModelGameManager {
     }
 
     private void initRoundVictory(GameState state) {
-        state.setGameStatus(GameStatus.WON);
+        if (state.getCurrentRound() <= lastRound)
+            continueToNextRound();
+        else {
+            state.setGameStatus(GameStatus.WON);
+        }
+    }
+
+    private void continueToNextRound() {
+        state.setDayTime(true);
+        state.accumulateRound();
+        state.startTimerForNextRound();
+        state.addShnuzes(state.getCurrentRound() * 1000);
     }
 
     private boolean buildingsExist() {
         return !getBuildingPositions(state.getGrid()).isEmpty();
+    }
+    private boolean enemiesExist() {
+        Cell[][] board = state.getGrid();
+        for (Cell[] row: board){
+            for (Cell cell: row){
+                if (cell.getObject() instanceof Enemy)
+                    return true;
+            }
+        }
+        return false;
     }
     private List<Position> getBuildingPositions(Cell[][] grid) {
         List<Position> buildingPositions = new ArrayList<>();
@@ -172,14 +197,12 @@ public class ModelGameManager {
         return buildingPositions;
     }
 
-
-
     public void skipToNextRound() {
         state.startTimerForNextRound();
         state.decreaseTimeToNextRound(state.getTimeToNextRound() - 1);
     }
 
-    public void setSoundEffects(SoundEffects effects) {
+    public void setSoundEffects(SoundEffectManager effects) {
         this.soundEffects = effects;
         if (state == null)
             return;
@@ -205,5 +228,21 @@ public class ModelGameManager {
 
     public int getRound() {
         return state.getCurrentRound();
+    }
+
+    public void setCurrentRound(int currentRound) {
+        state.setCurrentRound(currentRound);
+    }
+
+    public void setShnuzes(int shnuzes) {
+        state.setShnuzes(shnuzes);
+    }
+
+    public void initShnuzes() {
+        state.initShnuzes();
+    }
+
+    public void setDayTime(boolean dayTime) {
+        state.setDayTime(dayTime);
     }
 }

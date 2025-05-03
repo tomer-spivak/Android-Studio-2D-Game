@@ -23,16 +23,17 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,19 +54,12 @@ import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
 public class DatabaseRepository {
     private final FirebaseFirestore db;
-    private final FirebaseUser user;
-    AuthenticationHelper authHelper;
-    FirebaseStorage storage;
-    StorageReference storageRef;
+    private AuthenticationHelper authHelper;
     private static DatabaseRepository instance;
-
 
     private DatabaseRepository(Context context){
         FirebaseApp.initializeApp(context);
         db = FirebaseFirestore.getInstance();
-        storage = FirebaseStorage.getInstance();
-        storageRef = storage.getReference();
-        user = FirebaseAuth.getInstance().getCurrentUser();
     }
 
     public static synchronized DatabaseRepository getInstance(Context context) {
@@ -75,10 +69,10 @@ public class DatabaseRepository {
         return instance;
     }
 
-
-    public void saveBoard(Cell[][] board, String difficulty, Long gameTime,
+    public void saveBoard(Cell[][] board, String difficulty, Long gameTime, int currentRound, int shnuzes, boolean dayTime,
                           OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
-        if (user == null) return;
+        if (isGuest()) return;
+        FirebaseUser user = authHelper.getUserInstance();
 
         Map<String, Object> boardData = new HashMap<>();
         for (int i = 0; i < board.length; i++) {
@@ -89,108 +83,93 @@ public class DatabaseRepository {
             boardData.put("row_" + i, rowData);
         }
 
+        // Save board structure
         db.collection("users")
                 .document(user.getUid())
-                .collection("board")
+                .collection("currentGame")
                 .document("board objects")
                 .set(boardData)
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
 
-        db.collection("users")
-                .document(user.getUid())
-                .collection("board")
-                .document("difficulty level")
-                .set(new HashMap<String, Object>() {{
-                    put("level", difficulty);
-                }});
+        // Save all game metadata in a single "meta" document
+        Map<String, Object> metaData = new HashMap<>();
+        metaData.put("level", difficulty);
+        metaData.put("millis from start of the game", gameTime);
+        metaData.put("currentRound", currentRound);
+        metaData.put("shnuzes", shnuzes);
+        metaData.put("dayTime", dayTime);
 
         db.collection("users")
                 .document(user.getUid())
-                .collection("board")
-                .document("time of game")
-                .set(new HashMap<String, Object>() {{
-                    put("millis from start of the game", gameTime);
-                }});
+                .collection("currentGame")
+                .document("meta")
+                .set(metaData);
     }
 
-    public void loadBoard(OnSuccessListener<DocumentSnapshot> onSuccess,
-                          OnFailureListener onFailure) {
-        if (user == null) {
+    public void loadBoard(OnSuccessListener<DocumentSnapshot> onSuccess, OnFailureListener onFailure) {
+        if (isGuest()) {
             return;
         }
+        FirebaseUser user = authHelper.getUserInstance();
 
         db.collection("users")
                 .document(user.getUid())
-                .collection("board")
+                .collection("currentGame")
                 .document("board objects")
                 .get()
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
 
-    private void loadDifficultyLevel(OnSuccessListener<DocumentSnapshot> onSuccess) {
-        if (user == null) {
-            return;
-        }
+    public void loadDataFromDataBase(BoardMapper boardMapper, OnBoardLoadedListener listener) {
+        if (isGuest()) return;
+        FirebaseUser user = authHelper.getUserInstance();
 
         db.collection("users")
                 .document(user.getUid())
-                .collection("board")
-                .document("difficulty level")
+                .collection("currentGame")
+                .document("meta")
                 .get()
-                .addOnSuccessListener(onSuccess);
-    }
-
-    public void loadBoardFromDataBase(BoardMapper boardMapper,
-                                      OnBoardLoadedListener listener) {
-        //if difficulty is null, it means that its in the database,
-        // and that we are currently in a game
-
-        loadDifficultyLevel(new OnSuccessListener<DocumentSnapshot>() {
-                @Override
-                public void onSuccess(DocumentSnapshot documentSnapshot) {
-                    String difficultyName = (String) documentSnapshot.get("level");
-                    DifficultyLevel difficultyLevel = DifficultyLevel
-                            .valueOf(difficultyName);
-                    boardMapper.setDifficulty(difficultyLevel);
-
-                    loadTimeOfGame(new OnSuccessListener<DocumentSnapshot>() {
-                        @Override
-                        public void onSuccess(DocumentSnapshot documentSnapshot) {
-                            Long timeOfGame =
-                                    (Long) documentSnapshot.get("millis from start of the game");
-                            boardMapper.setTimeSinceStartOfGame(timeOfGame);
-
-                            loadBoard(new OnSuccessListener<DocumentSnapshot>() {
-                                @Override
-                                public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                    createBoardInBoardMapper(boardMapper, documentSnapshot, listener);
-                                }
-                            }, null);
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot metaSnapshot) {
+                        // Load all meta fields from one document
+                        String difficultyName = metaSnapshot.getString("level");
+                        Long gameTime = metaSnapshot.getLong("millis from start of the game");
+                        Long currentRound = metaSnapshot.getLong("currentRound");
+                        Long shnuzes = metaSnapshot.getLong("shnuzes");
+                        boolean dayTime = Boolean.TRUE.equals(metaSnapshot.getBoolean("dayTime"));
+                        if (difficultyName != null) {
+                            boardMapper.setDifficulty(DifficultyLevel.valueOf(difficultyName));
                         }
-                    });
+                        if (gameTime != null) {
+                            boardMapper.setTimeSinceStartOfGame(gameTime);
+                        }
+                        if (currentRound != null) {
+                            boardMapper.setCurrentRound(currentRound.intValue());
+                        }
+                        if (shnuzes != null) {
+                            boardMapper.setShnuzes(shnuzes.intValue());
+                        }
+                        boardMapper.setDayTime(dayTime);
+                        Log.d("wtf", "diff: " + boardMapper.getDifficulty());
+                        Log.d("wtf", "time: " + boardMapper.getTimeSinceStartOfGame());
+                        Log.d("wtf", "currentRound: " + boardMapper.getCurrentRound());
+                        Log.d("wtf", "shnuz" + boardMapper.getShnuzes());
 
-
-                }
-            });
+                        // Load board structure
+                        loadBoard(new OnSuccessListener<DocumentSnapshot>() {
+                            @Override
+                            public void onSuccess(DocumentSnapshot boardSnapshot) {
+                                createBoardInBoardMapper(boardMapper, boardSnapshot, listener);
+                            }
+                        }, null);
+                    }
+                });
     }
 
-    private void loadTimeOfGame(OnSuccessListener<DocumentSnapshot> onSuccess) {
-        if (user == null) {
-            return;
-        }
-
-        db.collection("users")
-                .document(user.getUid())
-                .collection("board")
-                .document("time of game")
-                .get()
-                .addOnSuccessListener(onSuccess);
-    }
-
-    private void createBoardInBoardMapper(BoardMapper boardMapper,
-                                          DocumentSnapshot documentSnapshot,
+    private void createBoardInBoardMapper(BoardMapper boardMapper, DocumentSnapshot documentSnapshot,
                                           OnBoardLoadedListener listener) {
         if (documentSnapshot == null || !documentSnapshot.exists()){
             boardMapper.initBoard();
@@ -203,14 +182,14 @@ public class DatabaseRepository {
     }
 
     public void checkIfTheresAGame(GameCheckCallback callback) {
-        if (user == null) {
+        if (isGuest()) {
             callback.onCheckCompleted(false);
             return;
         }
-
+        FirebaseUser user = authHelper.getUserInstance();
         db.collection("users")
                 .document(user.getUid())
-                .collection("board")
+                .collection("currentGame")
                 .document("board objects")
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -218,69 +197,78 @@ public class DatabaseRepository {
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         callback.onCheckCompleted(documentSnapshot.exists() &&
                                 documentSnapshot.getData() != null);
+                        Log.d("frank", documentSnapshot.exists() + ", " + documentSnapshot.getData());
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         callback.onCheckCompleted(false);
+                        Log.d("frank", "fail");
                     }
                 });
     }
 
     public void removeBoard() {
-        if (user == null) return;
+        if (isGuest())
+            return;
+        FirebaseUser user = authHelper.getUserInstance();
         db.collection("users")
                 .document(user.getUid())
-                .collection("board")
+                .collection("currentGame")
                 .document("board objects")
                 .delete();
+
         db.collection("users")
                 .document(user.getUid())
-                .collection("board")
-                .document("difficulty level")
-                .delete();
-        db.collection("users")
-                .document(user.getUid())
-                .collection("board")
-                .document("time of game")
+                .collection("currentGame")
+                .document("meta")
                 .delete();
     }
 
+
+
     public void logResults(GameViewModel viewModel) {
-        if (user == null) return;
+        if (isGuest())
+            return;
+        FirebaseUser user = authHelper.getUserInstance();
         int round = viewModel.getRound();
-        db.collection("users").document(user.getUid())
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+        Log.d("oof", "fuck");
+        db.collection("users").document(user.getUid()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    Log.d("oof", String.valueOf(documentSnapshot));
+                    if (documentSnapshot != null && documentSnapshot.exists()) {
+                        Map<String, Object> leaderboard = (Map<String, Object>) documentSnapshot.get("leaderboard");
+
+                        if (leaderboard == null) {
+                            leaderboard = new HashMap<>();
+                        }
+
+                        // Save round if needed
+                        Long maxRound = (Long) leaderboard.get("max round");
+                        if (maxRound == null || round > maxRound) {
+                            saveRound(round, user);
+                        }
+                        Log.d("oof", "wtf");
+                        // Always increment these
+
+                    } else {
+                        // If document doesn't exist, initialize leaderboard
+                        saveRound(round, user);
+                        Map<String, Object> initData = new HashMap<>();
+                        initData.put("leaderboard.enemies defeated", 0);
+                        initData.put("leaderboard.games played", 1);
+                        db.collection("users").document(user.getUid()).set(initData, SetOptions.merge());
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
                     @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        handleLeaderboardData(documentSnapshot, round);
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d("oof", "shit: " + e.getMessage());
                     }
                 });
     }
 
-    private void handleLeaderboardData(DocumentSnapshot documentSnapshot, int round) {
-        if (documentSnapshot != null && documentSnapshot.exists()) {
-            Map<String, Object> leaderboard = (Map<String, Object>) documentSnapshot
-                    .get("leaderboard");
-
-            if (leaderboard != null) {
-                Long maxRound = (Long) leaderboard.get("max round");
-                if (maxRound == null)
-                    saveRound(round);
-                else if (round > maxRound) {
-                    saveRound(round);
-                }
-            } else {
-                saveRound(round);
-            }
-        } else {
-            saveRound(round);
-        }
-    }
-
-    private void saveRound(int round) {
+    private void saveRound(int round, FirebaseUser user) {
         Map<String, Object> leaderboard = new HashMap<>();
         leaderboard.put("max round", round);
 
@@ -297,13 +285,13 @@ public class DatabaseRepository {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         for (DocumentSnapshot document : task.getResult()) {
-                            Map<String, Object> leaderboard = (Map<String, Object>)
-                                    document.get("leaderboard");
+                            Map<String, Object> leaderboard = (Map<String, Object>) document.get("leaderboard");
                             if (leaderboard != null && leaderboard.get("max round") != null) {
-                                int maxRound = ((Number) Objects.
-                                        requireNonNull(leaderboard.get("max round"))).intValue();
+                                int maxRound = ((Number) Objects.requireNonNull(leaderboard.get("max round"))).intValue();
                                 String displayName = document.getString("displayName");
-                                maxRounds.add(new LeaderboardEntry(maxRound, displayName));
+                                int gamesPlayed = ((Number) Objects.requireNonNull(leaderboard.get("games played"))).intValue();
+                                int enemiesDefeated = ((Number) Objects.requireNonNull(leaderboard.get("enemies defeated"))).intValue();
+                                maxRounds.add(new LeaderboardEntry(maxRound, displayName, gamesPlayed, enemiesDefeated));
                             }
                         }
                         maxRounds.sort(Collections.reverseOrder());
@@ -312,14 +300,6 @@ public class DatabaseRepository {
                         callback.onLeaderboardFetched(new ArrayList<>());
                     }
                 });
-    }
-
-    public String getDisplayName() {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser == null) {
-            return "guest";
-        }
-        return currentUser.getDisplayName();
     }
 
     public void handleGoogleSignInResult(Intent data, GoogleSignInCallback googleSignInCallback) {
@@ -334,7 +314,9 @@ public class DatabaseRepository {
         return authHelper.getGoogleSignInIntent(context);
     }
 
-    public void signUpWithEmailPassword(String string, String string1, String username, OnSuccessListener onSuccessListener, Context context, Uri uri) {
+    public void signUpWithEmailPassword(String string, String string1, String username, OnSuccessListener onSuccessListener, Context context,
+                                        Uri uri) {
+        Log.d("sigma", "wtf");
         if (authHelper == null)
             authHelper = new AuthenticationHelper();
         authHelper.signUpWithEmailPassword(string, string1, username, onSuccessListener, context, uri);
@@ -353,31 +335,37 @@ public class DatabaseRepository {
         authHelper.forgotPassword(email, onSuccessListener, onFailureListener);
     }
 
-    public void uploadImage(Uri imageUri, String username, OnSuccessListener onSuccessListener){
+    public void uploadImage(Uri imageUri, OnSuccessListener<Void> onSuccess, Context context, String uid) {
+        // 1) Get a fresh root ref
 
-        storageRef = storageRef.child("profileImages/" + username + ".jpg");
+        // 2) Create a one-off child ref for this upload
 
-        storageRef.putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        storageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                            @Override
-                            public void onSuccess(Uri uri) {
-                                Log.d("image", String.valueOf(uri));
-                                onSuccessListener.onSuccess(null);
-                            }
-                        });
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.d("image", String.valueOf(user.getDisplayName()));
-            }
-        })
-        ;
+        // Upload under UID
+        StorageReference profileRef = FirebaseStorage
+                .getInstance()
+                .getReference("profileImages/" + uid + ".jpg");
+
+        // 3) Upload
+        Log.d("sigma", "Uploading image for UID = " + uid);
+
+        profileRef.putFile(imageUri)
+                .addOnSuccessListener(task -> profileRef.getDownloadUrl()
+                        .addOnSuccessListener(uri -> {
+                            Log.d("sigma", "URL is " + uri);
+                            onSuccess.onSuccess(null);
+                        }))
+                .addOnFailureListener(e -> {
+                    Log.d("sigma", "upload failed: " + e.getMessage());
+                    Toast.makeText(context,
+                            "failed to upload image: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                });
     }
 
     public void fetchAndSetImage(ImageView imageView, Context context) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+        StorageReference storageRef = FirebaseStorage.getInstance().getReference();
         Uri photoUrl = user.getPhotoUrl();
 
         if (photoUrl != null) {
@@ -387,13 +375,41 @@ public class DatabaseRepository {
             return;
         }
 
-        StorageReference profileImageRef = storageRef.child("profileImages/" + user.getDisplayName() + ".jpg");
+        StorageReference profileImageRef = storageRef.child("profileImages/" + user.getUid() + ".jpg");
         profileImageRef.getDownloadUrl().addOnSuccessListener(uri ->
                         Glide.with(context)
                                 .load(uri)
                                 .into(imageView))
                 .addOnFailureListener(e ->
                         Toast.makeText(context, "Failed to fetch image: " + e.getMessage(), Toast.LENGTH_LONG).show());
+    }
+
+    public FirebaseUser getUserInstance() {
+        // initialize on first use
+        if (authHelper == null) {
+            authHelper = new AuthenticationHelper();
+        }
+        return authHelper.getUserInstance();
+    }
+
+    public boolean isGuest() {
+        // initialize on first use
+        if (authHelper == null) {
+            authHelper = new AuthenticationHelper();
+        }
+        return authHelper.isGuest();
+    }
+
+    public void incrementEnemiesDefeated() {
+        FirebaseUser user = getUserInstance();
+        db.collection("users").document(user.getUid()).update("leaderboard.enemies defeated", FieldValue.increment(1));
+    }
+
+    public void incrementGamesPlayed() {
+        FirebaseUser user = getUserInstance();
+
+        db.collection("users").document(user.getUid()).update("leaderboard.games played", FieldValue.increment(1));
+
     }
 
     public interface GoogleSignInCallback {
@@ -467,44 +483,57 @@ public class DatabaseRepository {
                     });
         }
 
-        public void signUpWithEmailPassword(String email, String password, String username, OnSuccessListener
-                onSuccessListener, Context context, Uri uri){
+        public void signUpWithEmailPassword(String email, String password, String username, OnSuccessListener onSuccessListener, Context context,
+                                            Uri uri){
+            Log.d("sigma", "big");
             mAuth.createUserWithEmailAndPassword(email, password)
-                    .addOnSuccessListener(new OnSuccessListener() {
+                    .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                         @Override
-                        public void onSuccess(Object o) {
-                            sendEmail(email, context);
-                            uploadImage(uri, username, onSuccessListener);
-                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                            if (user != null) {
-                                UserProfileChangeRequest profileUpdates =
-                                        new UserProfileChangeRequest.Builder()
-                                                .setDisplayName(username)
-                                                .build();
-                                user.updateProfile(profileUpdates)
-                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                            @Override
-                                            public void onSuccess(Void unused) {
-                                                FirebaseFirestore db = FirebaseFirestore.getInstance();
-                                                Map<String, Object> userData = new HashMap<>();
-                                                userData.put("displayName", username);
-                                                db.collection("users").document(user.getUid())
-                                                        .set(userData, SetOptions.merge());
-                                            }
-                                        });
-                            }
-                        }
+                        public void onSuccess(AuthResult authResult) {
+                            FirebaseUser newUser = authResult.getUser();
 
-            })
+                            String uid = newUser.getUid();
+                            Log.d("sigma", "chungs");
+                            sendEmail(email, context);
+                            uploadImage(uri, onSuccessListener, context, uid);
+                            Log.d("sigma", "wtf");
+                            UserProfileChangeRequest profileUpdates =
+                                    new UserProfileChangeRequest.Builder()
+                                            .setDisplayName(username)
+                                            .build();
+                            newUser.updateProfile(profileUpdates)
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void unused) {
+                                            FirebaseFirestore db = FirebaseFirestore.getInstance();
+                                            Map<String, Object> userData = new HashMap<>();
+                                            userData.put("displayName", username);
+                                            db.collection("users").document(newUser.getUid())
+                                                    .set(userData, SetOptions.merge());
+                                        }
+                                    });
+                        }
+                    })
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
+
                             Toast.makeText(context, "failed to create a user: " + e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
         }
 
 
-
+        public FirebaseUser getUserInstance() {
+            return FirebaseAuth.getInstance().getCurrentUser();
+        }
+        public boolean isGuest(){
+            // initialize on first use
+            if (authHelper == null) {
+                authHelper = new AuthenticationHelper();
+            }
+            return getUserInstance() == null ||
+                    Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).isAnonymous();
+        }
     }
 }
