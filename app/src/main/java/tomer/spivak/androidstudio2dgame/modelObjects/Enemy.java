@@ -48,21 +48,29 @@ public class Enemy extends ModelObject implements IDamager{
         return attackComponent.canAttack() && (state == EnemyState.IDLE);
     }
 
-    public void updateDirection(Position prevPos) {
-        updateDirection(prevPos, pos);
-    }
-
     public void updateDirection(Position prevPos, Position nextPos) {
+        int dx = nextPos.getX() - prevPos.getX();
+        int dy = nextPos.getY() - prevPos.getY();
+        Direction chosen;
         if (prevPos.getX() > nextPos.getX()){
-            setCurrentDirection(Direction.UPRIGHT);
+            chosen = Direction.UPRIGHT;
         } else if(prevPos.getX() < nextPos.getX()){
-            setCurrentDirection(Direction.DOWNLEFT);
+            chosen = Direction.DOWNLEFT;
         } else {
             if (nextPos.getY() < prevPos.getY()){
-                setCurrentDirection(Direction.UPLEFT);
+                chosen = Direction.UPLEFT;
             } else
-                setCurrentDirection(Direction.DOWNRIGHT);
+                chosen = Direction.DOWNRIGHT;
         }
+
+        Log.d("Facing",
+                String.format("dX=%d dY=%d → %s (prev=(%d,%d), next=(%d,%d))",
+                        dx, dy, chosen.name(),
+                        prevPos.getX(), prevPos.getY(), nextPos.getX(), nextPos.getY()));
+        setCurrentDirection(chosen);
+        // (your quadrant logic here, setting `chosen`)
+
+
     }
 
     @Override

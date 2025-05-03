@@ -86,39 +86,60 @@ public class EnemyManager {
     }
 
 
-    private void updateEnemyMovement(Enemy enemy, GameState current, long deltaTime) {
-        List<Position> path = createPathForEnemy(current, enemy);
-        int targetIndex = enemy.getCurrentTargetIndex();
-
-        if (path == null || path.isEmpty() || targetIndex >= path.size()){
-            attemptAttack(current, enemy, deltaTime);
-            return;
-        }
-
-        enemy.updateDirection(enemy.getPosition(), path.get(0));
-        enemy.accumulateTime(deltaTime);
-
-        float timePerStep = 1000 / enemy.getMovementSpeed();
-
-        while (enemy.getAccumulatedTime() >= timePerStep && targetIndex < path.size()) {
-            Position nextPos = path.get(targetIndex);
-            Cell nextCell = current.getCellAt(nextPos);
-            if (nextCell.getObject() != null) {
-                path = createPathForEnemy(current, enemy);
-                nextPos = path.get(targetIndex);
-                nextCell = current.getCellAt(nextPos);
+    private void attemptAttackIfAdjacent(GameState current, Enemy enemy, long deltaTime) {
+        Building building = pivotToAdjacentBuildings(enemy, current);
+        if (building != null) {
+            // same as your existing attemptAttack logic
+            enemy.accumulateAttackTime(deltaTime);
+            if (enemy.canAttack()) {
+                enemy.attack(building);
             }
-            Cell currentCell = current.getCellAt(enemy.getPosition());
-            targetIndex = moveEnemy(currentCell, nextCell, enemy, timePerStep);
-            enemy.setState(EnemyState.IDLE);
         }
     }
 
-    private void attemptAttack(GameState current, Enemy enemy, long deltaTime) {
-        Building buildingToAttack = pivotToAdjacentBuildings(enemy, current);
-        enemy.accumulateAttackTime(deltaTime);
-        if (enemy.canAttack()) {
-            enemy.attack(buildingToAttack);
+    private void updateEnemyMovement(Enemy enemy, GameState current, long deltaTime) {
+        List<Position> path = enemy.getPath();
+        int targetIndex = enemy.getCurrentTargetIndex();
+
+        boolean needNewPath = false;
+        if (path == null || path.isEmpty()) {
+            needNewPath = true;
+        } else if (targetIndex >= path.size()) {
+            needNewPath = true;
+        } else {
+            Position nextPos = path.get(targetIndex);
+            if (current.getCellAt(nextPos).getObject() != null) {
+                needNewPath = true;
+            }
+        }
+
+        if (needNewPath) {
+            path = createPathForEnemy(current, enemy);
+            enemy.setCurrentTargetIndex(0);
+            if (path == null || path.isEmpty()) {
+                // no valid route → try attack or stay idle
+                attemptAttackIfAdjacent(current, enemy, deltaTime);
+                return;
+            }
+            targetIndex = 0;
+        }
+
+        // move along the path
+        Position nextPos = path.get(targetIndex);
+        enemy.updateDirection(enemy.getPosition(), nextPos);
+        enemy.accumulateTime(deltaTime);
+
+        float timePerStep = 1000f / enemy.getMovementSpeed();
+        if (enemy.getAccumulatedTime() >= timePerStep && targetIndex < path.size()) {
+            Cell currentCell = current.getCellAt(enemy.getPosition());
+            Cell nextCell    = current.getCellAt(path.get(targetIndex));
+
+            // only move if the cell is free
+            if (nextCell.getObject() == null) {
+                int newIndex = moveEnemy(currentCell, nextCell, enemy, timePerStep);
+                enemy.setCurrentTargetIndex(newIndex);
+            }
+            enemy.setState(EnemyState.IDLE);
         }
     }
 
@@ -150,16 +171,27 @@ public class EnemyManager {
     }
 
 
-    private int moveEnemy(Cell currentCell, Cell nextCell, Enemy enemy, float timePerStep){
-        currentCell.removeObject();
+    private int moveEnemy(Cell currentCell, Cell nextCell, Enemy enemy, float timePerStep) {
+        // 1) remember where we came from
         Position prevPos = enemy.getPosition();
+        // 2) where we’re actually going
+        Position nextPos = nextCell.getPosition();
+
+        // 3) move it in the grid
+        currentCell.removeObject();
+        enemy.setPosition(nextPos);
         nextCell.spawnEnemy(enemy);
-        enemy.updateDirection(prevPos);
+
+        // 4) now that pos is correct, recalc facing
+        enemy.updateDirection(prevPos, nextPos);
+
+        // 5) advance its path index & consume the time slice
         enemy.incrementTargetIndex();
         enemy.decreaseAccumulatedTime(timePerStep);
-        return enemy.getCurrentTargetIndex();
 
+        return enemy.getCurrentTargetIndex();
     }
+
 
     public List<Enemy> getEnemies(GameState gameState) {
             List<Enemy> enemies = new ArrayList<>();
