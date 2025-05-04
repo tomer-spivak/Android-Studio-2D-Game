@@ -13,9 +13,6 @@ public class LeaderboardEntry implements Comparable<LeaderboardEntry> {
         this.enemiesDefeated = enemiesDefeated;
     }
 
-
-
-        // Constructor, getters, and setters...public String getDisplayName() { return displayName; }
     public int getMaxRound() { return maxRound; }
         public int getGamesPlayed() { return gamesPlayed; }
 

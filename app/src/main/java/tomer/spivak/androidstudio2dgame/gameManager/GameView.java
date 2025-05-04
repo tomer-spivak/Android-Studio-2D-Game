@@ -14,7 +14,6 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +39,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     //custom class that handles touch events (scrolls, zoom)
     private final TouchManager touchManager;
 
-    //
+
     private final SoundEffectManager soundEffects;
     GameObjectManager gameObjectManager;
     private Float scale = 1F;
@@ -203,7 +202,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
             float volume = musicService.getVolume();
             editor.putFloat("volume", volume);
-            Log.d("volume", "put" +volume);
 
             editor.apply();
             musicService.stopMusic();
@@ -244,8 +242,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
             backgroundBitmap = nightBackground;
         }
         if (gameState.getGameStatus() == GameStatus.LOST){
-            Toast.makeText(context, "lost", Toast.LENGTH_SHORT).show();
-            Log.d("lost", "lost");
             stopGameLoop();
         }
         shnuzes = gameState.getShnuzes();

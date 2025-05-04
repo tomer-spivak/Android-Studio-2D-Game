@@ -5,15 +5,11 @@ class TransformState {
     private final float positionX;
     private final float positionY;
     private final float scale;
-    private final float initialX;
-    private final float initialY;
 
     public TransformState(float positionX, float positionY, float scale) {
         this.positionX = positionX;
         this.positionY = positionY;
         this.scale = scale;
-        this.initialX = positionX;
-        this.initialY = positionY;
     }
 
     public float getPositionX() { return positionX; }

@@ -12,21 +12,14 @@ public class Pathfinder {
         this.gameState = gameState;
     }
 
-    /**
-     * Finds the shortest path from `start` to the closest neighboring cell of any Building.
-     * Expands outwards ring by ring: first building neighbors, then their neighbors, etc.
-     * Returns an empty list if no building or no reachable neighbor exists.
-     */
     public List<Position> findPathToClosestBuildingNeighbor(Position start) {
         Map<Position, Position> cameFrom = new HashMap<>();
         Queue<Position> frontier = new LinkedList<>();
 
-        // ✅ NEW: Check if already adjacent to a building
         if (hasAdjacentBuilding(start)) {
-            return Collections.emptyList(); // No movement needed; enemy is adjacent already
+            return Collections.emptyList();
         }
 
-        // Existing: Check if any neighbor is adjacent to a building
         for (Position nb : start.getNeighbors()) {
             if (!gameState.isValidPosition(nb) || isOccupied(nb)) {
                 continue;
@@ -40,7 +33,6 @@ public class Pathfinder {
             frontier.add(nb);
         }
 
-        // Standard BFS...
         while (!frontier.isEmpty()) {
             Position cur = frontier.poll();
             if (cur == null)
@@ -63,7 +55,6 @@ public class Pathfinder {
         return null;
     }
 
-    /** Returns true if any of pos’s 4-neighbours has a Building in it. */
     private boolean hasAdjacentBuilding(Position pos) {
         for (Position nb : pos.getNeighbors()) {
             if (!gameState.isValidPosition(nb))
@@ -75,10 +66,6 @@ public class Pathfinder {
         }
         return false;
     }
-
-    /**
-     * Standard BFS that stops at the first reached target and reconstructs the path.
-     */
 
     private List<Position> reconstructPath(Position start, Position goal, Map<Position, Position> cameFrom) {
         List<Position> path = new ArrayList<>();

@@ -4,9 +4,9 @@ import com.google.firebase.firestore.DocumentSnapshot;
 
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 
-// Define a callback interface
 public interface OnBoardLoadedListener {
-    void onBoardLoaded(DocumentSnapshot documentSnapshot, DifficultyLevel finalDifficultyLevel, Long finalTimeSinceGameStart, int finalCurrentRound, int finalShnuzes, boolean finalDayTime);
+    void onBoardLoaded(DocumentSnapshot documentSnapshot, DifficultyLevel finalDifficultyLevel,
+                       Long finalTimeSinceGameStart, int finalCurrentRound, int finalShnuzes, boolean finalDayTime);
 }
 
 

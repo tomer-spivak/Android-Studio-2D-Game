@@ -1,7 +1,7 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
 import android.content.Context;
-import android.util.Log;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,15 +23,14 @@ public class BuildingsRecyclerViewAdapter extends
     private final Context context;
     private final String[] buildingImages;
     private View selectedBuilding;
-    private final GameActivity gameActivity; // Add reference to Activity
+    private final GameActivity gameActivity;
 
-    // Updated constructor
     public BuildingsRecyclerViewAdapter(Context context,
                                         String[] buildingImages,
                                         GameActivity activity) {
         this.context = context;
         this.buildingImages = buildingImages;
-        this.gameActivity = activity; // Store activity reference
+        this.gameActivity = activity;
     }
 
     @NonNull
@@ -45,11 +44,7 @@ public class BuildingsRecyclerViewAdapter extends
     public void onBindViewHolder(@NonNull BuildingViewHolder holder, int position) {
         String imageName = buildingImages[(position)].toLowerCase();
         int resourceId = context.getResources().getIdentifier(imageName, "drawable", context.getPackageName());
-        Log.d("debug", imageName);
-        Glide.with(context)
-                .load(resourceId)
-                .placeholder(R.drawable.placeholder_building)
-                .into(holder.imageView);
+        Glide.with(context).load(resourceId).placeholder(R.drawable.placeholder_building).into(holder.imageView);
 
         String title = imageName.replace("0", " ");
         String[] words = title.split(" ");
@@ -99,9 +94,8 @@ public class BuildingsRecyclerViewAdapter extends
             int position = getAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
                 String buildingImageURL = buildingImages[position];
-                // Directly call Activity methods
                 gameActivity.onBuildingSelected(buildingImageURL.replace("0", ""));
-                gameActivity.closeBuildingMenu(); // New helper method
+                gameActivity.closeBuildingMenu();
             }
         }
     }

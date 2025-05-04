@@ -32,7 +32,6 @@ public class LeaderboardAdapter
 
     public enum SortType { MAX_ROUND, GAMES_PLAYED, ENEMIES_DEFEATED }
 
-    /** Sort fullList, then re-filter by lastQuery */
     public void sortBy(SortType type) {
         Comparator<LeaderboardEntry> cmp;
         switch (type) {
@@ -48,7 +47,6 @@ public class LeaderboardAdapter
                 break;
         }
         fullList.sort(cmp);
-        // re-apply filter
         filter(lastQuery);
     }
 

@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 import java.util.Random;
 
 import tomer.spivak.androidstudio2dgame.R;
@@ -53,7 +52,6 @@ public class MusicService extends Service {
             mediaPlayer.setVolume(volume, volume);
         }
         playRandomSong();
-        Log.d("music", "MusicService onCreate");
     }
 
 
@@ -80,7 +78,6 @@ public class MusicService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("music", "MusicService onStartCommand");
         return START_STICKY;
     }
 
@@ -96,14 +93,12 @@ public class MusicService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d("music", "MusicService onBind called");
         return binder;
     }
 
 
 
     public void pauseMusic() {
-        Log.d("music", mediaPlayer != null ? "MediaPlayer exists" : "MediaPlayer is null");
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
         }
@@ -116,8 +111,7 @@ public class MusicService extends Service {
                     mediaPlayer.start();
                     mediaPlayer.setVolume(volume, volume);
                 }
-            } catch (IllegalStateException e) {
-                Log.d("music", "MediaPlayer resume failed: " + e.getMessage());
+            } catch (IllegalStateException ignored) {
             }
         }
     }
@@ -128,8 +122,7 @@ public class MusicService extends Service {
                 if (mediaPlayer.isPlaying()) {
                     mediaPlayer.stop();
                 }
-            } catch (IllegalStateException e) {
-                Log.e("music", "MediaPlayer stop failed: " + e.getMessage());
+            } catch (IllegalStateException ignored) {
             } finally {
                 mediaPlayer.release();
                 mediaPlayer = null;

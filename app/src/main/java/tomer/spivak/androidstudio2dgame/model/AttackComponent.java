@@ -40,10 +40,6 @@ public class AttackComponent {
         return attackDamage;
     }
 
-    public float getAttackTime() {
-        return timeSinceLastAttack;
-    }
-
     public float getTimeSinceLastAttack() {
         return timeSinceLastAttack;
     }

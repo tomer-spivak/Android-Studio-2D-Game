@@ -18,6 +18,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -32,6 +33,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
@@ -71,12 +73,8 @@ public class DatabaseRepository {
         return instance;
     }
 
-    // In DatabaseRepository.java
-    public void saveBoard(GameState gameState,
-                          OnSuccessListener<Void> onSuccess,
-                          OnFailureListener onFailure) {
+    public void saveBoard(GameState gameState, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
         if (isGuest()) {
-            Log.d("DB", "Guest user - skip save");
             return;
         }
 
@@ -88,34 +86,32 @@ public class DatabaseRepository {
             return;
         }
 
-        // Convert game state to database format
         Map<String, Object> boardData = convertBoardToMap(gameState.getGrid());
         Map<String, Object> metaData = createMetaData(gameState);
 
-        // Use batched write for atomic operation
         WriteBatch batch = db.batch();
 
-        DocumentReference boardRef = db.collection("users")
-                .document(user.getUid())
-                .collection("currentGame")
+        DocumentReference boardRef = db.collection("users").document(user.getUid()).collection("currentGame")
                 .document("board objects");
 
-        DocumentReference metaRef = db.collection("users")
-                .document(user.getUid())
-                .collection("currentGame")
+        DocumentReference metaRef = db.collection("users").document(user.getUid()).collection("currentGame")
                 .document("meta");
 
         batch.set(boardRef, boardData, SetOptions.merge());
         batch.set(metaRef, metaData, SetOptions.merge());
 
         batch.commit()
-                .addOnSuccessListener(unused -> {
-                    Log.d("DB", "Save successful");
-                    if (onSuccess != null) onSuccess.onSuccess(unused);
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        if (onSuccess != null) onSuccess.onSuccess(unused);
+                    }
                 })
-                .addOnFailureListener(e -> {
-                    Log.e("DB", "Save failed", e);
-                    if (onFailure != null) onFailure.onFailure(e);
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        if (onFailure != null) onFailure.onFailure(e);
+                    }
                 });
     }
 
@@ -144,50 +140,47 @@ public class DatabaseRepository {
         if (isGuest()) return;
         FirebaseUser user = authHelper.getUserInstance();
 
-        // 1) Load meta, apply to boardMapper
-        db.collection("users")
-                .document(user.getUid())
-                .collection("currentGame")
-                .document("meta")
-                .get()
-                .addOnSuccessListener(metaSnap -> {
-                    String difficultyName = metaSnap.getString("level");
-                    Long gameTime        = metaSnap.getLong("millis from start of the game");
-                    Long currentRoundL    = metaSnap.getLong("currentRound");
-                    Long shnuzesL         = metaSnap.getLong("shnuzes");
-                    Boolean dt           = metaSnap.getBoolean("dayTime");
-                    DifficultyLevel difficultyLevel = DifficultyLevel.MEDIUM;
-                    long timeSinceGameStart = 0L;
-                    int currentRound = 1, shnuzes = -1;
-                    boolean dayTime;
-                    if (difficultyName != null)
-                        difficultyLevel = DifficultyLevel.valueOf(difficultyName);
-                    if (gameTime     != null)
-                        timeSinceGameStart = gameTime;
-                    if (currentRoundL != null)
-                        currentRound = (currentRoundL.intValue());
-                    if (shnuzesL      != null)
-                        shnuzes = (shnuzesL.intValue());
-                    dayTime = (Boolean.TRUE.equals(dt));
+        db.collection("users").document(user.getUid()).collection("currentGame").document("meta").get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        String difficultyName = documentSnapshot.getString("level");
+                        Long gameTime        = documentSnapshot.getLong("millis from start of the game");
+                        Long currentRoundL    = documentSnapshot.getLong("currentRound");
+                        Long shnuzesL         = documentSnapshot.getLong("shnuzes");
+                        Boolean dt           = documentSnapshot.getBoolean("dayTime");
+                        DifficultyLevel difficultyLevel = DifficultyLevel.MEDIUM;
+                        long timeSinceGameStart = 0L;
+                        int currentRound = 1, shnuzes = -1;
+                        boolean dayTime;
+                        if (difficultyName != null)
+                            difficultyLevel = DifficultyLevel.valueOf(difficultyName);
+                        if (gameTime     != null)
+                            timeSinceGameStart = gameTime;
+                        if (currentRoundL != null)
+                            currentRound = (currentRoundL.intValue());
+                        if (shnuzesL      != null)
+                            shnuzes = (shnuzesL.intValue());
+                        dayTime = (Boolean.TRUE.equals(dt));
 
-                    // 2) Now load the actual board cells
-                    DifficultyLevel finalDifficultyLevel = difficultyLevel;
-                    Long finalTimeSinceGameStart = timeSinceGameStart;
-                    int finalCurrentRound = currentRound;
-                    int finalShnuzes = shnuzes;
-                    boolean finalDayTime = dayTime;
-                    db.collection("users")
-                            .document(user.getUid())
-                            .collection("currentGame")
-                            .document("board objects")
-                            .get()
-                            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                @Override
-                                public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                    listener.onBoardLoaded(documentSnapshot, finalDifficultyLevel, finalTimeSinceGameStart, finalCurrentRound,
-                                            finalShnuzes, finalDayTime);
-                                }
-                            });
+                        DifficultyLevel finalDifficultyLevel = difficultyLevel;
+                        Long finalTimeSinceGameStart = timeSinceGameStart;
+                        int finalCurrentRound = currentRound;
+                        int finalShnuzes = shnuzes;
+                        boolean finalDayTime = dayTime;
+                        db.collection("users")
+                                .document(user.getUid())
+                                .collection("currentGame")
+                                .document("board objects")
+                                .get()
+                                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                        listener.onBoardLoaded(documentSnapshot, finalDifficultyLevel, finalTimeSinceGameStart, finalCurrentRound,
+                                                finalShnuzes, finalDayTime);
+                                    }
+                                });
+                    }
                 });
     }
 
@@ -198,24 +191,18 @@ public class DatabaseRepository {
             return;
         }
         FirebaseUser user = authHelper.getUserInstance();
-        db.collection("users")
-                .document(user.getUid())
-                .collection("currentGame")
-                .document("board objects")
-                .get()
+        db.collection("users").document(user.getUid()).collection("currentGame").document("board objects").get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         callback.onCheckCompleted(documentSnapshot.exists() &&
                                 documentSnapshot.getData() != null);
-                        Log.d("frank", documentSnapshot.exists() + ", " + documentSnapshot.getData());
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         callback.onCheckCompleted(false);
-                        Log.d("frank", "fail");
                     }
                 });
     }
@@ -224,17 +211,9 @@ public class DatabaseRepository {
         if (isGuest())
             return;
         FirebaseUser user = authHelper.getUserInstance();
-        db.collection("users")
-                .document(user.getUid())
-                .collection("currentGame")
-                .document("board objects")
-                .delete();
+        db.collection("users").document(user.getUid()).collection("currentGame").document("board objects").delete();
 
-        db.collection("users")
-                .document(user.getUid())
-                .collection("currentGame")
-                .document("meta")
-                .delete();
+        db.collection("users").document(user.getUid()).collection("currentGame").document("meta").delete();
     }
 
 
@@ -245,48 +224,46 @@ public class DatabaseRepository {
         FirebaseUser user = authHelper.getUserInstance();
         int round = vm.getRound();
 
-        db.collection("users").document(user.getUid())
-                .get()
-                .addOnSuccessListener(doc -> {
-                    Map<String,Object> lb = doc.exists()
-                            ? (Map<String,Object>)doc.get("leaderboard")
-                            : null;
+        db.collection("users").document(user.getUid()).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        Map<String,Object> lb = documentSnapshot.exists() ? (Map<String,Object>)documentSnapshot.get("leaderboard") : null;
 
-                    // update max round
-                    Long maxR = lb == null ? null : (Long)lb.get("max round");
-                    if (maxR == null || round > maxR) {
-                        Map<String, Object> leaderboard = new HashMap<>();
-                        leaderboard.put("max round", round);
+                        Long maxR = lb == null ? null : (Long)lb.get("max round");
+                        if (maxR == null || round > maxR) {
+                            Map<String, Object> leaderboard = new HashMap<>();
+                            leaderboard.put("max round", round);
 
-                        db.collection("users").document(user.getUid()).set(Collections
-                                .singletonMap("leaderboard", leaderboard), SetOptions
-                                .merge());
+                            db.collection("users").document(user.getUid()).set(Collections.singletonMap("leaderboard", leaderboard), SetOptions
+                                    .merge());
+                        }
                     }
-                })
-                .addOnFailureListener(e -> Log.w("DB", "logResults failed", e));
+                });
     }
 
 
     public void fetchLeaderboardFromDatabase(final LeaderboardCallback callback) {
         final List<LeaderboardEntry> maxRounds = new ArrayList<>();
-        db.collection("users")
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        for (DocumentSnapshot document : task.getResult()) {
-                            Map<String, Object> leaderboard = (Map<String, Object>) document.get("leaderboard");
-                            if (leaderboard != null && leaderboard.get("max round") != null) {
-                                int maxRound = ((Number) Objects.requireNonNull(leaderboard.get("max round"))).intValue();
-                                String displayName = document.getString("displayName");
-                                int gamesPlayed = ((Number) Objects.requireNonNull(leaderboard.get("games played"))).intValue();
-                                int enemiesDefeated = ((Number) Objects.requireNonNull(leaderboard.get("enemies defeated"))).intValue();
-                                maxRounds.add(new LeaderboardEntry(maxRound, displayName, gamesPlayed, enemiesDefeated));
+        db.collection("users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (DocumentSnapshot document : task.getResult()) {
+                                Map<String, Object> leaderboard = (Map<String, Object>) document.get("leaderboard");
+                                if (leaderboard != null && leaderboard.get("max round") != null) {
+                                    int maxRound = ((Number) Objects.requireNonNull(leaderboard.get("max round"))).intValue();
+                                    String displayName = document.getString("displayName");
+                                    int gamesPlayed = ((Number) Objects.requireNonNull(leaderboard.get("games played"))).intValue();
+                                    int enemiesDefeated = ((Number) Objects.requireNonNull(leaderboard.get("enemies defeated"))).intValue();
+                                    maxRounds.add(new LeaderboardEntry(maxRound, displayName, gamesPlayed, enemiesDefeated));
+                                }
                             }
+                            maxRounds.sort(Collections.reverseOrder());
+                            callback.onLeaderboardFetched(maxRounds);
+                        } else {
+                            callback.onLeaderboardFetched(new ArrayList<>());
                         }
-                        maxRounds.sort(Collections.reverseOrder());
-                        callback.onLeaderboardFetched(maxRounds);
-                    } else {
-                        callback.onLeaderboardFetched(new ArrayList<>());
                     }
                 });
     }
@@ -305,7 +282,6 @@ public class DatabaseRepository {
 
     public void signUpWithEmailPassword(String string, String string1, String username, OnSuccessListener onSuccessListener, Context context,
                                         Uri uri) {
-        Log.d("sigma", "wtf");
         if (authHelper == null)
             authHelper = new AuthenticationHelper();
         authHelper.signUpWithEmailPassword(string, string1, username, onSuccessListener, context, uri);
@@ -365,16 +341,21 @@ public class DatabaseRepository {
         }
 
         StorageReference profileImageRef = storageRef.child("profileImages/" + user.getUid() + ".jpg");
-        profileImageRef.getDownloadUrl().addOnSuccessListener(uri ->
-                        Glide.with(context)
-                                .load(uri)
-                                .into(imageView))
-                .addOnFailureListener(e ->
-                        Toast.makeText(context, "Failed to fetch image: " + e.getMessage(), Toast.LENGTH_LONG).show());
+        profileImageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        Glide.with(context).load(uri).into(imageView);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(context, "Failed to fetch image: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     public FirebaseUser getUserInstance() {
-        // initialize on first use
         if (authHelper == null) {
             authHelper = new AuthenticationHelper();
         }
@@ -382,7 +363,6 @@ public class DatabaseRepository {
     }
 
     public boolean isGuest() {
-        // initialize on first use
         if (authHelper == null) {
             authHelper = new AuthenticationHelper();
         }
@@ -409,24 +389,20 @@ public class DatabaseRepository {
     private class AuthenticationHelper {
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
-        public void loginWithEmailAndPassword(String email, String password,
-                                              OnSuccessListener onSuccessListener,
+        public void loginWithEmailAndPassword(String email, String password, OnSuccessListener onSuccessListener,
                                               OnFailureListener onFailureListener){
             mAuth.signInWithEmailAndPassword(email, password).addOnSuccessListener(onSuccessListener)
                     .addOnFailureListener(onFailureListener);
         }
         public void forgotPassword(String email, OnSuccessListener onSuccessListener,
                                    OnFailureListener onFailureListener){
-            FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-                    .addOnSuccessListener(onSuccessListener)
+            FirebaseAuth.getInstance().sendPasswordResetEmail(email).addOnSuccessListener(onSuccessListener)
                     .addOnFailureListener(onFailureListener);
         }
 
         public Intent getGoogleSignInIntent(Context context) {
             GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(context.getString(R.string.default_web_client_id))
-                    .requestEmail()
-                    .build();
+                    .requestIdToken(context.getString(R.string.default_web_client_id)).requestEmail().build();
 
             GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(context, gso);
             googleSignInClient.signOut();
@@ -447,34 +423,27 @@ public class DatabaseRepository {
                                             final GoogleSignInCallback callback) {
             AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
             mAuth.signInWithCredential(credential)
-                    .addOnCompleteListener(task -> {
-                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                        if (task.isSuccessful() && user != null) {
-                            FirebaseFirestore db = FirebaseFirestore.getInstance();
-                            Map<String, Object> userData = new HashMap<>();
-                            String displayName = user.getDisplayName();
-                            userData.put("displayName", displayName);
+                    .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                            if (task.isSuccessful() && user != null) {
+                                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                                Map<String, Object> userData = new HashMap<>();
+                                String displayName = user.getDisplayName();
+                                userData.put("displayName", displayName);
 
-                            db.collection("users").document(user.getUid())
-                                    .set(userData, SetOptions.merge())
-                                    .addOnFailureListener(new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception e) {
-                                            Log.d("displayName",
-                                                    Objects.requireNonNull(e
-                                                            .getMessage()));
-                                        }
-                                    });
-                            callback.onSuccess();
-                        } else {
-                            callback.onFailure(task.getException());
+                                db.collection("users").document(user.getUid()).set(userData, SetOptions.merge());
+                                callback.onSuccess();
+                            } else {
+                                callback.onFailure(task.getException());
+                            }
                         }
                     });
         }
 
         public void signUpWithEmailPassword(String email, String password, String username, OnSuccessListener onSuccessListener, Context context,
                                             Uri uri){
-            Log.d("sigma", "big");
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                         @Override
@@ -482,14 +451,9 @@ public class DatabaseRepository {
                             FirebaseUser newUser = authResult.getUser();
 
                             String uid = newUser.getUid();
-                            Log.d("sigma", "chungs");
                             sendEmail(email, context);
                             uploadImage(uri, onSuccessListener, context, uid);
-                            Log.d("sigma", "wtf");
-                            UserProfileChangeRequest profileUpdates =
-                                    new UserProfileChangeRequest.Builder()
-                                            .setDisplayName(username)
-                                            .build();
+                            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder().setDisplayName(username).build();
                             newUser.updateProfile(profileUpdates)
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                                         @Override
@@ -497,8 +461,7 @@ public class DatabaseRepository {
                                             FirebaseFirestore db = FirebaseFirestore.getInstance();
                                             Map<String, Object> userData = new HashMap<>();
                                             userData.put("displayName", username);
-                                            db.collection("users").document(newUser.getUid())
-                                                    .set(userData, SetOptions.merge());
+                                            db.collection("users").document(newUser.getUid()).set(userData, SetOptions.merge());
                                         }
                                     });
                         }
@@ -506,8 +469,7 @@ public class DatabaseRepository {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-
-                            Toast.makeText(context, "failed to create a user: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, "failed to sign up: " + e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
         }
@@ -517,7 +479,6 @@ public class DatabaseRepository {
             return FirebaseAuth.getInstance().getCurrentUser();
         }
         public boolean isGuest(){
-            // initialize on first use
             if (authHelper == null) {
                 authHelper = new AuthenticationHelper();
             }

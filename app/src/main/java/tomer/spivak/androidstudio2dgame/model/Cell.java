@@ -19,7 +19,7 @@ import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 
 public class Cell {
-    private final Position position; // Grid position (fixed)
+    private final Position position;
     private ModelObject object;
     private CellState cellState;
 
@@ -64,7 +64,6 @@ public class Cell {
         return neighbors;
     }
 
-    // Getters
     public Position getPosition() {
         return position;
     }
@@ -87,8 +86,8 @@ public class Cell {
 
     public Map<String, Object> toMap() {
         Map<String, Object> cellData = new HashMap<>();
-        cellData.put("position", position.toMap()); // Convert Position to Map
-        cellData.put("occupied", object != null); // Boolean if occupied
+        cellData.put("position", position.toMap());
+        cellData.put("occupied", object != null);
         cellData.put("object", object != null ? object.toMap() : null);
         return cellData;
     }

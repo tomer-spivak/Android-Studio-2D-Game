@@ -1,8 +1,6 @@
 package tomer.spivak.androidstudio2dgame.modelObjects;
 
 
-import android.util.Log;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -49,8 +47,6 @@ public class Enemy extends ModelObject implements IDamager{
     }
 
     public void updateDirection(Position prevPos, Position nextPos) {
-        int dx = nextPos.getX() - prevPos.getX();
-        int dy = nextPos.getY() - prevPos.getY();
         Direction chosen;
         if (prevPos.getX() > nextPos.getX()){
             chosen = Direction.UPRIGHT;
@@ -62,14 +58,7 @@ public class Enemy extends ModelObject implements IDamager{
             } else
                 chosen = Direction.DOWNRIGHT;
         }
-
-        Log.d("Facing",
-                String.format("dX=%d dY=%d → %s (prev=(%d,%d), next=(%d,%d))",
-                        dx, dy, chosen.name(),
-                        prevPos.getX(), prevPos.getY(), nextPos.getX(), nextPos.getY()));
         setCurrentDirection(chosen);
-        // (your quadrant logic here, setting `chosen`)
-
 
     }
 
@@ -80,7 +69,6 @@ public class Enemy extends ModelObject implements IDamager{
 
     public void attack(Building target) {
         setSoundStreamId(soundEffects.playEnemyAttackSound());
-        Log.d("target", "sigma");
         executeAttackAnimation(target);
     }
 
@@ -130,8 +118,6 @@ public class Enemy extends ModelObject implements IDamager{
     @Override
     public void takeDamage(float damage) {
         super.takeDamage(damage);
-        Log.d("take", String.valueOf(timeSinceLastMove));
-
         if (health <= 0){
             onDeath();
             return;
@@ -212,7 +198,6 @@ public class Enemy extends ModelObject implements IDamager{
     }
 
     public void setState(EnemyState enemyState) {
-        Log.d("enemyState", enemyState.toString());
         this.state = enemyState;
     }
 

@@ -1,6 +1,7 @@
 package tomer.spivak.androidstudio2dgame.home;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -40,7 +41,6 @@ public class SignUpFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 1) Register the launcher once
         pickImageLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult>() {
@@ -50,11 +50,9 @@ public class SignUpFragment extends Fragment {
                         Intent data = result.getData();
                         Uri imageUri = null;
 
-                        // 2) Gallery result
                         if (data != null && data.getData() != null) {
                             imageUri = data.getData();
                         }
-                        // 3) Camera result (tiny bitmap)
                         else if (data != null && data.getExtras() != null) {
                             Bitmap bmp = (Bitmap) data.getExtras().get("data");
                             if (bmp != null) {
@@ -62,11 +60,7 @@ public class SignUpFragment extends Fragment {
                             }
                         }
 
-                        // 4) Finally, fire sign-up
-                        repository.signUpWithEmailPassword(
-                                email,
-                                password,
-                                username,
+                        repository.signUpWithEmailPassword(email, password, username,
                                 new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void unused) {
@@ -74,9 +68,7 @@ public class SignUpFragment extends Fragment {
                                                 new Intent(requireActivity(), IntermediateActivity.class)
                                         );
                                     }
-                                },
-                                requireContext(),
-                                imageUri
+                                }, requireContext(), imageUri
                         );
                     }
                 }
@@ -84,9 +76,7 @@ public class SignUpFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(
-            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState
-    ) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
         repository = DatabaseRepository.getInstance(requireContext());
 
@@ -98,7 +88,6 @@ public class SignUpFragment extends Fragment {
         TextView tvNameErr  = view.findViewById(R.id.tvUsernameError);
         Button   btnSignUp  = view.findViewById(R.id.btnSignUp);
 
-        // Simplest form validation you already have:
         TextWatcher combinedWatcher = new TextWatcherAdapter() {
             @Override public void onTextChanged(CharSequence s, int i, int b, int c) {
                 email    = etEmail.getText().toString().trim();
@@ -114,24 +103,25 @@ public class SignUpFragment extends Fragment {
         etPassword.addTextChangedListener(combinedWatcher);
         etUsername.addTextChangedListener(combinedWatcher);
 
-        // 5) On “Sign Up” click, show our non-pausable chooser
         btnSignUp.setOnClickListener(v -> showImageSourceChooser());
 
         return view;
     }
 
     private void showImageSourceChooser() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Choose Profile Image")
-                .setItems(new String[]{"Camera", "Gallery"}, (dlg, which) -> {
-                    Intent intent;
-                    if (which == 0) {
-                        intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    } else {
-                        intent = new Intent(Intent.ACTION_GET_CONTENT)
-                                .setType("image/*");
+        new AlertDialog.Builder(requireContext()).setTitle("Choose Profile Image")
+                .setItems(new String[]{"Camera", "Gallery"}, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent;
+                        if (which == 0) {
+                            intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        } else {
+                            intent = new Intent(Intent.ACTION_GET_CONTENT)
+                                    .setType("image/*");
+                        }
+                        pickImageLauncher.launch(intent);
                     }
-                    pickImageLauncher.launch(intent);
                 })
                 .setCancelable(true)
                 .show();

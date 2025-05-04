@@ -25,8 +25,6 @@ import java.util.List;
 
 public class LeaderboardFragment extends Fragment {
     private LeaderboardAdapter adapter;
-    private final ArrayList<LeaderboardEntry> leaderboardList = new ArrayList<>();
-    DatabaseRepository databaseRepository = DatabaseRepository.getInstance(getContext());
 
 
     @Override
@@ -34,13 +32,11 @@ public class LeaderboardFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_leaderboard, container, false);
 
-        // RecyclerView
         RecyclerView rv = view.findViewById(R.id.rvLeaderboard);
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new LeaderboardAdapter(new ArrayList<>());
         rv.setAdapter(adapter);
 
-        // Search bar
         EditText searchBar = view.findViewById(R.id.searchBar);
         searchBar.addTextChangedListener(new TextWatcherAdapter() {
             @Override
@@ -49,27 +45,20 @@ public class LeaderboardFragment extends Fragment {
             }
         });
 
-        // 1) Set up Spinner with a custom item layout
         Spinner spinner = view.findViewById(R.id.spinnerSort);
         String[] options = getResources().getStringArray(R.array.leaderboard_sort_options);
 
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
-                requireContext(),
-                R.layout.spinner_item,      // your custom “closed” view (TextView @android:id/text1)
-                android.R.id.text1,           // or android.R.id.text1 if you switched IDs
-                options
-        );
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(requireContext(), R.layout.spinner_item, android.R.id.text1, options);
 
-// use your brand-new dropdown layout:
         spinnerAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
 
         spinner.setAdapter(spinnerAdapter);
 
 
-
-        // 2) Listen for selections
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
 
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -86,21 +75,16 @@ public class LeaderboardFragment extends Fragment {
             }
         });
 
-        // Fetch and display data
         DatabaseRepository.getInstance(requireContext())
-                .fetchLeaderboardFromDatabase(entries -> adapter.updateData(entries));
+                .fetchLeaderboardFromDatabase(new LeaderboardCallback() {
+                    @Override
+                    public void onLeaderboardFetched(List<LeaderboardEntry> leaderboardEntries) {
+                        adapter.updateData(leaderboardEntries);
+                    }
+                });
 
         return view;
     }
+}
 
-    private void fetchLeaderboardData() {
-        databaseRepository.fetchLeaderboardFromDatabase(new LeaderboardCallback() {
-            @Override
-            public void onLeaderboardFetched(List<LeaderboardEntry> leaderboardEntries) {
-                leaderboardList.clear();
-                leaderboardList.addAll(leaderboardEntries);
-                adapter.notifyDataSetChanged();
-            }
-        });
-    }}
 

@@ -59,7 +59,6 @@ public class HomeActivity extends AppCompatActivity{
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             AlarmManager alarmManager1 = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
             if (!alarmManager1.canScheduleExactAlarms()) {
-                // Request permission
                 Intent intent1 = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
                 intent1.setData(Uri.parse("package:" + getPackageName()));
                 startActivity(intent1);

@@ -15,7 +15,6 @@ import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 public class EnemyManager {
     SoundEffectManager soundEffects;
 
-
     public void spawnEnemies(GameState gameState, int amount) {
         String enemyType = "monster";
             for (int i = 0; i < amount; i++) {
@@ -27,22 +26,19 @@ public class EnemyManager {
         Cell[][] grid = gameState.getGrid();
         int rows = grid.length;
         int cols = grid[0].length;
-        int maxLevel = Math.min(rows, cols) / 2;  // number of concentric frames
+        int maxLevel = Math.min(rows, cols) / 2;
 
         Random rnd = new Random();
         for (int level = 0; level < maxLevel; level++) {
             List<Cell> freeCells = new ArrayList<>();
 
-            // collect border cells at this level
             int r2 = rows - 1 - level;
             int c2 = cols - 1 - level;
 
-            // top & bottom edges
             for (int c = level; c <= c2; c++) {
                 if (!grid[level][c].isOccupied()) freeCells.add(grid[level][c]);
                 if (r2 != level && !grid[r2][c].isOccupied()) freeCells.add(grid[r2][c]);
             }
-            // left & right edges (excluding corners already done)
             for (int r = level + 1; r <= r2 - 1; r++) {
                 if (!grid[r][level].isOccupied()) freeCells.add(grid[r][level]);
                 if (c2 != level && !grid[r][c2].isOccupied()) freeCells.add(grid[r][c2]);
@@ -61,7 +57,7 @@ public class EnemyManager {
             }
         }
 
-        // if we get here, *all* frames were full
+        // if we get here, all cells were full
         gameState.setGameStatus(GameStatus.WON);
     }
 
@@ -89,7 +85,6 @@ public class EnemyManager {
     private void attemptAttackIfAdjacent(GameState current, Enemy enemy, long deltaTime) {
         Building building = pivotToAdjacentBuildings(enemy, current);
         if (building != null) {
-            // same as your existing attemptAttack logic
             enemy.accumulateAttackTime(deltaTime);
             if (enemy.canAttack()) {
                 enemy.attack(building);
@@ -117,14 +112,12 @@ public class EnemyManager {
             path = createPathForEnemy(current, enemy);
             enemy.setCurrentTargetIndex(0);
             if (path == null || path.isEmpty()) {
-                // no valid route → try attack or stay idle
                 attemptAttackIfAdjacent(current, enemy, deltaTime);
                 return;
             }
             targetIndex = 0;
         }
 
-        // move along the path
         Position nextPos = path.get(targetIndex);
         enemy.updateDirection(enemy.getPosition(), nextPos);
         enemy.accumulateTime(deltaTime);
@@ -134,7 +127,6 @@ public class EnemyManager {
             Cell currentCell = current.getCellAt(enemy.getPosition());
             Cell nextCell    = current.getCellAt(path.get(targetIndex));
 
-            // only move if the cell is free
             if (nextCell.getObject() == null) {
                 int newIndex = moveEnemy(currentCell, nextCell, enemy, timePerStep);
                 enemy.setCurrentTargetIndex(newIndex);
@@ -150,7 +142,6 @@ public class EnemyManager {
         Cell targetCell = null;
         float minHealth = Integer.MAX_VALUE;
 
-        // find the building with least health
         for (Cell cell : neighbors) {
             if (cell.getObject() instanceof Building) {
                 Building b = (Building) cell.getObject();
@@ -162,7 +153,6 @@ public class EnemyManager {
         }
 
         if (targetCell != null) {
-            // turn toward that building
             enemy.updateDirection(enemy.getPosition(), targetCell.getPosition());
             return (Building) targetCell.getObject();
         }
@@ -172,20 +162,15 @@ public class EnemyManager {
 
 
     private int moveEnemy(Cell currentCell, Cell nextCell, Enemy enemy, float timePerStep) {
-        // 1) remember where we came from
         Position prevPos = enemy.getPosition();
-        // 2) where we’re actually going
         Position nextPos = nextCell.getPosition();
 
-        // 3) move it in the grid
         currentCell.removeObject();
         enemy.setPosition(nextPos);
         nextCell.spawnEnemy(enemy);
 
-        // 4) now that pos is correct, recalc facing
         enemy.updateDirection(prevPos, nextPos);
 
-        // 5) advance its path index & consume the time slice
         enemy.incrementTargetIndex();
         enemy.decreaseAccumulatedTime(timePerStep);
 

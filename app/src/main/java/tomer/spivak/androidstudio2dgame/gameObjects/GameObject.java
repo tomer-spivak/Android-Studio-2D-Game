@@ -32,11 +32,11 @@ public class GameObject {
         this.imagePoint = point;
         this.scale = scale;
         this.pos = pos;
-        Log.d("type", "type: " + type);
+        imageResourceString = type.toLowerCase() + "_" + state;
         if ("monster".contains(type)) {
-            imageResourceString = type.toLowerCase() + "_" + state + "_" + direction;
-        } else
-            imageResourceString = type.toLowerCase() + "_" + state;
+            imageResourceString += "_" + direction;
+        }
+
 
         scaledSize = new int[2];
         originalSize = new int[2];
@@ -44,8 +44,6 @@ public class GameObject {
 
         if (!type.contains("monster"))
             this.type = "building";
-        Log.d("type", "img: " + imageResourceString);
-        Log.d("type", "dir" + direction);
         createView();
         setScale(scale);
     }
@@ -53,7 +51,7 @@ public class GameObject {
 
     protected void createView() {
         Log.d("grass", "creating new game object: " + imageResourceString);
-        ImageView imageView = new ImageView(context); // Use your Activity or Application context
+        ImageView imageView = new ImageView(context);
         imageView.setImageResource(context.getResources().getIdentifier(imageResourceString, "drawable", context.getPackageName()));
         this.view = imageView;
 

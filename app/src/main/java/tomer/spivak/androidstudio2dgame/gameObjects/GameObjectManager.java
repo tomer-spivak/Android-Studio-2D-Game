@@ -2,7 +2,6 @@ package tomer.spivak.androidstudio2dgame.gameObjects;
 
 import android.content.Context;
 import android.graphics.Point;
-import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -49,9 +48,6 @@ public class GameObjectManager {
                 if (i >= newBoard.length || j >= newBoard[0].length)
                     continue;
 
-                Log.d("broad", newBoard.length + ", " + newBoard[0].length);
-                Log.d("broad", board.length + ", " + board[0].length);
-                Log.d("broad", i + ", " + j);
                 if ((!newBoard[i][j].isOccupied() && !board[i][j].isOccupied())){
                     CellState cellState = newBoard[i][j].getCellState();
                     board[i][j] = new Cell(newBoard[i][j].getPosition(), cellState);
@@ -60,7 +56,6 @@ public class GameObjectManager {
                 }
 
                 if (newBoard[i][j].isOccupied() && !board[i][j].isOccupied()){
-                    Log.d("board", newBoard[i][j].getObject().toString());
                     addObjectFromModelToView(newBoard[i][j].getObject(), i, j, scale);
                     CellState cellState = newBoard[i][j].getCellState();
                     board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject(),
@@ -134,7 +129,7 @@ public class GameObjectManager {
                 gameObject.getImagePoint().y) {
             i++;
         }
-        gameObjectsViewsArrayList.add(i, gameObject); // Insert at the correct position
+        gameObjectsViewsArrayList.add(i, gameObject);
     }
 
     public void updateScaleForGameObjects(float scale) {

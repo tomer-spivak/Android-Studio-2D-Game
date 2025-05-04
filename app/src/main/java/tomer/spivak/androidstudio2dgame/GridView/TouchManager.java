@@ -2,7 +2,7 @@ package tomer.spivak.androidstudio2dgame.GridView;
 
 
 import android.content.Context;
-import android.util.Log;
+
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -15,8 +15,10 @@ public class TouchManager {
     private final GestureDetector gestureDetector;
     private final ScaleGestureDetector scaleGestureDetector;
     private final TouchListener listener;
+
+    //flag that says theres a second finger on the screen
     private boolean zoomInProgress = true;
-    //theres a second finger on the screen
+
     private float lastTouchX, lastTouchY;
 
 
@@ -46,7 +48,6 @@ public class TouchManager {
 
             case MotionEvent.ACTION_POINTER_DOWN:
                 zoomInProgress = false;
-                Log.d("scrolling", "false");
                 break;
 
 
@@ -54,7 +55,6 @@ public class TouchManager {
                 lastTouchX = event.getX();
                 lastTouchY = event.getY();
                 zoomInProgress = true;
-                Log.d("scrolling", "true");
 
 
                 break;

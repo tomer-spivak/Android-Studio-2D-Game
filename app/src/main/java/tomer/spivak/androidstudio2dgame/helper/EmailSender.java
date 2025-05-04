@@ -1,7 +1,6 @@
 package tomer.spivak.androidstudio2dgame.helper;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
@@ -23,7 +22,6 @@ public class EmailSender {
 
 
     public static void sendEmail(String toEmail, Context context) {
-        Log.d("Email", "wtf");
         String url = "https://api.sendgrid.com/v3/mail/send";
         String apiKey = "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";
 
@@ -42,9 +40,7 @@ public class EmailSender {
             e.printStackTrace();
         }
 
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, emailData,
-                response -> Log.d("Email", "Email sent successfully"),
-                error -> Log.e("Email", "Failed to send email", error)) {
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, emailData, null, null) {
 
             @Override
             public Map<String, String> getHeaders() {
@@ -59,7 +55,6 @@ public class EmailSender {
                 try {
                     String jsonString = new String(response.data, HttpHeaderParser.parseCharset(response.headers, "utf-8"));
                     if (jsonString.isEmpty() && response.statusCode == 202) {
-                        Log.d("Email", "Empty response received, but status is 202 Accepted.");
                         return Response.success(new JSONObject(), HttpHeaderParser.parseCacheHeaders(response));
                     }
                     return Response.success(new JSONObject(jsonString), HttpHeaderParser.parseCacheHeaders(response));

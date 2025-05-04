@@ -222,9 +222,7 @@ public class IntermediateActivity extends AppCompatActivity {
         ImageView ivProfile =
                 navigationView.getHeaderView(0).findViewById(R.id.header_image);
 
-        String displayName = user != null && user.getDisplayName() != null
-                ? user.getDisplayName()
-                : "guest";
+        String displayName = user != null && user.getDisplayName() != null ? user.getDisplayName() : "guest";
         tvUsername.setText(displayName);
 
         databaseRepository.fetchAndSetImage(ivProfile, this);

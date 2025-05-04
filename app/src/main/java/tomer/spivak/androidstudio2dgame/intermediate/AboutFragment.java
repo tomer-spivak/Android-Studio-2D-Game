@@ -35,8 +35,7 @@ public class AboutFragment extends Fragment {
                 try {
                     startActivity(intent);
                 } catch (android.content.ActivityNotFoundException e) {
-                    Toast.makeText(getContext(), "You don't have gmail", Toast.LENGTH_SHORT)
-                            .show();
+                    Toast.makeText(getContext(), "You don't have gmail", Toast.LENGTH_SHORT).show();
                 }
             }
         });

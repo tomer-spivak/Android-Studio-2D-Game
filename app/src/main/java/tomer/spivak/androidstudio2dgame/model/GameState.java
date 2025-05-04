@@ -107,7 +107,6 @@ public class GameState {
     public void removeShnuzes(int shnuzes) {
         this.shnuzes -= shnuzes;
     }
-
     public void setCurrentRound(int currentRound) {
         this.currentRound = currentRound;
     }
