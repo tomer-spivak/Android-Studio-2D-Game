@@ -1,5 +1,7 @@
 package tomer.spivak.androidstudio2dgame.model;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
@@ -22,24 +24,17 @@ public class Cell {
     private final Position position;
     private ModelObject object;
     private CellState cellState;
+    private CellState defaultState;
 
-    public Cell(Position position) {
-        this.position = position;
-        cellState = CellState.NORMAL;
+    public Cell(Position position, CellState cellState) {
+        this(position, null, cellState);
+        Log.d("cell", "creating cell: " + cellState);
+        defaultState = cellState;
     }
 
-    public Cell(Position position, ModelObject object) {
-        this.position = position;
-        this.object = object;
-    }
     public Cell(Position position, ModelObject object, CellState cellState) {
         this.position = position;
         this.object = object;
-        this.cellState = cellState;
-    }
-
-    public Cell(Position position, CellState cellState) {
-        this.position = position;
         this.cellState = cellState;
     }
 
@@ -88,6 +83,7 @@ public class Cell {
         cellData.put("position", position.toMap());
         cellData.put("occupied", object != null);
         cellData.put("object", object != null ? object.toMap() : null);
+        cellData.put("state", cellState.name());
         return cellData;
     }
 
@@ -106,17 +102,24 @@ public class Cell {
     }
 
     public void executeBurntAnimation() {
+        CellState state = getCellState();
+        if (state == CellState.BURNT)
+            state = defaultState;
         setState(CellState.BURNT);
+        CellState finalState = state;
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                setState(CellState.NORMAL);
+                setState(defaultState);
             }
         }, 200);
     }
 
     public void executeEnemyDeathAnimation() {
+        CellState state = getCellState();
+        if (state == CellState.ENEMYDEATH1 || state == CellState.ENEMYDEATH2 || state == CellState.ENEMYDEATH3)
+            state = defaultState;
         final CellState[] states = {
                 CellState.ENEMYDEATH1,
                 CellState.ENEMYDEATH2,
@@ -129,6 +132,7 @@ public class Cell {
         final AtomicInteger stepCounter = new AtomicInteger(0);
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        CellState finalState = state;
         scheduler.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -137,7 +141,7 @@ public class Cell {
                     int stateIndex = step % stepsPerCycle;
                     setState(states[stateIndex]);
                 } else {
-                    setState(CellState.NORMAL);
+                    setState(defaultState);
                     scheduler.shutdown();
                 }
             }
@@ -145,12 +149,16 @@ public class Cell {
     }
 
     public void executeExplosion() {
+        CellState state = getCellState();
+        if (state == CellState.EXPLODE)
+            state = defaultState;
         setState(CellState.EXPLODE);
         Timer timer = new Timer();
+        CellState finalState = state;
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                setState(CellState.NORMAL);
+                setState(defaultState);
             }
         }, 800);
     }

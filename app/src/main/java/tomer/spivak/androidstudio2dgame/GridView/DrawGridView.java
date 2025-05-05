@@ -29,6 +29,7 @@ public class DrawGridView {
                 context);
         grasses[5] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_explode), context);
         this.context = context;
+        grasses[6] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_enemy_spawn_location), context);
 
 
     }

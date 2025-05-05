@@ -123,11 +123,10 @@ public class DatabaseRepository {
             for (int j = 0; j < grid[i].length; j++) {
                 Log.d("zig", "i, j: " + i + ", " + j + ", grid:" + grid[i][j].toMap().toString());
                 Cell cell = grid[i][j];
-                if (!cell.isOccupied() || cell.getPosition().equals(cell.getObject().getPosition()))
-                    rowData.add(cell.toMap());
-                else {
-                    rowData.add(new Cell(new Position(i, j)).toMap());
-                }
+                if (cell.getObject() != null && !cell.getPosition().equals(cell.getObject().getPosition()))
+                    cell.removeObject();
+                rowData.add(cell.toMap());
+
             }
             boardData.put("row_" + i, rowData);
         }

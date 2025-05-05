@@ -1,5 +1,7 @@
 package tomer.spivak.androidstudio2dgame.viewModel;
 
+import android.util.Log;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -12,6 +14,7 @@ import java.util.Objects;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.model.ModelGameManager;
 import tomer.spivak.androidstudio2dgame.modelEnums.Direction;
@@ -79,9 +82,14 @@ public class GameViewModel extends ViewModel {
         if (data == null){
             for (int i = 0; i < boardSize; i++) {
                 for (int j = 0; j < boardSize; j++) {
-                    board[i][j] = new Cell(new Position(i, j));
+                    CellState state = (i == 0 || i == boardSize - 1 || j == 0 || j == boardSize - 1)
+                            ? CellState.SPAWN : CellState.NORMAL;
+
+                    board[i][j] = new Cell(new Position(i, j), state);
+
                 }
             }
+
             return board;
         }
         for (Map.Entry<String, Object> entry : Objects.requireNonNull(data).entrySet()) {
@@ -97,6 +105,11 @@ public class GameViewModel extends ViewModel {
 
                 HashMap objectMap = (HashMap) (col.get("object"));
 
+                String cellStateName = (String) col.get("state");
+
+
+                CellState cellState = CellState.valueOf(cellStateName);
+
                 if (objectMap != null) {
                     ModelObject object = ModelObjectFactory.create((String) objectMap.get("type"), pos, difficultyLevel);
                     String type = (String) objectMap.get("type");
@@ -111,17 +124,27 @@ public class GameViewModel extends ViewModel {
                         enemy.setTimeSinceLastAttack(((Double) objectMap.get("timeSinceLastAttack")).floatValue());
                         enemy.setTimeSinceLastMove(((Double) objectMap.get("timeSinceLastMove")).floatValue());
 
-                        board[pos.getX()][pos.getY()] = new Cell(pos, enemy);
+                        board[pos.getX()][pos.getY()] = new Cell(pos, enemy, cellState);
                     } else {
-                        board[pos.getX()][pos.getY()] = new Cell(pos, object);
+                        board[pos.getX()][pos.getY()] = new Cell(pos, object, cellState);
                     }
 
                 } else {
-                    board[pos.getX()][pos.getY()] = new Cell(pos);
+                    board[pos.getX()][pos.getY()] = new Cell(pos, cellState);
                 }
             }
         }
-        return removeNullRowsAndColumns(board);
+        Cell[][] correctdBoard = removeNullRowsAndColumns(board);
+        for (int i = 0; i < boardSize; i++) {
+            for (int j = 0; j < boardSize; j++) {
+                if (i == 0 || i == boardSize - 1 || j == 0 || j == boardSize - 1) {
+                    if (correctdBoard[i][j] == null) {
+                        correctdBoard[i][j] = new Cell(new Position(i, j), CellState.SPAWN);
+                    }
+                }
+            }
+        }
+        return correctdBoard;
     }
 
 

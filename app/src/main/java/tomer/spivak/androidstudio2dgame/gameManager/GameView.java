@@ -55,6 +55,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     GameActivity gameActivity;
     private MusicService musicService;
     private final Intent musicIntent;
+    private int roundsLeft = Integer.MAX_VALUE;
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -169,14 +170,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
                 continue;
             gameObject.drawView(canvas);
             gameDrawerHelper.drawHealthBar(gameObject, canvas, scale);
-
         }
         if (timeTillNextRound > 0){
             gameDrawerHelper.drawTimeTillNextRound(canvas, timeTillNextRound, screenWidth);
         }
-        if (currentRound > 0){
-            gameDrawerHelper.drawRoundNumber(canvas, currentRound, screenWidth);
-        }
+        gameDrawerHelper.drawNumberOfRoundsLeft(canvas, roundsLeft, screenWidth);
+
 
         gameDrawerHelper.drawShnuzes(canvas, shnuzes, screenWidth);
 
@@ -232,8 +231,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     public void updateFromGameState(GameState gameState) {
         updateBoard(gameState.getGrid());
         boolean timeOfDay = gameState.isDayTime();
+        currentRound = gameState.getCurrentRound();
+        roundsLeft = gameState.getNumberOfRounds() - currentRound + 1;
         if (timeOfDay){
-            currentRound = -1;
             timeTillNextRound = gameState.getTimeToNextRound();
             backgroundBitmap = morningBackground;
         } else {

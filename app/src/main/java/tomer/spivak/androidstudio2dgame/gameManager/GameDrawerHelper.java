@@ -65,16 +65,8 @@ public class GameDrawerHelper {
                 (timeTillNextRound % 1000) / 100 + "s";
         timerPaint.getTextBounds(timeText, 0, timeText.length(), timerBounds);
         int x = screenWidth / 2 - timerBounds.width() / 2;
-        int y = 100;
+        int y = 250;
         canvas.drawText(timeText, x, y, timerPaint);
-    }
-
-    public void drawRoundNumber(Canvas canvas, int currentRound, int screenWidth){
-        String roundText = "current round: " + currentRound;
-        timerPaint.getTextBounds(roundText, 0, roundText.length(), timerBounds);
-        int x = screenWidth / 2 - timerBounds.width() / 2;
-        int y = 100;
-        canvas.drawText(roundText, x, y, timerPaint);
     }
 
     public void drawBackground(Canvas canvas, Bitmap backgroundBitmap, int screenWidth, int screenHeight) {
@@ -82,18 +74,23 @@ public class GameDrawerHelper {
         canvas.drawBitmap(scaledBackBitmap, 0, 0, backgroundPaint);
     }
 
-
     public void drawShnuzes(Canvas canvas, int shunzes, int screenWidth) {
         String formattedShunzes = NumberFormat.getNumberInstance().format(shunzes);
 
         String shunzesText = "Shnuzes: " + formattedShunzes + " \uD83D\uDCB0";
 
-        int x = screenWidth / 2 - timerBounds.width() / 2 - 50;
+        int x = screenWidth / 2 - timerBounds.width() / 2 + 100;
         int y = 180;
 
         canvas.drawText(shunzesText, x, y, timerPaint);
     }
 
 
-
+    public void drawNumberOfRoundsLeft(Canvas canvas, int roundsLeft, int screenWidth) {
+        String roundText = "number of rounds left: " + roundsLeft;
+        timerPaint.getTextBounds(roundText, 0, roundText.length(), timerBounds);
+        int x = screenWidth / 2 - timerBounds.width() / 2 + 50;
+        int y = 100;
+        canvas.drawText(roundText, x, y, timerPaint);
+    }
 }

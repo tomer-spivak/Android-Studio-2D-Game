@@ -24,16 +24,14 @@ public class ModelGameManager {
     private SoundEffectManager soundEffects;
     private static final int NIGHT_THRESHOLD = 5000;
     private String selectedBuildingType;
-    private int lastRound;
 
     public ModelGameManager() {
 
     }
 
     public void init(Cell[][] board, DifficultyLevel difficulty) {
-        state = new GameState(board, NIGHT_THRESHOLD, difficulty);
+        state = new GameState(board, NIGHT_THRESHOLD, difficulty, 5 * (difficulty.ordinal() + 1));
         state.startTimerForNextRound();
-        lastRound = (board.length - 1) * 4;
         if(containsMainBuilding(board))
            return;
         createMainBase();
@@ -109,15 +107,10 @@ public class ModelGameManager {
         return result;
     }
 
-
-    public GameState getState() {
-        return state;
-    }
-
     public void handleCellClick(int row, int col) {
         Cell selectedCell = state.getGrid()[row][col];
         if (!selectedCell.isOccupied()){
-            if (canPlaceBuilding(state)){
+            if (canPlaceBuilding(state, new Position(row, col))){
                 placeSelectedBuilding(row, col, state);
                 selectedBuildingType = null;
             }
@@ -127,9 +120,19 @@ public class ModelGameManager {
         }
     }
 
-    private boolean canPlaceBuilding(GameState state) {
+    private boolean canPlaceBuilding(GameState state, Position position) {
         return selectedBuildingType != null && state.isDayTime() && state.getShnuzes() >=
-                ModelObjectFactory.getPrice(selectedBuildingType);
+                ModelObjectFactory.getPrice(selectedBuildingType) && !isOnFrame(state.getCellAt(position));
+    }
+
+    public boolean isOnFrame(Cell cell) {
+        Cell[][] grid = state.getGrid();
+        int numRows = grid.length;
+        if (numRows == 0) return false;
+        int numCols = grid[0].length;
+
+        return cell.getPosition().getX() == 0 || cell.getPosition().getX() == numRows - 1 ||
+                cell.getPosition().getY() == 0 || cell.getPosition().getY() == numCols - 1;
     }
 
     private void removeBuilding(Cell selectedCell, GameState state) {
@@ -233,7 +236,6 @@ public class ModelGameManager {
             Log.d("cell", object.getType());
             executeExplosion(cell);
         }
-
     }
 
     private void executeExplosion(Cell explodingCell) {
@@ -254,10 +256,10 @@ public class ModelGameManager {
                 // only ring: at least one offset at full radius
                 if (Math.max(Math.abs(dr), Math.abs(dc)) == radius) {
                     Cell cell = board[r][c];
-                    cell.executeExplosion();
                     ModelObject object = cell.getObject();
-                    if (object == null)
+                    if (!(object instanceof Enemy))
                         continue;
+                    cell.executeExplosion();
                     object.takeDamage(((ExplodingBuilding)explodingCell.getObject()).getDamage());
                 }
             }
@@ -270,7 +272,7 @@ public class ModelGameManager {
     }
 
     private void initRoundVictory(GameState state) {
-        if (state.getCurrentRound() <= lastRound)
+        if (state.getCurrentRound() < state.getNumberOfRounds())
             continueToNextRound();
         else {
             state.setGameStatus(GameStatus.WON);
@@ -326,6 +328,10 @@ public class ModelGameManager {
         }
         enemyManager.setSoundEffects(soundEffects);
 
+    }
+
+    public GameState getState() {
+        return state;
     }
 
     public void setSelectedBuildingType(String type) {

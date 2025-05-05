@@ -2,6 +2,7 @@ package tomer.spivak.androidstudio2dgame.gameObjects;
 
 import android.content.Context;
 import android.graphics.Point;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -18,7 +19,6 @@ public class GameObjectManager {
     private final ArrayList<GameObject> gameObjectsViewsArrayList = new ArrayList<>();
     private final Context context;
     private final Cell[][] board;
-    private final CellState[][] cellStates;
     private Point[][] centerCells;
 
 
@@ -29,11 +29,9 @@ public class GameObjectManager {
 
         board = new Cell[boardSize][boardSize];
 
-        cellStates = new CellState[boardSize][boardSize];
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
-                board[i][j] = new Cell(new Position(i, j));
-                cellStates[i][j] = CellState.NORMAL;
+                board[i][j] = new Cell(new Position(i, j), CellState.NORMAL);
             }
         }
 
@@ -48,11 +46,11 @@ public class GameObjectManager {
                 //if both of them dont have anything, it doesnt matter to us
                 if (i >= newBoard.length || j >= newBoard[0].length)
                     continue;
+                Log.d("cell", "cell state: " + board[i][j].getCellState());
 
                 if ((!newBoard[i][j].isOccupied() && !board[i][j].isOccupied())){
                     CellState cellState = newBoard[i][j].getCellState();
                     board[i][j] = new Cell(newBoard[i][j].getPosition(), cellState);
-                    cellStates[i][j] = cellState;
                     continue;
                 }
 
@@ -61,7 +59,6 @@ public class GameObjectManager {
                     CellState cellState = newBoard[i][j].getCellState();
                     board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject(),
                             cellState);
-                    cellStates[i][j] = cellState;
                     continue;
                 }
 
@@ -71,15 +68,12 @@ public class GameObjectManager {
                     clearCell(i, j);
                     CellState cellState = newBoard[i][j].getCellState();
                     board[i][j] = new Cell(newBoard[i][j].getPosition(), cellState);
-                    cellStates[i][j] = cellState;
                     continue;
                 }
 
                 if (newBoard[i][j].isOccupied() && board[i][j].isOccupied()){
                     CellState cellState = newBoard[i][j].getCellState();
-                    board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject()
-                            , cellState);
-                    cellStates[i][j] = cellState;
+                    board[i][j] = new Cell(newBoard[i][j].getPosition(), newBoard[i][j].getObject(), cellState);
                     updateGameObject(newBoard[i][j], i, j, scale);
                 }
             }
@@ -168,7 +162,13 @@ public class GameObjectManager {
     }
 
     public CellState[][] getCellStates() {
-        return cellStates;
+        CellState[][] states = new CellState[board.length][board[0].length];
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                states[i][j] = board[i][j].getCellState();
+            }
+        }
+        return states;
     }
 
     public Cell[][] getBoard() {

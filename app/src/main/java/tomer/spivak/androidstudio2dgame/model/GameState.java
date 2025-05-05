@@ -17,15 +17,18 @@ public class GameState {
     private long currentTimeOfGame;
     private int shnuzes;
     private int enemiesDefeated = 0;
+    private final int NumberOfRounds;
 
-    public GameState(Cell[][] grid, int nightThreshold, DifficultyLevel difficulty) {
+    public GameState(Cell[][] grid, int nightThreshold, DifficultyLevel difficulty, int numberOfRounds) {
         this.grid = grid;
+        NumberOfRounds = numberOfRounds;
         this.isDayTime = true;
         this.currentRound = 1;
         this.nightThreshold = nightThreshold;
         this.difficulty = difficulty;
         initShnuzes();
         currentTimeOfGame = 0;
+        gameStatus = GameStatus.PLAYING;
     }
 
     public void initShnuzes() {
@@ -129,5 +132,9 @@ public class GameState {
 
     public int getEnemiesDefeated() {
         return enemiesDefeated;
+    }
+
+    public int getNumberOfRounds() {
+        return NumberOfRounds;
     }
 }

@@ -1,9 +1,10 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 
 import android.view.LayoutInflater;
@@ -109,6 +110,7 @@ public class GameActivity extends AppCompatActivity{
         buildingRecyclerView.setAdapter(new BuildingsRecyclerViewAdapter(this, buildingImages,  this));
 
 
+
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
 
         //did the user continue a game or started a new one
@@ -128,7 +130,8 @@ public class GameActivity extends AppCompatActivity{
                 }
             };
             databaseRepository.loadCurrentGame(listener);
-        } else {
+        }
+        else {
             //start a new game, we can take get the difficulty selected
             DifficultyLevel difficultyLevel = DifficultyLevel.valueOf(getIntent().getStringExtra("difficultyLevel"));
             //init the board in the model with default values
@@ -144,11 +147,10 @@ public class GameActivity extends AppCompatActivity{
             public void onChanged(GameState gameState) {
                 //update game view
                 gameView.updateFromGameState(gameState);
-                if (gameState.getGameStatus() == GameStatus.LOST) {
-                    triggerDefeat();
-                } else if (gameState.getGameStatus() == GameStatus.WON)  {
-                    triggerVictory();
+                if(gameState.getGameStatus() != GameStatus.PLAYING){
+                    triggerGameEnd(gameState.getGameStatus() == GameStatus.WON);
                 }
+
                 int enemiesDefeated = gameState.getEnemiesDefeated();
                 if (enemiesDefeated == enemiesDefeatedCache + 1){
                     enemiesDefeatedCache = enemiesDefeated;
@@ -266,6 +268,7 @@ public class GameActivity extends AppCompatActivity{
                         .show();
             }
         });
+
         //overiding the back button
         OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
             @Override
@@ -348,88 +351,87 @@ public class GameActivity extends AppCompatActivity{
         getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
     }
 
-    private void triggerVictory() {
-        databaseRepository.removeBoard(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                skipAutoSave = true;
-                databaseRepository.logResults(viewModel);
+    //if connected and profile
+        //show alert dialog (freezed)
+        //start firebase async
+        //unfreeze when finished firebase
+    //else
+        //show alert dialog (not freezed)
 
-                LayoutInflater inflater = LayoutInflater.from(context);
-                View dialogView = inflater.inflate(R.layout.alert_dialog_won, null);
 
-                AlertDialog alertDialog = new AlertDialog.Builder(context).setView(dialogView).setCancelable(false).create();
+    private void triggerGameEnd(boolean userWon) {
+        gameView.stopGameLoop();
+        skipAutoSave = true;
 
-                Button btnExitApp = dialogView.findViewById(R.id.exit_app_btn);
-                Button btnGoBack = dialogView.findViewById(R.id.go_back_btn);
-
-                btnExitApp.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        alertDialog.dismiss();
-                        gameView.stopGameLoop();
-                        finishAffinity();
-                        System.exit(0);
-                    }
+        if(isOnline()){
+            AlertDialog frozenDialog = showFrozenEndGameDialog(userWon);
+            databaseRepository.logResults(viewModel);
+            databaseRepository.removeBoard(task -> {
+                // when Firebase finishes, dismiss the frozen dialog
+                // and immediately show the real one
+                runOnUiThread(() -> {
+                    frozenDialog.dismiss();
+                    showEndGameDialog(userWon);
                 });
+            });
+        } else{
+            showEndGameDialog(userWon);
+        }
 
-                btnGoBack.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        alertDialog.dismiss();
-                        gameView.stopGameLoop();
-                        if (context instanceof Activity) {
-                            ((Activity) context).finish();
-                        }
-                    }
-                });
-
-                alertDialog.show();
-            }
-        });
 
     }
 
-    private void triggerDefeat() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        View dialogView = LayoutInflater.from(context).inflate(R.layout.alert_dialog_defeat, null);
+    private void showEndGameDialog(boolean userWon) {
+        int layout = userWon
+                ? R.layout.alert_dialog_won
+                : R.layout.alert_dialog_defeat;
 
-        Button btnMenu = dialogView.findViewById(R.id.btnMenu);
-        Button btnExit = dialogView.findViewById(R.id.btnExit);
+        View view = LayoutInflater.from(this).inflate(layout, null);
+        AlertDialog dlg = new AlertDialog.Builder(this)
+                .setView(view)
+                .setCancelable(false)
+                .create();
 
-        AlertDialog alertDialog = builder.setView(dialogView).setCancelable(false).create();
 
-        btnMenu.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                databaseRepository.logResults(viewModel);
-                databaseRepository.removeBoard(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        alertDialog.dismiss();
-                        finish();
-                    }
-                });
-            }
-        });
-        btnExit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                databaseRepository.removeBoard(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        alertDialog.dismiss();
-                        finishAffinity();
-                        System.exit(0);
-                    }
-                });
-            }
-        });
-        skipAutoSave = true;
+            view.findViewById(R.id.btnExit)
+                    .setOnClickListener(x -> { dlg.dismiss(); finishAffinity(); System.exit(0); });
+            view.findViewById(R.id.btnMenu)
+                    .setOnClickListener(x -> { dlg.dismiss(); finish(); });
 
-        gameView.stopGameLoop();
+            view.findViewById(R.id.btnMenu)
+                    .setOnClickListener(x -> { dlg.dismiss(); finish(); });
+            view.findViewById(R.id.btnExit)
+                    .setOnClickListener(x -> { dlg.dismiss(); finishAffinity(); System.exit(0); });
 
-        alertDialog.show();
+
+        dlg.show();
+    }
+
+    private AlertDialog showFrozenEndGameDialog(boolean userWon) {
+        int layout = userWon
+                ? R.layout.alert_dialog_won
+                : R.layout.alert_dialog_defeat;
+
+        View view = LayoutInflater.from(this).inflate(layout, null);
+        // remove any buttons so it really is “frozen”
+        // (you can also just show a ProgressBar here instead)
+        view.findViewById(R.id.tvMessage).setVisibility(View.GONE);
+        view.findViewById(R.id.btnMenu).setVisibility(View.GONE);
+        view.findViewById(R.id.btnExit).setVisibility(View.GONE);
+
+        AlertDialog dlg = new AlertDialog.Builder(this)
+                .setView(view)
+                .setCancelable(false)
+                .create();
+        dlg.show();
+        return dlg;
+    }
+
+    private boolean isOnline() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+        return ni != null && ni.isConnected();
     }
 
     public void closeBuildingMenu() {
