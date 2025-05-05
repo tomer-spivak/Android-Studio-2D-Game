@@ -45,7 +45,6 @@ public class Cell {
 
     public void placeBuilding(Building building) {
         this.object = building;
-        building.setPosition(position);
     }
 
     public void spawnEnemy(Enemy enemy) {
@@ -145,5 +144,15 @@ public class Cell {
         }, 0, 300, TimeUnit.MILLISECONDS);
     }
 
+    public void executeExplosion() {
+        setState(CellState.EXPLODE);
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                setState(CellState.NORMAL);
+            }
+        }, 800);
+    }
 }
 

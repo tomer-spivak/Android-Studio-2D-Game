@@ -10,16 +10,43 @@ public class ModelObjectFactory {
     private static final Map<String, ModelObjectCreator> typeMap = new HashMap<>();
 
     static {
-        typeMap.put("obelisk", (position, difficulty) ->
-                new Building(getBuildingHealthByDifficulty(200, difficulty), position, 1000));
+        typeMap.put("obelisk", new ModelObjectCreator() {
+            @Override
+            public ModelObject create(Position position, DifficultyLevel difficulty) {
+                return new Building(getBuildingHealthByDifficulty(200, difficulty), position, 1000, "obelisk");
+            }
+        });
 
-        typeMap.put("lightningtower", (position, difficulty) ->
-                new Turret(getBuildingHealthByDifficulty(100, difficulty), getTurretDamageByDifficulty(20, difficulty),
-                        4, position, 1500, 3000));
+        typeMap.put("mainbuilding", new ModelObjectCreator() {
+            @Override
+            public ModelObject create(Position position, DifficultyLevel difficulty) {
+                return new Building(getBuildingHealthByDifficulty(10, difficulty), position, -1, "mainbuilding");
+            }
+        });
 
-        typeMap.put("monster", (position, difficulty) ->
-                new Enemy(getEnemyHealthByDifficulty(80, difficulty), getEnemyDamageByDifficulty(30, difficulty),
-                      2.5f, position, 500, getRewardByDifficulty(100, difficulty)));
+        typeMap.put("lightningtower", new ModelObjectCreator() {
+            @Override
+            public ModelObject create(Position position, DifficultyLevel difficulty) {
+                return new Turret(getBuildingHealthByDifficulty(100, difficulty), getBuildingDamageByDifficulty(20, difficulty),
+                        4, position, 1500, 3000);
+            }
+        });
+
+        typeMap.put("monster", new ModelObjectCreator() {
+            @Override
+            public ModelObject create(Position position, DifficultyLevel difficulty) {
+                return new Enemy(getEnemyHealthByDifficulty(80, difficulty), getEnemyDamageByDifficulty(30, difficulty),
+                        2.5f, position, 500, getRewardByDifficulty(100, difficulty));
+            }
+        });
+        typeMap.put("explodingtower", new ModelObjectCreator(){
+
+            @Override
+            public ModelObject create(Position position, DifficultyLevel difficulty) {
+                return new ExplodingBuilding(getBuildingHealthByDifficulty(100, difficulty), position, 2000,
+                        getBuildingDamageByDifficulty(100, difficulty));
+            }
+        });
 
     }
 
@@ -69,7 +96,7 @@ public class ModelObjectFactory {
         }
     }
 
-    private static float getTurretDamageByDifficulty(int base, DifficultyLevel difficulty) {
+    private static float getBuildingDamageByDifficulty(int base, DifficultyLevel difficulty) {
         switch (difficulty) {
             case EASY: return (int) (base * 1.25);
             case HARD: return (int) (base * 0.75);

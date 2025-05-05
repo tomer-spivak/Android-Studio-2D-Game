@@ -37,7 +37,6 @@ public class GameObject {
             imageResourceString += "_" + direction;
         }
 
-
         scaledSize = new int[2];
         originalSize = new int[2];
         this.type = type;
@@ -47,7 +46,6 @@ public class GameObject {
         createView();
         setScale(scale);
     }
-
 
     protected void createView() {
         Log.d("grass", "creating new game object: " + imageResourceString);
@@ -66,19 +64,24 @@ public class GameObject {
 
         this.originalSize[0] = originalWidth;
         this.originalSize[1] = originalHeight;
-
-        scaledSize[0] = (int) pxToDp((float) (originalWidth * scale * 1.2),
-                context.getResources().getDisplayMetrics());
-        scaledSize[1] = (int) pxToDp((float) (originalHeight * scale * 1.2),
-                        context.getResources().getDisplayMetrics());
+        if(imageResourceString.contains("mainbuilding")){
+            scaledSize[0] = (int) pxToDp((float) (originalWidth * scale * 1.35), context.getResources().getDisplayMetrics());
+            scaledSize[1] = (int) pxToDp((float) (originalHeight * scale * 1.3), context.getResources().getDisplayMetrics());
+        } else{
+            scaledSize[0] = (int) pxToDp((float) (originalWidth * scale * 1.2), context.getResources().getDisplayMetrics());
+            scaledSize[1] = (int) pxToDp((float) (originalHeight * scale * 1.2), context.getResources().getDisplayMetrics());
+        }
     }
 
     public void drawView(Canvas canvas) {
         Bitmap scaledBitmap = createScaledBitmap();
         int topLeftX = imagePoint.x - (int) ((float) scaledSize[0] / 2);
         int topLeftY = imagePoint.y - scaledSize[1]/2;
-        if (!imageResourceString.contains("monster")) {
-            topLeftY = (int) (imagePoint.y - ((double) scaledSize[1] / 2) * 1.2);
+        if (imageResourceString.contains("lightning") || imageResourceString.contains("obelisk") || imageResourceString.contains("exploding")) {
+            topLeftY = imagePoint.y - (int) (scaledSize[1] * 0.75);
+        }
+        if (imageResourceString.contains("mainbuilding")){
+            topLeftY = imagePoint.y - (int) (scaledSize[1] * 0.4);
         }
         canvas.drawBitmap(scaledBitmap, topLeftX, topLeftY, null);
     }
@@ -110,10 +113,14 @@ public class GameObject {
 
     public void setScale(float scale) {
         this.scale = scale;
-        this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 1.2),
-                context.getResources().getDisplayMetrics());
-        this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 1.2),
-                context.getResources().getDisplayMetrics());
+        if(imageResourceString.contains("mainbuilding")){
+            this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 1.35), context.getResources().getDisplayMetrics());
+            this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 1.3), context.getResources().getDisplayMetrics());
+        } else{
+            this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 1.2), context.getResources().getDisplayMetrics());
+            this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 1.2), context.getResources().getDisplayMetrics());
+        }
+
     }
 
     public Point getImagePoint() {

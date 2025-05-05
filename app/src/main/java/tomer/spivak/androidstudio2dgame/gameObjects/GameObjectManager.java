@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Point;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.Position;
@@ -64,10 +65,10 @@ public class GameObjectManager {
                     continue;
                 }
 
-                //if the old board has it but the new one doesnt,
+                //if the graphical board has it but the logic one doesnt,
                 //we need to remove it.
                 if (!newBoard[i][j].isOccupied() && board[i][j].isOccupied()){
-                    removeGameObject(i, j);
+                    clearCell(i, j);
                     CellState cellState = newBoard[i][j].getCellState();
                     board[i][j] = new Cell(newBoard[i][j].getPosition(), cellState);
                     cellStates[i][j] = cellState;
@@ -86,11 +87,11 @@ public class GameObjectManager {
     }
 
     private void updateGameObject(Cell cell, int i, int j, float scale) {
-        removeGameObject(i, j);
+        clearCell(i, j);
         addObjectFromModelToView(cell.getObject(), i, j, scale);
     }
 
-    private void removeGameObject(int i, int j) {
+    private void clearCell(int i, int j) {
         for (int k = 0; k < gameObjectsViewsArrayList.size(); k++) {
             GameObject gameObject = gameObjectsViewsArrayList.get(k);
             if (gameObject.getPos().getX() == i && gameObject.getPos().getY() == j) {
@@ -102,6 +103,8 @@ public class GameObjectManager {
 
     private void addObjectFromModelToView(ModelObject object, int centerX, int centerY, float scale) {
         GameObject gameObject = null;
+        if (isPosOccupied(object.getPosition()))
+            return;
         if (object instanceof Enemy){
             Enemy enemy = (Enemy) object;
             gameObject = GameObjectFactory.create(context, centerCells[centerX][centerY],
@@ -111,22 +114,37 @@ public class GameObjectManager {
                     enemy.getCurrentDirection().name().toLowerCase());
         } else if (object instanceof Building && !(object instanceof Turret)){
             Building building = (Building) object;
+            if (Objects.equals(building.getType(), "mainbuilding")){
+                if (building.getPosition().getX() == centerX && building.getPosition().getY() == centerY){
+                    gameObject = GameObjectFactory.create(context, centerCells[centerX][centerY], building.getType().toLowerCase(), scale,
+                            new Position(centerX, centerY), building.getState().name().toLowerCase(), "");
+                }
+            } else{
             gameObject = GameObjectFactory.create(context, centerCells[centerX][centerY], building.getType().toLowerCase(), scale,
                     new Position(centerX, centerY), building.getState().name().toLowerCase(), "");
+            }
         } else if (object instanceof Turret) {
             Turret turret = (Turret) object;
             gameObject = GameObjectFactory.create(context, centerCells[centerX][centerY], turret.getType().toLowerCase(), scale,
                     new Position(centerX, centerY), turret.getState().name().toLowerCase(), "");
         }
-        addGameObject(gameObject);
+        if (gameObject != null)
+            addGameObject(gameObject);
+    }
+
+    private boolean isPosOccupied(Position position) {
+        for (int i = 0; i < gameObjectsViewsArrayList.size(); i++) {
+            if (gameObjectsViewsArrayList.get(i).getPos().getX() == position.getX() && gameObjectsViewsArrayList.get(i).getPos().getY() == position.getY())
+                return true;
+        }
+        return false;
     }
 
     //adds a building to the drawn buildings in order
     public void addGameObject(GameObject gameObject) {
         int i = 0;
         int size = gameObjectsViewsArrayList.size();
-        while (i < size && gameObjectsViewsArrayList.get(i).getImagePoint().y <
-                gameObject.getImagePoint().y) {
+        while (i < size && gameObjectsViewsArrayList.get(i).getImagePoint().y < gameObject.getImagePoint().y) {
             i++;
         }
         gameObjectsViewsArrayList.add(i, gameObject);

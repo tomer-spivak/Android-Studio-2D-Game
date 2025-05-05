@@ -15,7 +15,7 @@ public class Turret extends Building implements IDamager {
     private final List<Position> removedPositions = new ArrayList<>();
 
     public Turret(float health, float attackDamage, float attackRange, Position pos, long attackCooldown, int price) {
-        super(health, pos, price);
+        super(health, pos, price, "lightningtower");
         this.attackRange = attackRange;
         this.attackComponent = new AttackComponent(attackDamage, attackCooldown);
 
@@ -132,7 +132,7 @@ public class Turret extends Building implements IDamager {
     @Override
     public Object toMap() {
         Map<String,Object> turretData = (Map<String,Object>) super.toMap();
-        turretData.put("type", "lightningtower");
+        turretData.replace("type", "lightningtower");
         turretData.put("timeSinceLastAttack", attackComponent.getTimeSinceLastAttack());
         turretData.put("attackDamage", attackComponent.getAttackDamage());
         turretData.put("attackRange", attackRange);

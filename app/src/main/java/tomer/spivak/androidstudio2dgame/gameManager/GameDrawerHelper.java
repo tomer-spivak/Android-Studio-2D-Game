@@ -11,6 +11,7 @@ import java.text.NumberFormat;
 
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectManager;
+import tomer.spivak.androidstudio2dgame.model.Position;
 
 public class GameDrawerHelper {
 
@@ -33,7 +34,9 @@ public class GameDrawerHelper {
 
     public void drawHealthBar(GameObject gameObject, Canvas canvas, float scale) {
         Point pos = gameObject.getImagePoint();
-        tomer.spivak.androidstudio2dgame.model.Position position = gameObject.getPos();
+        Position position = gameObject.getPos();
+        if (gameObjectManager.getBoard()[position.getX()][position.getY()].getObject() == null)
+            return;
         float health = gameObjectManager.getBoard()[position.getX()][position.getY()].getObject().getHealth();
         float maxHealth = gameObjectManager.getBoard()[position.getX()][position.getY()].getObject().getMaxHealth();
         int barWidth = (int) (80 * scale);
@@ -41,7 +44,7 @@ public class GameDrawerHelper {
         int x = pos.x - barWidth / 2;
         int yOffset;
         if (gameObject.getBuildingType().equals("building")) {
-            yOffset = 250;
+            yOffset = 290;
         } else {
             yOffset = 170;
         }

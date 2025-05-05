@@ -12,11 +12,11 @@ public class Building extends ModelObject {
     protected BuildingState state;
     protected final int price;
 
-    public Building(float health, Position pos, int price) {
+    public Building(float health, Position pos, int price, String type) {
         super(health, pos);
         this.state = BuildingState.IDLE;
         this.price = price;
-        this.type = "obelisk";
+        this.type = type;
     }
 
     public BuildingState getState() {
@@ -48,6 +48,7 @@ public class Building extends ModelObject {
     public Object toMap() {
         Map buildingData = (Map) super.toMap();
         buildingData.put("health", health);
+        buildingData.put("type", type);
         return buildingData;
     }
 }

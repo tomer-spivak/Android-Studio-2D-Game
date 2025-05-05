@@ -14,6 +14,8 @@ public class GameObjectFactory {
     static {
         typeMap.put("obelisk", GameObject::new);
         typeMap.put("lightningtower", GameObject::new);
+        typeMap.put("mainbuilding", GameObject::new);
+        typeMap.put("explodingtower", GameObject::new);
     }
 
 

@@ -15,7 +15,6 @@
         android:id="@+id/conLay"
         android:padding="5dp">
 
-        <!-- Title TextView -->
         <TextView
             android:gravity="center"
             android:id="@+id/tvTitle"

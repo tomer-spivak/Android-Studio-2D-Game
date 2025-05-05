@@ -53,6 +53,7 @@ import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardCallback;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
@@ -86,7 +87,7 @@ public class DatabaseRepository {
             return;
         }
 
-        Map<String, Object> boardData = convertBoardToMap(gameState.getGrid());
+        Map<String, Object> boardData = convertBoardToMap(gameState.getGrid().clone());
         Map<String, Object> metaData = createMetaData(gameState);
 
         WriteBatch batch = db.batch();
@@ -120,7 +121,13 @@ public class DatabaseRepository {
         for (int i = 0; i < grid.length; i++) {
             List<Map<String, Object>> rowData = new ArrayList<>();
             for (int j = 0; j < grid[i].length; j++) {
-                rowData.add(grid[i][j].toMap());
+                Log.d("zig", "i, j: " + i + ", " + j + ", grid:" + grid[i][j].toMap().toString());
+                Cell cell = grid[i][j];
+                if (!cell.isOccupied() || cell.getPosition().equals(cell.getObject().getPosition()))
+                    rowData.add(cell.toMap());
+                else {
+                    rowData.add(new Cell(new Position(i, j)).toMap());
+                }
             }
             boardData.put("row_" + i, rowData);
         }
@@ -207,13 +214,21 @@ public class DatabaseRepository {
                 });
     }
 
-    public void removeBoard() {
+    public void removeBoard(OnCompleteListener<Void> onCompleteListener) {
         if (isGuest())
             return;
         FirebaseUser user = authHelper.getUserInstance();
-        db.collection("users").document(user.getUid()).collection("currentGame").document("board objects").delete();
+        Log.d("sigma", "removing board: " + user);
+        db.collection("users").document(user.getUid()).collection("currentGame").document("board objects").delete().
+                addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                Log.d("sigma", "board removed:" + task.isSuccessful());
+                db.collection("users").document(user.getUid()).collection("currentGame").document("meta").delete().
+                        addOnCompleteListener(onCompleteListener);
+            }
+        });
 
-        db.collection("users").document(user.getUid()).collection("currentGame").document("meta").delete();
     }
 
 
@@ -253,8 +268,14 @@ public class DatabaseRepository {
                                 Map<String, Object> leaderboard = (Map<String, Object>) document.get("leaderboard");
                                 if (leaderboard != null && leaderboard.get("max round") != null) {
                                     int maxRound = ((Number) Objects.requireNonNull(leaderboard.get("max round"))).intValue();
+                                    int gamesPlayed = 0;
                                     String displayName = document.getString("displayName");
-                                    int gamesPlayed = ((Number) Objects.requireNonNull(leaderboard.get("games played"))).intValue();
+                                    if (leaderboard.get("games played") == null)
+                                        leaderboard.put("games played", 0); else
+                                         gamesPlayed = ((Number) Objects.requireNonNull(leaderboard.get("games played"))).intValue();
+
+                                    if (leaderboard.get("enemies defeated") == null)
+                                        leaderboard.put("enemies defeated", 0);
                                     int enemiesDefeated = ((Number) Objects.requireNonNull(leaderboard.get("enemies defeated"))).intValue();
                                     maxRounds.add(new LeaderboardEntry(maxRound, displayName, gamesPlayed, enemiesDefeated));
                                 }

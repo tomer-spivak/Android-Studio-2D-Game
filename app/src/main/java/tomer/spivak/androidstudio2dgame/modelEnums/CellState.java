@@ -5,5 +5,6 @@ public enum CellState {
     BURNT,
     ENEMYDEATH1,
     ENEMYDEATH2,
-    ENEMYDEATH3
+    ENEMYDEATH3,
+    EXPLODE
 }

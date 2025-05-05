@@ -2,6 +2,7 @@ package tomer.spivak.androidstudio2dgame.gameActivity;
 
 import android.content.Context;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,6 +46,9 @@ public class BuildingsRecyclerViewAdapter extends
         String imageName = buildingImages[(position)].toLowerCase();
         int resourceId = context.getResources().getIdentifier(imageName, "drawable", context.getPackageName());
         Glide.with(context).load(resourceId).placeholder(R.drawable.placeholder_building).into(holder.imageView);
+        Log.d("title", String.valueOf(resourceId));
+        Log.d("title", imageName);
+        Log.d("title", holder.imageView.toString());
 
         String title = imageName.replace("0", " ");
         String[] words = title.split(" ");
@@ -55,14 +59,16 @@ public class BuildingsRecyclerViewAdapter extends
         }
         title = String.join(" ", words);
         holder.tvName.setText(title);
-
-        if (title.equals("Lightning Tower")){
+        Log.d("title", title);
+        if (title.equals("Lightningtower")){
             holder.tvPrice.setText("3,000 \uD83D\uDCB0");
         }
         if (title.equals("Obelisk")){
             holder.tvPrice.setText("1,000 \uD83D\uDCB0");
         }
-
+        if(title.equals("Explodingtower")){
+            holder.tvPrice.setText("2,000 \uD83D\uDCB0");
+        }
     }
 
     @Override
@@ -94,7 +100,7 @@ public class BuildingsRecyclerViewAdapter extends
             int position = getAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
                 String buildingImageURL = buildingImages[position];
-                gameActivity.onBuildingSelected(buildingImageURL.replace("0", ""));
+                gameActivity.onBuildingSelected(buildingImageURL);
                 gameActivity.closeBuildingMenu();
             }
         }

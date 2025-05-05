@@ -181,8 +181,7 @@ public class CustomGridView extends GridView {
         if (drawGridView != null) {
             for (int i = 0; i < numRows; i++) {
                 for (int j = 0; j < numColumns; j++) {
-                    drawGridView.draw(canvas, gridPathManager.getCellCenters()[i][j],
-                            gridTransformer.getScale(), cellStates[i][j]);
+                    drawGridView.draw(canvas, gridPathManager.getCellCenters()[i][j], gridTransformer.getScale(), cellStates[i][j]);
                 }
             }
         }

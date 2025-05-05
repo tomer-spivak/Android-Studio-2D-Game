@@ -27,8 +27,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentSnapshot;
 
 
@@ -66,6 +68,10 @@ public class GameActivity extends AppCompatActivity{
     //continue a game after exiting and saving it
     private boolean continueGame;
 
+    //if the user chose to remove the save
+    private boolean skipAutoSave = false;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,7 +103,7 @@ public class GameActivity extends AppCompatActivity{
         databaseRepository = DatabaseRepository.getInstance(context);
 
         //init card view
-        String[] buildingImages = {"obelisk", "lightning0tower"};
+        String[] buildingImages = { "obelisk", "lightningtower", "explodingtower" };
         RecyclerView buildingRecyclerView = findViewById(R.id.buildingRecyclerView);
         buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         buildingRecyclerView.setAdapter(new BuildingsRecyclerViewAdapter(this, buildingImages,  this));
@@ -271,6 +277,7 @@ public class GameActivity extends AppCompatActivity{
                 View dialogView = inflater.inflate(R.layout.alert_dialog_back, null);
 
                 AlertDialog alertDialog = new AlertDialog.Builder(context).setView(dialogView).setCancelable(false).create();
+                alertDialog.show();
 
                 Button btnCancel = dialogView.findViewById(R.id.dialog_cancel);
                 Button btnDiscardSave = dialogView.findViewById(R.id.dialog_exit_without_saving);
@@ -290,10 +297,15 @@ public class GameActivity extends AppCompatActivity{
                         //logs in the leaderboard
                         databaseRepository.logResults(viewModel);
                         //removes the save
-                        databaseRepository.removeBoard();
-                        alertDialog.dismiss();
-                        gameView.stopGameLoop();
-                        finish();
+                        databaseRepository.removeBoard(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                alertDialog.dismiss();
+                                gameView.stopGameLoop();
+                                skipAutoSave = true;
+                                finish();
+                            }
+                        });
                     }
                 });
 
@@ -330,7 +342,6 @@ public class GameActivity extends AppCompatActivity{
                         }
                     }
                 });
-                alertDialog.show();
             }
         };
         //assigns the callback
@@ -338,39 +349,45 @@ public class GameActivity extends AppCompatActivity{
     }
 
     private void triggerVictory() {
-        databaseRepository.removeBoard();
-        databaseRepository.logResults(viewModel);
-
-        LayoutInflater inflater = LayoutInflater.from(context);
-        View dialogView = inflater.inflate(R.layout.alert_dialog_won, null);
-
-        AlertDialog alertDialog = new AlertDialog.Builder(context).setView(dialogView).setCancelable(false).create();
-
-        Button btnExitApp = dialogView.findViewById(R.id.exit_app_btn);
-        Button btnGoBack = dialogView.findViewById(R.id.go_back_btn);
-
-        btnExitApp.setOnClickListener(new View.OnClickListener() {
+        databaseRepository.removeBoard(new OnCompleteListener<Void>() {
             @Override
-            public void onClick(View v) {
-                alertDialog.dismiss();
-                gameView.stopGameLoop();
-                finishAffinity();
-                System.exit(0);
+            public void onComplete(@NonNull Task<Void> task) {
+                skipAutoSave = true;
+                databaseRepository.logResults(viewModel);
+
+                LayoutInflater inflater = LayoutInflater.from(context);
+                View dialogView = inflater.inflate(R.layout.alert_dialog_won, null);
+
+                AlertDialog alertDialog = new AlertDialog.Builder(context).setView(dialogView).setCancelable(false).create();
+
+                Button btnExitApp = dialogView.findViewById(R.id.exit_app_btn);
+                Button btnGoBack = dialogView.findViewById(R.id.go_back_btn);
+
+                btnExitApp.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        alertDialog.dismiss();
+                        gameView.stopGameLoop();
+                        finishAffinity();
+                        System.exit(0);
+                    }
+                });
+
+                btnGoBack.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        alertDialog.dismiss();
+                        gameView.stopGameLoop();
+                        if (context instanceof Activity) {
+                            ((Activity) context).finish();
+                        }
+                    }
+                });
+
+                alertDialog.show();
             }
         });
 
-        btnGoBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                alertDialog.dismiss();
-                gameView.stopGameLoop();
-                if (context instanceof Activity) {
-                    ((Activity) context).finish();
-                }
-            }
-        });
-
-        alertDialog.show();
     }
 
     private void triggerDefeat() {
@@ -386,21 +403,31 @@ public class GameActivity extends AppCompatActivity{
             @Override
             public void onClick(View v) {
                 databaseRepository.logResults(viewModel);
-                databaseRepository.removeBoard();
-                alertDialog.dismiss();
-                finish();
+                databaseRepository.removeBoard(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        alertDialog.dismiss();
+                        finish();
+                    }
+                });
             }
         });
-
         btnExit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                gameView.stopGameLoop();
-                alertDialog.dismiss();
-                finishAffinity();
-                System.exit(0);
+                databaseRepository.removeBoard(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        alertDialog.dismiss();
+                        finishAffinity();
+                        System.exit(0);
+                    }
+                });
             }
         });
+        skipAutoSave = true;
+
+        gameView.stopGameLoop();
 
         alertDialog.show();
     }
@@ -430,7 +457,7 @@ public class GameActivity extends AppCompatActivity{
     protected void onDestroy() {
         GameState gameState = viewModel.getGameState().getValue();
 
-        if (gameState != null) {
+        if (gameState != null && !skipAutoSave) {
             databaseRepository.saveBoard(gameState, null, null);
         }
 
