@@ -83,11 +83,11 @@ public class EnemyManager {
 
 
     private void attemptAttackIfAdjacent(GameState current, Enemy enemy, long deltaTime) {
-        Building building = pivotToAdjacentBuildings(enemy, current);
-        if (building != null) {
+        Cell targetCell = pivotToAdjacentBuildings(enemy, current);
+        if (targetCell != null) {
             enemy.accumulateAttackTime(deltaTime);
             if (enemy.canAttack()) {
-                enemy.attack(building);
+                enemy.attack(targetCell);
             }
         }
     }
@@ -135,7 +135,7 @@ public class EnemyManager {
         }
     }
 
-    private Building pivotToAdjacentBuildings(Enemy enemy, GameState current) {
+    private Cell pivotToAdjacentBuildings(Enemy enemy, GameState current) {
         Cell enemyCell = current.getCellAt(enemy.getPosition());
         List<Cell> neighbors = enemyCell.getNeighbors(current);
 
@@ -154,7 +154,7 @@ public class EnemyManager {
 
         if (targetCell != null) {
             enemy.updateDirection(enemy.getPosition(), targetCell.getPosition());
-            return (Building) targetCell.getObject();
+            return targetCell;
         }
 
         return null;

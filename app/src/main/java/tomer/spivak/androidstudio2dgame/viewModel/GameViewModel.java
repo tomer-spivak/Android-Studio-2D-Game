@@ -1,12 +1,13 @@
 package tomer.spivak.androidstudio2dgame.viewModel;
 
 import android.util.Log;
+import android.util.Pair;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,75 +77,109 @@ public class GameViewModel extends ViewModel {
         setDayTime(dayTime);
     }
 
-    public Cell[][] createBoard(Map<String, Object> data, int boardSize, DifficultyLevel difficultyLevel) {
+    public Cell[][] createBoard(Map<String, Object> data,
+                                int boardSize,
+                                DifficultyLevel difficultyLevel) {
+        // 1) Initialize every cell with a default state (SPAWN on edges, NORMAL inside)
         Cell[][] board = new Cell[boardSize][boardSize];
-
-        if (data == null){
-            for (int i = 0; i < boardSize; i++) {
-                for (int j = 0; j < boardSize; j++) {
-                    CellState state = (i == 0 || i == boardSize - 1 || j == 0 || j == boardSize - 1)
-                            ? CellState.SPAWN : CellState.NORMAL;
-
-                    board[i][j] = new Cell(new Position(i, j), state);
-
-                }
-            }
-
-            return board;
-        }
-        for (Map.Entry<String, Object> entry : Objects.requireNonNull(data).entrySet()) {
-            Object rowData = entry.getValue();
-            List<Map<String, Object>> rowList = (List<Map<String, Object>>) rowData;
-
-            for (Map<String, Object> col : rowList) {
-                HashMap map = (HashMap) col.get("position");
-                Position pos = new Position(((Long) Objects.requireNonNull(map.get("x"))).intValue(),
-                        ((Long) Objects.requireNonNull(map.get("y"))).intValue());
-
-                if (pos.getX() >= boardSize || pos.getY() >= boardSize) continue;
-
-                HashMap objectMap = (HashMap) (col.get("object"));
-
-                String cellStateName = (String) col.get("state");
-
-
-                CellState cellState = CellState.valueOf(cellStateName);
-
-                if (objectMap != null) {
-                    ModelObject object = ModelObjectFactory.create((String) objectMap.get("type"), pos, difficultyLevel);
-                    String type = (String) objectMap.get("type");
-                    object.setHealth(((Number) Objects.requireNonNull(objectMap.get("health"))).floatValue());
-
-                    if (type.equals("monster")) {
-                        Enemy enemy = (Enemy) ModelObjectFactory.create(type, pos, difficultyLevel);
-
-                        enemy.setState(EnemyState.valueOf(objectMap.get("enemyState").toString()));
-                        enemy.setCurrentDirection(Direction.valueOf(objectMap.get("currentDirection").toString()));
-                        enemy.setCurrentTargetIndex(((Number) objectMap.get("currentTargetIndex")).intValue());
-                        enemy.setTimeSinceLastAttack(((Double) objectMap.get("timeSinceLastAttack")).floatValue());
-                        enemy.setTimeSinceLastMove(((Double) objectMap.get("timeSinceLastMove")).floatValue());
-
-                        board[pos.getX()][pos.getY()] = new Cell(pos, enemy, cellState);
-                    } else {
-                        board[pos.getX()][pos.getY()] = new Cell(pos, object, cellState);
-                    }
-
-                } else {
-                    board[pos.getX()][pos.getY()] = new Cell(pos, cellState);
-                }
-            }
-        }
-        Cell[][] correctdBoard = removeNullRowsAndColumns(board);
         for (int i = 0; i < boardSize; i++) {
             for (int j = 0; j < boardSize; j++) {
-                if (i == 0 || i == boardSize - 1 || j == 0 || j == boardSize - 1) {
-                    if (correctdBoard[i][j] == null) {
-                        correctdBoard[i][j] = new Cell(new Position(i, j), CellState.SPAWN);
+                CellState st = (i == 0 || j == 0 || i == boardSize - 1 || j == boardSize - 1)
+                        ? CellState.SPAWN
+                        : CellState.NORMAL;
+                board[i][j] = new Cell(new Position(i, j), st);
+            }
+        }
+        if (data == null || data.isEmpty()) {
+            return board;
+        }
+
+        // 2) First pass: overlay every saved object and collect enemy→targetPos pairs
+        List<Pair<Enemy, Position>> pendingTargets = new ArrayList<>();
+        for (Object rowObj : data.values()) {
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> rowList = (List<Map<String, Object>>) rowObj;
+            for (Map<String, Object> col : rowList) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> posMap = (Map<String, Object>) col.get("position");
+                int x = ((Number) Objects.requireNonNull(posMap.get("x"))).intValue();
+                int y = ((Number) Objects.requireNonNull(posMap.get("y"))).intValue();
+                if (x < 0 || y < 0 || x >= boardSize || y >= boardSize) continue;
+
+                CellState cellState = CellState.valueOf((String) col.get("state"));
+                @SuppressWarnings("unchecked")
+                Map<String, Object> objectMap = (Map<String, Object>) col.get("object");
+
+                if (objectMap != null && "monster".equals(objectMap.get("type"))) {
+                    // Reconstruct the Enemy
+                    Enemy e = (Enemy) ModelObjectFactory.create(
+                            "monster", new Position(x, y), difficultyLevel);
+                    e.setHealth(((Number) Objects.requireNonNull(objectMap.get("health"))).floatValue());
+                    e.setState(EnemyState.valueOf(Objects.requireNonNull(objectMap.get("enemyState")).toString()));
+                    e.setCurrentDirection(
+                            Direction.valueOf(Objects.requireNonNull(objectMap.get("currentDirection")).toString()));
+                    e.setCurrentTargetIndex(
+                            ((Number) Objects.requireNonNull(objectMap.get("currentTargetIndex"))).intValue());
+                    e.setTimeSinceLastAttack(
+                            ((Number) Objects.requireNonNull(objectMap.get("timeSinceLastAttack"))).floatValue());
+                    e.setTimeSinceLastMove(
+                            ((Number) Objects.requireNonNull(objectMap.get("timeSinceLastMove"))).floatValue());
+                    e.setAttackAnimationElapsedTime(
+                            ((Number) Objects.requireNonNull(objectMap.get("attackAnimationElapsedTime"))).longValue());
+                    e.setAttackAnimationRunning(
+                            (Boolean) objectMap.get("attackAnimationRunning"));
+
+                    Map<String, Object> tposMap = (Map<String, Object>) objectMap.get("targetCellPos");
+                    if (tposMap != null) {
+                        Position targetPos = new Position(((Number) Objects.requireNonNull(tposMap.get("x"))).intValue(),
+                                ((Number) Objects.requireNonNull(tposMap.get("y"))).intValue());
+                        pendingTargets.add(Pair.create(e, targetPos));
+                    }
+                    board[x][y] = new Cell(new Position(x, y), e, cellState);
+                }
+                else if (objectMap != null) {
+                    // Any non‐enemy ModelObject
+                    String type = (String) objectMap.get("type");
+                    ModelObject obj = ModelObjectFactory.create(type, new Position(x, y), difficultyLevel);
+                    obj.setHealth(((Number) Objects.requireNonNull(objectMap.get("health"))).floatValue());
+                    board[x][y] = new Cell(new Position(x, y), obj, cellState);
+                }
+                // else leave the default EMPTY cell
+            }
+        }
+
+        // 3) Trim out any fully‐null rows/columns
+        Cell[][] trimmed = removeNullRowsAndColumns(board);
+
+        // 4) Wire up every pending Enemy → its actual targetCell in the trimmed grid
+        int trimmedRows = trimmed.length;
+        int trimmedCols = trimmedRows > 0 ? trimmed[0].length : 0;
+        for (Pair<Enemy, Position> pair : pendingTargets) {
+            Enemy e = pair.first;
+            Position p = pair.second;
+            if (p.getX() >= 0 && p.getX() < trimmedRows
+                    && p.getY() >= 0 && p.getY() < trimmedCols
+                    && trimmed[p.getX()][p.getY()] != null) {
+                Cell targetCell = trimmed[p.getX()][p.getY()];
+                Log.d("cell", "target cell:" + targetCell.getObject());
+                e.setTargetCell(targetCell);
+            } else {
+                Log.e("GameViewModel", "Invalid targetPos for enemy: " + p);
+            }
+        }
+
+        // 5) Ensure the outer ring of trimmed[][] is all SPAWN cells
+        for (int i = 0; i < trimmedRows; i++) {
+            for (int j = 0; j < trimmedCols; j++) {
+                if (i == 0 || j == 0 || i == trimmedRows - 1 || j == trimmedCols - 1) {
+                    if (trimmed[i][j] == null) {
+                        trimmed[i][j] = new Cell(new Position(i, j), CellState.SPAWN);
                     }
                 }
             }
         }
-        return correctdBoard;
+
+        return trimmed;
     }
 
 

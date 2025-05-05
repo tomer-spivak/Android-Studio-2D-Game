@@ -1,12 +1,15 @@
 package tomer.spivak.androidstudio2dgame.modelObjects;
 
 
+import android.util.Log;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import tomer.spivak.androidstudio2dgame.model.AttackComponent;
+import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.Direction;
 import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
@@ -22,7 +25,7 @@ public class Enemy extends ModelObject implements IDamager{
     private final int reward;
     private long attackAnimationElapsedTime;
     private boolean attackAnimationRunning = false;
-    private Building target;
+    private Cell targetCell;
 
     public Enemy(float health, float damage, float movementSpeed, Position pos, float attackCooldown, int reward) {
         super(health, pos);
@@ -67,13 +70,13 @@ public class Enemy extends ModelObject implements IDamager{
         attackComponent.dealDamage(target);
     }
 
-    public void attack(Building target) {
+    public void attack(Cell targetCell) {
         setSoundStreamId(soundEffects.playEnemyAttackSound());
-        executeAttackAnimation(target);
+        executeAttackAnimation(targetCell);
     }
 
-    private void executeAttackAnimation(Building target) {
-        this.target = target;
+    private void executeAttackAnimation(Cell targetCell) {
+        this.targetCell = targetCell;
 
         resetAttackTimer();
         setState(EnemyState.ATTACKING1);
@@ -106,7 +109,7 @@ public class Enemy extends ModelObject implements IDamager{
                 setState(EnemyState.ATTACKING3);
             } else {
                 setState(EnemyState.ATTACKING4);
-                dealDamage(target);
+                dealDamage(targetCell.getObject());
             }
         } else {
             setState(EnemyState.IDLE);
@@ -201,17 +204,36 @@ public class Enemy extends ModelObject implements IDamager{
         this.state = enemyState;
     }
 
+    public void setAttackAnimationElapsedTime(long attackAnimationElapsedTime) {
+        this.attackAnimationElapsedTime = attackAnimationElapsedTime;
+    }
+
+    public void setAttackAnimationRunning(boolean attackAnimationRunning) {
+        this.attackAnimationRunning = attackAnimationRunning;
+    }
+
     @Override
     public Object toMap() {
         Map enemyData = (Map) super.toMap();
+        enemyData.put("type", "monster");
         enemyData.put("currentDirection", currentDirection.name());
-        enemyData.put("enemyState", state.name());
+        enemyData.put("enemyState",   state.name());
         enemyData.put("currentTargetIndex", currentTargetIndex);
         enemyData.put("timeSinceLastAttack", attackComponent.getTimeSinceLastAttack());
-        enemyData.put("timeSinceLastMove", timeSinceLastMove);
-        enemyData.put("damage", attackComponent.getAttackDamage());
-        enemyData.put("type", "monster");
+        enemyData.put("timeSinceLastMove",   timeSinceLastMove);
+        enemyData.put("damage",              attackComponent.getAttackDamage());
+        enemyData.put("movementSpeed",       movementSpeed);
+        enemyData.put("reward",              reward);
+        enemyData.put("attackAnimationRunning", attackAnimationRunning);
+        enemyData.put("attackAnimationElapsedTime", attackAnimationElapsedTime);
+        Log.d("targetcell", String.valueOf(targetCell==null));
+        if(targetCell!=null)
+            enemyData.put("targetCellPos", targetCell.getPosition().toMap());
+        
         return enemyData;
     }
 
+    public void setTargetCell(Cell cell) {
+        this.targetCell = cell;
+    }
 }
