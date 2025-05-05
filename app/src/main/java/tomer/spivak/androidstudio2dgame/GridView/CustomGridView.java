@@ -54,6 +54,11 @@ public class CustomGridView extends GridView {
         gridPathManager.calculateCellPaths();
 
         updatePosition(-(float) 2300 /2, -(float) 1200 /2);
+
+        cellStates = new CellState[numRows][numColumns];
+        for (int i = 0; i < numRows; i++)
+            for (int j = 0; j < numColumns; j++)
+                cellStates[i][j] = CellState.NORMAL;
     }
 
     public Point[] getSelectedCell(float x, float y) {

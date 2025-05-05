@@ -7,6 +7,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -35,10 +36,15 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentSnapshot;
 
 
+import java.util.List;
 
+import tomer.spivak.androidstudio2dgame.GameObjectData;
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.model.Cell;
+import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
@@ -146,7 +152,6 @@ public class GameActivity extends AppCompatActivity{
             @Override
             public void onChanged(GameState gameState) {
                 //update game view
-                gameView.updateFromGameState(gameState);
                 if(gameState.getGameStatus() != GameStatus.PLAYING){
                     triggerGameEnd(gameState.getGameStatus() == GameStatus.WON);
                 }
@@ -168,6 +173,26 @@ public class GameActivity extends AppCompatActivity{
                     btnSkipRound.setVisibility(View.GONE);
                     cvSelectBuildingMenu.setVisibility(View.GONE);
                 }
+
+                Cell[][] board = gameState.getGrid();
+                int R = board.length, C = board[0].length;
+                CellState[][] states = new CellState[R][C];
+                for (int i = 0; i < R; i++) {
+                    for (int j = 0; j < C; j++) {
+                        states[i][j] = board[i][j].getCellState();
+                    }
+                }
+                gameView.getGridView().setCellsState(states);
+                gameView.updateFromGameState(gameState);
+            }
+        });
+
+        viewModel.getDelta().observe(this, new Observer<Pair<List<GameObjectData>, List<Position>>>() {
+            @Override
+            public void onChanged(Pair<List<GameObjectData>, List<Position>> deltaPair) {
+                List<GameObjectData> changedGameObjects = deltaPair.first;
+                List<Position> positionsRemoved = deltaPair.second;
+                gameView.applyDelta(changedGameObjects, positionsRemoved);
             }
         });
 
@@ -350,14 +375,6 @@ public class GameActivity extends AppCompatActivity{
         //assigns the callback
         getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
     }
-
-    //if connected and profile
-        //show alert dialog (freezed)
-        //start firebase async
-        //unfreeze when finished firebase
-    //else
-        //show alert dialog (not freezed)
-
 
     private void triggerGameEnd(boolean userWon) {
         gameView.stopGameLoop();

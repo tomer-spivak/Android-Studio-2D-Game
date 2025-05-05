@@ -26,10 +26,11 @@ public class Cell {
     private CellState cellState;
     private CellState defaultState;
 
-    public Cell(Position position, CellState cellState) {
-        this(position, null, cellState);
+    public Cell(Position position, CellState defaultState) {
+        this(position, null, defaultState);
         Log.d("cell", "creating cell: " + cellState);
-        defaultState = cellState;
+        this.defaultState = defaultState;
+
     }
 
     public Cell(Position position, ModelObject object, CellState cellState) {
@@ -102,18 +103,14 @@ public class Cell {
     }
 
     public void executeBurntAnimation() {
-        CellState state = getCellState();
-        if (state == CellState.BURNT)
-            state = defaultState;
         setState(CellState.BURNT);
-        CellState finalState = state;
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 setState(defaultState);
             }
-        }, 200);
+        }, 500);
     }
 
     public void executeEnemyDeathAnimation() {
@@ -132,7 +129,6 @@ public class Cell {
         final AtomicInteger stepCounter = new AtomicInteger(0);
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        CellState finalState = state;
         scheduler.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -149,12 +145,8 @@ public class Cell {
     }
 
     public void executeExplosion() {
-        CellState state = getCellState();
-        if (state == CellState.EXPLODE)
-            state = defaultState;
         setState(CellState.EXPLODE);
         Timer timer = new Timer();
-        CellState finalState = state;
         timer.schedule(new TimerTask() {
             @Override
             public void run() {

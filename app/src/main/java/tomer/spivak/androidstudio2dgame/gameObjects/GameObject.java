@@ -26,8 +26,12 @@ public class GameObject {
     protected String imageResourceString;
     protected Position pos;
     protected String type;
+    private float healthPercentage;
+    private String state, direction;
 
-    public GameObject(Context context, Point point, float scale, Position pos, String type, String state, String direction) {
+
+
+    public GameObject(Context context, Point point, float scale, Position pos, String type, String state, String direction, float healthPercentage) {
         this.context = context;
         this.imagePoint = point;
         this.scale = scale;
@@ -41,10 +45,12 @@ public class GameObject {
         originalSize = new int[2];
         this.type = type;
 
-        if (!type.contains("monster"))
-            this.type = "building";
         createView();
         setScale(scale);
+        this.healthPercentage = healthPercentage;
+
+        this.state  = state;
+        this.direction = direction;
     }
 
     protected void createView() {
@@ -135,7 +141,31 @@ public class GameObject {
         this.imagePoint = point;
     }
 
-    public String getBuildingType() {
+    public String getType() {
         return type;
     }
+
+    public void updateState(String newState, String newDirection, float newHealthPercentage) {
+
+        this.state = newState;
+        this.direction = newDirection;
+        this.healthPercentage = newHealthPercentage;
+
+        // rebuild the drawable every time
+        imageResourceString = type + "_" + state
+                + (type.equals("monster") ? "_" + direction : "");
+        createView();
+        setScale(this.scale);
+    }
+
+    public float getHealthPercentage() {
+        return healthPercentage;
+    }
+    public int getScaledWidth() {
+        return scaledSize[0];
+    }
+    public int getScaledHeight() {
+        return scaledSize[1];
+    }
+
 }

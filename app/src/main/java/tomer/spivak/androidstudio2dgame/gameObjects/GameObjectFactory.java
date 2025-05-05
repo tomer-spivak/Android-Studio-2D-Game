@@ -12,27 +12,64 @@ public class GameObjectFactory {
     private static final Map<String, GameObjectCreator> typeMap = new HashMap<>();
 
     static {
-        typeMap.put("obelisk", GameObject::new);
-        typeMap.put("lightningtower", GameObject::new);
-        typeMap.put("mainbuilding", GameObject::new);
-        typeMap.put("explodingtower", GameObject::new);
+        typeMap.put("obelisk", new GameObjectCreator() {
+            @Override
+            public GameObject create(Context context, Point point, float scale, Position pos, String type, String state, String direction, float healthPercentage) {
+                return new GameObject(context, point, scale, pos, type, state, direction, healthPercentage);
+            }
+        });
+        typeMap.put("lightningtower", new GameObjectCreator() {
+            @Override
+            public GameObject create(Context context, Point point, float scale, Position pos, String type, String state, String direction, float healthPercentage) {
+                return new GameObject(context, point, scale, pos, type, state, direction, healthPercentage);
+            }
+        });
+        typeMap.put("mainbuilding", new GameObjectCreator() {
+            @Override
+            public GameObject create(Context context, Point point, float scale, Position pos, String type, String state, String direction, float healthPercentage) {
+                return new GameObject(context, point, scale, pos, type, state, direction, healthPercentage);
+            }
+        });
+        typeMap.put("explodingtower", new GameObjectCreator() {
+            @Override
+            public GameObject create(Context context, Point point, float scale, Position pos, String type, String state, String direction, float healthPercentage) {
+                return new GameObject(context, point, scale, pos, type, state, direction, healthPercentage);
+            }
+        });
     }
 
-
-    public static GameObject create(Context context, Point point, String type, float scale, Position pos, String state, String direction) {
-        if (type.equals("monster")) {
-            return new GameObject(context, point, scale, pos, type, state, direction);
+    public static GameObject create(
+            Context context,
+            Point point,
+            String type,
+            float scale,
+            Position pos,
+            String state,
+            String direction,
+            float healthPercentage
+    ) {
+        if ("monster".equals(type)) {
+            return new GameObject(context, point, scale, pos, type, state, direction, healthPercentage);
         }
 
         GameObjectCreator creator = typeMap.get(type);
         if (creator != null) {
-            return creator.create(context, point, scale, pos, type, state, null);
+            return creator.create(context, point, scale, pos, type, state, direction, healthPercentage);
         }
-        throw new IllegalArgumentException("Unknown type: " + type);
+
+        throw new IllegalArgumentException("Unknown GameObject type: " + type);
     }
 
-    @FunctionalInterface
-    interface GameObjectCreator {
-        GameObject create(Context context, Point point, float scale, Position pos, String type, String state, String direction);
+    public interface GameObjectCreator {
+        GameObject create(
+                Context context,
+                Point point,
+                float scale,
+                Position pos,
+                String type,
+                String state,
+                String direction,
+                float healthPercentage
+        );
     }
 }

@@ -53,7 +53,6 @@ import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardCallback;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
-import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
@@ -126,7 +125,6 @@ public class DatabaseRepository {
                 if (cell.getObject() != null && !cell.getPosition().equals(cell.getObject().getPosition()))
                     cell.removeObject();
                 rowData.add(cell.toMap());
-
             }
             boardData.put("row_" + i, rowData);
         }
@@ -273,8 +271,7 @@ public class DatabaseRepository {
                                         leaderboard.put("games played", 0); else
                                          gamesPlayed = ((Number) Objects.requireNonNull(leaderboard.get("games played"))).intValue();
 
-                                    if (leaderboard.get("enemies defeated") == null)
-                                        leaderboard.put("enemies defeated", 0);
+                                    leaderboard.putIfAbsent("enemies defeated", 0);
                                     int enemiesDefeated = ((Number) Objects.requireNonNull(leaderboard.get("enemies defeated"))).intValue();
                                     maxRounds.add(new LeaderboardEntry(maxRound, displayName, gamesPlayed, enemiesDefeated));
                                 }

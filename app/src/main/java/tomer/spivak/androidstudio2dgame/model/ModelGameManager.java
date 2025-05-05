@@ -112,7 +112,6 @@ public class ModelGameManager {
         if (!selectedCell.isOccupied()){
             if (canPlaceBuilding(state, new Position(row, col))){
                 placeSelectedBuilding(row, col, state);
-                selectedBuildingType = null;
             }
         } else if (!selectedCell.getObject().getType().equals("mainbuilding") && state.isDayTime()) {
             Log.d("type", selectedCell.getObject().getType());

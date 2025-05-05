@@ -25,6 +25,9 @@ public class AttackComponent {
     }
 
     public void dealDamage(IDamageable target) {
+        if (target == null) {
+            return;
+        }
         target.takeDamage(attackDamage);
     }
 
