@@ -180,7 +180,7 @@ public class DatabaseRepository {
                                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                                     @Override
                                     public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                        listener.onBoardLoaded(documentSnapshot, finalDifficultyLevel, finalTimeSinceGameStart, finalCurrentRound,
+                                        listener.onBoardLoaded(documentSnapshot.getData(), finalDifficultyLevel, finalTimeSinceGameStart, finalCurrentRound,
                                                 finalShnuzes, finalDayTime);
                                     }
                                 });

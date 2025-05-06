@@ -33,10 +33,10 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentSnapshot;
 
 
 import java.util.List;
+import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.GameObjectData;
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
@@ -118,10 +118,10 @@ public class GameActivity extends AppCompatActivity{
             //we need a listener that will tell us if the board was loaded, and if so get all the data.
             OnBoardLoadedListener listener = new OnBoardLoadedListener() {
                 @Override
-                public void onBoardLoaded(DocumentSnapshot documentSnapshot, DifficultyLevel finalDifficultyLevel, Long finalTimeSinceGameStart,
+                public void onBoardLoaded(Map<String, Object> boardFirebaseData, DifficultyLevel finalDifficultyLevel, Long finalTimeSinceGameStart,
                                           int finalCurrentRound, int finalShnuzes, boolean finalDayTime) {
                     //init the board in the model
-                    viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, documentSnapshot.getData(), boardSize, finalDifficultyLevel,
+                    viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, boardFirebaseData, boardSize, finalDifficultyLevel,
                             finalCurrentRound, finalShnuzes, finalTimeSinceGameStart, finalDayTime);
                     //loading finish
                     dialogLoadingBoard.dismiss();
