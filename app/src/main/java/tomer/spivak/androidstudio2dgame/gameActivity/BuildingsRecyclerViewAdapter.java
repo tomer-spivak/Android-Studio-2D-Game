@@ -2,7 +2,6 @@ package tomer.spivak.androidstudio2dgame.gameActivity;
 
 import android.content.Context;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,17 +19,14 @@ import tomer.spivak.androidstudio2dgame.R;
 public class BuildingsRecyclerViewAdapter extends
         RecyclerView.Adapter<BuildingsRecyclerViewAdapter.BuildingViewHolder> {
 
-
     private final Context context;
-    private final String[] buildingImages;
+    private final int[] buildingImagesRes;
     private View selectedBuilding;
     private final GameActivity gameActivity;
 
-    public BuildingsRecyclerViewAdapter(Context context,
-                                        String[] buildingImages,
-                                        GameActivity activity) {
+    public BuildingsRecyclerViewAdapter(Context context, int[] buildingImagesRes, GameActivity activity) {
         this.context = context;
-        this.buildingImages = buildingImages;
+        this.buildingImagesRes = buildingImagesRes;
         this.gameActivity = activity;
     }
 
@@ -43,37 +39,35 @@ public class BuildingsRecyclerViewAdapter extends
 
     @Override
     public void onBindViewHolder(@NonNull BuildingViewHolder holder, int position) {
-        String imageName = buildingImages[(position)].toLowerCase();
-        int resourceId = context.getResources().getIdentifier(imageName, "drawable", context.getPackageName());
+        int resourceId = buildingImagesRes[position];
         Glide.with(context).load(resourceId).placeholder(R.drawable.placeholder_building).into(holder.imageView);
-        Log.d("title", String.valueOf(resourceId));
-        Log.d("title", imageName);
-        Log.d("title", holder.imageView.toString());
+        String imageName = context.getResources().getResourceEntryName(resourceId);
+        String[] parts = imageName.split("_");
 
-        String title = imageName.replace("0", " ");
-        String[] words = title.split(" ");
-        for (int i = 0; i < words.length; i++) {
-            if (!words[i].isEmpty()) {
-                words[i] = words[i].substring(0, 1).toUpperCase() + words[i].substring(1);
+        String title = "";
+        for (int i = 0; i < parts.length; i++) {
+            if (!parts[i].isEmpty()) {
+                parts[i] = parts[i].substring(0,1).toUpperCase() + parts[i].substring(1).toLowerCase();
+                title += parts[i] + " ";
             }
         }
-        title = String.join(" ", words);
+        title = title.substring(0, title.length()-1);
+
         holder.tvName.setText(title);
-        Log.d("title", title);
-        if (title.equals("Lightningtower")){
+        if (title.equals("Lightning Tower")){
             holder.tvPrice.setText("3,000 \uD83D\uDCB0");
         }
         if (title.equals("Obelisk")){
             holder.tvPrice.setText("1,000 \uD83D\uDCB0");
         }
-        if(title.equals("Explodingtower")){
+        if(title.equals("Exploding Tower")){
             holder.tvPrice.setText("2,000 \uD83D\uDCB0");
         }
     }
 
     @Override
     public int getItemCount() {
-        return buildingImages.length;
+        return buildingImagesRes.length;
     }
 
     public class BuildingViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -97,9 +91,9 @@ public class BuildingsRecyclerViewAdapter extends
             selectedBuilding = itemView;
             itemView.setSelected(true);
 
-            int position = getAdapterPosition();
+            int position = getBindingAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
-                String buildingImageURL = buildingImages[position];
+                String buildingImageURL = context.getResources().getResourceEntryName(buildingImagesRes[position]).replace("_","");
                 gameActivity.onBuildingSelected(buildingImageURL);
                 gameActivity.closeBuildingMenu();
             }

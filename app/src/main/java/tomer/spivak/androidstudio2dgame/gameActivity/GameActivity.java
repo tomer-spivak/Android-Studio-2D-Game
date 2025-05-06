@@ -42,9 +42,7 @@ import tomer.spivak.androidstudio2dgame.GameObjectData;
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.Position;
-import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
@@ -104,10 +102,10 @@ public class GameActivity extends AppCompatActivity{
         databaseRepository = DatabaseRepository.getInstance(context);
 
         //init card view
-        String[] buildingImages = { "obelisk", "lightningtower", "explodingtower" };
+        int[] buildingImagesRes = { R.drawable.obelisk, R.drawable.lightning_tower, R.drawable.exploding_tower};
         RecyclerView buildingRecyclerView = findViewById(R.id.buildingRecyclerView);
         buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        buildingRecyclerView.setAdapter(new BuildingsRecyclerViewAdapter(this, buildingImages,  this));
+        buildingRecyclerView.setAdapter(new BuildingsRecyclerViewAdapter(this, buildingImagesRes,  this));
 
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
 
@@ -194,14 +192,12 @@ public class GameActivity extends AppCompatActivity{
                     gameIsOnGoing = true;
                     btnStartGame.setVisibility(View.GONE);
                     btnSkipRound.setVisibility(View.VISIBLE);
-
                     //if this is a new game update the database
                     if (!continueGame){
                         databaseRepository.incrementGamesPlayed(context);
                     }
                 } else {
-                    Toast.makeText(context, "In order to start a game\n" + "you need to build something",
-                            Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "In order to start a game\n" + "you need to build something", Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -233,24 +229,21 @@ public class GameActivity extends AppCompatActivity{
             public void onClick(View v) {
                 float volume = gameView.getMusicService().getCurrentVolumeLevel();
                 gameView.pauseGameLoop();
-
                 gameIsOnGoing = false;
-
                 LayoutInflater inflater = LayoutInflater.from(context);
                 View dialogView = inflater.inflate(R.layout.dialog_pause, null);
-                SeekBar volumeSeekBar = dialogView.findViewById(R.id.volumeSeekBar);
-                volumeSeekBar.setProgress((int) volume);
-                SeekBar soundEffectsSeekBar = dialogView.findViewById(R.id.soundEffectsSeekBar);
-                soundEffectsSeekBar.setProgress(soundEffectsManager.getVolumeLevel());
-
+                SeekBar musicVolumeSeekBar = dialogView.findViewById(R.id.volumeSeekBar);
+                musicVolumeSeekBar.setProgress((int) volume);
+                SeekBar soundEffectsVolumeSeekBar = dialogView.findViewById(R.id.soundEffectsSeekBar);
+                soundEffectsVolumeSeekBar.setProgress(soundEffectsManager.getVolumeLevel());
                 new AlertDialog.Builder(context).setTitle("Game Paused").setView(dialogView)
                         .setPositiveButton("resume", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();
                                 gameIsOnGoing = true;
-                                gameView.resumeGameLoop(volumeSeekBar.getProgress());
-                                soundEffectsManager.setVolume(soundEffectsSeekBar.getProgress() / 100f);
+                                gameView.resumeGameLoop(musicVolumeSeekBar.getProgress());
+                                soundEffectsManager.setVolume(soundEffectsVolumeSeekBar.getProgress() / 100f);
                             }
                         })
                         .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
@@ -274,9 +267,7 @@ public class GameActivity extends AppCompatActivity{
                                     finish();
                                 }
                             }
-                        })
-                        .setCancelable(false)
-                        .show();
+                        }).setCancelable(false).show();
             }
         });
 
@@ -351,6 +342,7 @@ public class GameActivity extends AppCompatActivity{
                 });
             }
         };
+
         //assigns the callback
         getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
     }
@@ -359,26 +351,50 @@ public class GameActivity extends AppCompatActivity{
         gameView.stopGameLoop();
         skipAutoSave = true;
 
+        //if not online, dont try to save at all
         if (!isOnline(context)) {
             showEndGameDialog(userWon);
             return;
         }
 
-        // show the “frozen” dialog
-        AlertDialog frozenDialog = showFrozenEndGameDialog(userWon);
+        int layout;
+        if (userWon)
+            layout = R.layout.alert_dialog_won;
+        else
+            layout = R.layout.alert_dialog_defeat;
+
+        View view = LayoutInflater.from(this).inflate(layout, null);
+
+        // remove all buttons (we wait for the firebase call to complete)
+        view.findViewById(R.id.tvMessage).setVisibility(View.GONE);
+        view.findViewById(R.id.btnMenu).setVisibility(View.GONE);
+        view.findViewById(R.id.btnExit).setVisibility(View.GONE);
+
+
+        AlertDialog alertDialog = new AlertDialog.Builder(this).setView(view).setCancelable(false).create();
+        alertDialog.show();
+
         databaseRepository.logResults(viewModel);
         if (userWon) {
             databaseRepository.incrementVictories(context);
         }
 
-        // schedule a 5-second fallback
         Handler handler = new Handler(Looper.getMainLooper());
+        //if after 5 seconds, the firebase call isnt done yet, we give up on re
         Runnable fallback = new Runnable() {
             @Override
             public void run() {
-                if (frozenDialog.isShowing()) {
-                    frozenDialog.dismiss();
-                    showEndGameDialog(userWon);
+                if (alertDialog.isShowing()) {
+                    if (!isFinishing() && !isDestroyed() && alertDialog.isShowing()) {
+                        alertDialog.dismiss();
+                        showEndGameDialog(userWon);
+                        databaseRepository.removeBoard(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+
+                            }
+                        });
+                    }
                 }
             }
         };
@@ -389,58 +405,42 @@ public class GameActivity extends AppCompatActivity{
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 handler.removeCallbacks(fallback);
-                if (frozenDialog.isShowing()) {
-                    frozenDialog.dismiss();
+                if (alertDialog.isShowing()) {
+                    alertDialog.dismiss();
+                    showEndGameDialog(userWon);
                 }
-                showEndGameDialog(userWon);
             }
         });
     }
 
     private void showEndGameDialog(boolean userWon) {
-        int layout = userWon
-                ? R.layout.alert_dialog_won
-                : R.layout.alert_dialog_defeat;
+        int layout;
+        if(userWon)
+            layout = R.layout.alert_dialog_won;
+        else
+            layout = R.layout.alert_dialog_defeat;
 
         View view = LayoutInflater.from(this).inflate(layout, null);
-        AlertDialog dlg = new AlertDialog.Builder(this)
-                .setView(view)
-                .setCancelable(false)
-                .create();
+        AlertDialog alertDialog = new AlertDialog.Builder(this).setView(view).setCancelable(false).create();
 
+        view.findViewById(R.id.progressBar).setVisibility(View.GONE);
 
-            view.findViewById(R.id.btnExit)
-                    .setOnClickListener(x -> { dlg.dismiss(); finishAffinity(); System.exit(0); });
-            view.findViewById(R.id.btnMenu)
-                    .setOnClickListener(x -> { dlg.dismiss(); finish(); });
-
-            view.findViewById(R.id.btnMenu)
-                    .setOnClickListener(x -> { dlg.dismiss(); finish(); });
-            view.findViewById(R.id.btnExit)
-                    .setOnClickListener(x -> { dlg.dismiss(); finishAffinity(); System.exit(0); });
-
-
-        dlg.show();
-    }
-
-    private AlertDialog showFrozenEndGameDialog(boolean userWon) {
-        int layout = userWon
-                ? R.layout.alert_dialog_won
-                : R.layout.alert_dialog_defeat;
-
-        View view = LayoutInflater.from(this).inflate(layout, null);
-        // remove any buttons so it really is “frozen”
-        // (you can also just show a ProgressBar here instead)
-        view.findViewById(R.id.tvMessage).setVisibility(View.GONE);
-        view.findViewById(R.id.btnMenu).setVisibility(View.GONE);
-        view.findViewById(R.id.btnExit).setVisibility(View.GONE);
-
-        AlertDialog dlg = new AlertDialog.Builder(this)
-                .setView(view)
-                .setCancelable(false)
-                .create();
-        dlg.show();
-        return dlg;
+        view.findViewById(R.id.btnExit).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+                finishAffinity();
+                System.exit(0);
+            }
+        });
+        view.findViewById(R.id.btnMenu).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+                finish();
+            }
+        });
+        alertDialog.show();
     }
 
     public void closeBuildingMenu() {

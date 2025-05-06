@@ -190,8 +190,7 @@ public class DatabaseRepository {
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        callback.onCheckCompleted(documentSnapshot.exists() &&
-                                documentSnapshot.getData() != null);
+                        callback.onCheckCompleted(documentSnapshot.exists() && documentSnapshot.getData() != null);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {

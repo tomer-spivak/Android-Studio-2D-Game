@@ -46,7 +46,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     //custom class that handles touch events (scrolls, zoom)
     private final TouchManager touchManager;
 
-
     private final SoundEffectManager soundEffects;
     private Float scale = 1F;
     private final Bitmap morningBackground;
@@ -394,9 +393,5 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         int x = screenWidth / 2 - timerBounds.width() / 2 + 50;
         int y = 100;
         canvas.drawText(roundText, x, y, timerPaint);
-    }
-
-    public CustomGridView getGridView() {
-        return gridView;
     }
 }
