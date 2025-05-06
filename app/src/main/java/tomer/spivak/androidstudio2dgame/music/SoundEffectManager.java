@@ -20,25 +20,22 @@ public class SoundEffectManager {
     public SoundEffectManager(Context context) {
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_GAME)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build();
+
+        soundPool = new SoundPool.Builder().setMaxStreams(50).setAudioAttributes(audioAttributes)
                 .build();
 
-            soundPool = new SoundPool.Builder()
-                    .setMaxStreams(50)
-                    .setAudioAttributes(audioAttributes)
-                    .build();
-
         volume = 0.5f;
-            enemyAttackSound = soundPool.load(context, R.raw.monsterattack, 1);
-            turretAttackSound = soundPool.load(context, R.raw.lightningtowerattack, 1);
-        }
+        enemyAttackSound = soundPool.load(context, R.raw.monsterattack, 1);
+        turretAttackSound = soundPool.load(context, R.raw.lightningtowerattack, 1);
+    }
 
     public int playEnemyAttackSound() {
-            int streamId = soundPool.play(enemyAttackSound, volume, volume, 1,
-                    0, 1.0f);
-            soundIds.add(streamId);
-
-            return streamId;
+        if (soundPool == null)
+            return 0;
+        int streamId = soundPool.play(enemyAttackSound, volume, volume, 1, 0, 1.0f);
+        soundIds.add(streamId);
+        return streamId;
     }
 
     public int playTurretAttackSound() {
@@ -61,7 +58,7 @@ public class SoundEffectManager {
     }
 
     public void setVolume(float volume) {
-        this.volume = volume;
+        this.volume = Math.max(0f, Math.min(1f, volume));
     }
 
     public void onDestroy() {
@@ -77,11 +74,11 @@ public class SoundEffectManager {
             soundPool.autoResume();
     }
 
-    public void stopSoundEffects() {
-
+    public void stopAllSoundEffects() {
         for (int soundId : soundIds) {
             soundPool.stop(soundId);
         }
+        soundIds.clear();
     }
 
     public void pauseSoundEffect(int soundStreamId) {

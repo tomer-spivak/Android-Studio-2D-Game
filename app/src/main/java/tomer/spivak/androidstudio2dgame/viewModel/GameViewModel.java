@@ -15,9 +15,12 @@ import tomer.spivak.androidstudio2dgame.GameObjectData;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.modelEnums.BuildingState;
 import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.model.ModelGameManager;
+import tomer.spivak.androidstudio2dgame.modelEnums.Direction;
+import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
@@ -185,7 +188,7 @@ public class GameViewModel extends ViewModel {
         if (data == null || data.isEmpty()) {
             return board;
         }
-
+        List<Pair<Enemy, Position>> pendingTargets = new ArrayList<>();
         // 2) overlay saved objects & states on the existing Cells
         for (Object rowObj : data.values()) {
             List<Map<String, Object>> rowList = (List<Map<String, Object>>) rowObj;
@@ -208,22 +211,53 @@ public class GameViewModel extends ViewModel {
 
                 @SuppressWarnings("unchecked")
                 Map<String, Object> objectMap = (Map<String, Object>) col.get("object");
-                if (objectMap != null && "monster".equals(objectMap.get("type"))) {
-                    // reconstruct your Enemy
-                    Enemy e = (Enemy) ModelObjectFactory.create("monster",
-                            new Position(x, y), difficultyLevel);
-                    // …populate e’s health / direction / etc…
-                    cell.spawnEnemy(e);
-
-                } else if (objectMap != null) {
-                    // any non‐enemy building/turret
+                if(objectMap != null)
+                {
                     String type = (String) objectMap.get("type");
                     ModelObject obj = ModelObjectFactory.create(type,
                             new Position(x, y), difficultyLevel);
-                    // …populate obj’s health / state…
-                    cell.placeBuilding((Building) obj);
+                    obj.setHealth((float)((double) objectMap.get("health")));
+                    if ("monster".equals(type)) {
+                        // reconstruct your Enemy
+                         // …populate e’s health / direction / etc…
+                        Enemy e = (Enemy) obj;
+                        e.setState(EnemyState.valueOf((String) objectMap.get("state")));
+                        e.setCurrentDirection(Direction.valueOf((String) objectMap.get("currentDirection")));
+                        e.setAttackAnimationRunning((Boolean) objectMap.get("attackAnimationRunning"));
+                        e.setAttackAnimationElapsedTime((Long) objectMap.get("attackAnimationElapsedTime"));
+                        Map<String, Object> tposMap = (Map<String, Object>) objectMap.get("targetCellPos");
+                        if (tposMap != null) {
+                            Position targetPos = new Position(((Number) Objects.requireNonNull(tposMap.get("x"))).intValue(),
+                                    ((Number) Objects.requireNonNull(tposMap.get("y"))).intValue());
+                            pendingTargets.add(Pair.create(e, targetPos));
+                        }
+                        cell.spawnEnemy(e);
+
+                    } else {
+                        // any non‐enemy building/turret
+                        Building building = (Building) obj;
+                        building.setState(BuildingState.valueOf((String) objectMap.get("state")));
+
+                        // …populate obj’s health / state…
+
+                        cell.placeBuilding((Building) obj);
+                    }
                 }
+
                 // else leave it “empty” (object==null) but with your savedState
+            }
+        }
+        int trimmedRows = board.length;
+        int trimmedCols = trimmedRows > 0 ? board[0].length : 0;
+        for (Pair<Enemy, Position> pair : pendingTargets) {
+            Enemy e = pair.first;
+            Position p = pair.second;
+            if (p.getX() >= 0 && p.getX() < trimmedRows
+                    && p.getY() >= 0 && p.getY() < trimmedCols
+                    && board[p.getX()][p.getY()] != null) {
+                Cell targetCell = board[p.getX()][p.getY()];
+                e.setTargetCell(targetCell);
+            } else {
             }
         }
 

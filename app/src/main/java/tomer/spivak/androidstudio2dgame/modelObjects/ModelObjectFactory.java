@@ -20,7 +20,7 @@ public class ModelObjectFactory {
         typeMap.put("mainbuilding", new ModelObjectCreator() {
             @Override
             public ModelObject create(Position position, DifficultyLevel difficulty) {
-                return new Building(getBuildingHealthByDifficulty(1000, difficulty), position, -1, "mainbuilding");
+                return new Building(getBuildingHealthByDifficulty(500, difficulty), position, -1, "mainbuilding");
             }
         });
 

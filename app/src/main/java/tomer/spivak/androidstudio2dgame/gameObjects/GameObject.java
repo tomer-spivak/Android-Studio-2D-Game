@@ -72,7 +72,7 @@ public class GameObject {
         this.originalSize[1] = originalHeight;
         if(imageResourceString.contains("mainbuilding")){
             scaledSize[0] = (int) pxToDp((float) (originalWidth * scale * 1.5), context.getResources().getDisplayMetrics());
-            scaledSize[1] = (int) pxToDp((float) (originalHeight * scale * 1.15), context.getResources().getDisplayMetrics());
+            scaledSize[1] = (int) pxToDp((float) (originalHeight * scale * 1.1), context.getResources().getDisplayMetrics());
         } else{
             scaledSize[0] = (int) pxToDp((float) (originalWidth * scale * 1.2), context.getResources().getDisplayMetrics());
             scaledSize[1] = (int) pxToDp((float) (originalHeight * scale * 1.2), context.getResources().getDisplayMetrics());
@@ -87,7 +87,7 @@ public class GameObject {
             topLeftY = imagePoint.y - (int) (scaledSize[1] * 0.75);
         }
         if (imageResourceString.contains("mainbuilding")){
-            topLeftY = imagePoint.y - (int) (scaledSize[1] * 0.5);
+            topLeftY = imagePoint.y - (int) (scaledSize[1] * 0.4);
         }
         canvas.drawBitmap(scaledBitmap, topLeftX, topLeftY, null);
     }
@@ -121,7 +121,7 @@ public class GameObject {
         this.scale = scale;
         if(imageResourceString.contains("mainbuilding")){
             this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 1.5), context.getResources().getDisplayMetrics());
-            this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 1.15), context.getResources().getDisplayMetrics());
+            this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 1.1), context.getResources().getDisplayMetrics());
         } else{
             this.scaledSize[0] = (int) pxToDp((float) (originalSize[0] * scale * 1.2), context.getResources().getDisplayMetrics());
             this.scaledSize[1] = (int) pxToDp((float) (originalSize[1] * scale * 1.2), context.getResources().getDisplayMetrics());

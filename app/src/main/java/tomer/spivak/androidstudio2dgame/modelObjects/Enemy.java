@@ -92,7 +92,6 @@ public class Enemy extends ModelObject implements IDamager{
     }
 
     public void updateAnimation(long deltaTime) {
-
         attackAnimationElapsedTime += deltaTime;
 
         int initDelay = 500;
@@ -157,6 +156,7 @@ public class Enemy extends ModelObject implements IDamager{
     public float getAccumulatedTime() {
         return timeSinceLastMove;
     }
+
     public void accumulateTime(long elapsedTime) {
         timeSinceLastMove += elapsedTime;
     }
@@ -217,7 +217,7 @@ public class Enemy extends ModelObject implements IDamager{
         Map enemyData = (Map) super.toMap();
         enemyData.put("type", "monster");
         enemyData.put("currentDirection", currentDirection.name());
-        enemyData.put("enemyState",   state.name());
+        enemyData.put("state",   state.name());
         enemyData.put("currentTargetIndex", currentTargetIndex);
         enemyData.put("timeSinceLastAttack", attackComponent.getTimeSinceLastAttack());
         enemyData.put("timeSinceLastMove",   timeSinceLastMove);

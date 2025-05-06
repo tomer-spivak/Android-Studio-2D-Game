@@ -113,7 +113,7 @@ public class ModelGameManager {
             if (canPlaceBuilding(state, new Position(row, col))){
                 placeSelectedBuilding(row, col, state);
             }
-        } else if (!selectedCell.getObject().getType().equals("mainbuilding") && state.isDayTime()) {
+        } else if (!selectedCell.getObject().getType().equals("mainbuilding") && state.isDayTime() && getNumberOfBuildings() > 2) {
             Log.d("type", selectedCell.getObject().getType());
             removeBuilding(selectedCell, state);
         }
@@ -300,7 +300,8 @@ public class ModelGameManager {
         List<Position> buildingPositions = new ArrayList<>();
         for (Cell[] cells : grid) {
             for (Cell cell : cells) {
-                if (cell.isOccupied() && cell.getObject() instanceof Building) {
+                if (cell.isOccupied() && cell.getObject() instanceof Building
+                        && cell.getObject().getPosition().equals(cell.getPosition())) {
                     buildingPositions.add(cell.getObject().getPosition());
                 }
             }

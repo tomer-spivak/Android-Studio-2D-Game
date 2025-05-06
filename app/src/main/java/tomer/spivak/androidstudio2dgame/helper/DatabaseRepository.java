@@ -54,6 +54,8 @@ import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
+import tomer.spivak.androidstudio2dgame.modelObjects.Building;
+import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
 public class DatabaseRepository {

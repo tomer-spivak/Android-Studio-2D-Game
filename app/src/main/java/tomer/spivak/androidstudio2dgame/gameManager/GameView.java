@@ -287,7 +287,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         }
 
         context.stopService(musicIntent);
-        soundEffects.stopSoundEffects();
+        soundEffects.stopAllSoundEffects();
 
 
         gameLoop.stopLoop();

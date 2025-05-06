@@ -49,6 +49,7 @@ public class Building extends ModelObject {
         Map buildingData = (Map) super.toMap();
         buildingData.put("health", health);
         buildingData.put("type", type);
+        buildingData.put("state", state.name());
         return buildingData;
     }
 }

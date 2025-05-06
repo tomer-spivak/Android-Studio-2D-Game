@@ -48,10 +48,7 @@ public class MusicService extends Service {
         super.onCreate();
         SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         volume = prefs.getFloat("volume", 0.07f) ;
-        if (mediaPlayer != null) {
-            mediaPlayer.setVolume(volume, volume);
-        }
-        playRandomSong();
+
     }
 
 
@@ -64,9 +61,11 @@ public class MusicService extends Service {
         do {
             newSongIndex = random.nextInt(music.length);
         } while (newSongIndex == lastSongIndex);
+
         lastSongIndex = newSongIndex;
+
         mediaPlayer = MediaPlayer.create(this, music[newSongIndex]);
-        mediaPlayer.start();
+
         mediaPlayer.setVolume(volume, volume);
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -74,10 +73,14 @@ public class MusicService extends Service {
                 playRandomSong();
             }
         });
+        mediaPlayer.start();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (mediaPlayer == null) {
+            playRandomSong();
+        }
         return START_STICKY;
     }
 
