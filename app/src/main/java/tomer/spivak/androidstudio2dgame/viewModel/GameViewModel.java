@@ -36,6 +36,9 @@ public class GameViewModel extends ViewModel {
 
     private final ModelGameManager gameManager;
 
+    private final MutableLiveData<Integer> enemiesDefeatedDelta = new MutableLiveData<>();
+    private int lastEnemiesDefeated = 0;
+
     public GameViewModel() {
         this.gameManager = new ModelGameManager();
     }
@@ -128,6 +131,24 @@ public class GameViewModel extends ViewModel {
         return list;
     }
 
+    private void publishGameState() {
+        GameState state = gameManager.getState();
+
+        // 1) post full state
+        viewModelGameState.postValue(state);
+
+        // 2) post object‐delta
+        refresh();
+
+        // 3) post enemies‐defeated delta
+        int current = state.getEnemiesDefeated();
+        int diff = current - lastEnemiesDefeated;
+        if (diff > 0) {
+            enemiesDefeatedDelta.postValue(diff);
+            lastEnemiesDefeated = current;
+        }
+    }
+
 
     public void selectBuilding(String type) {
         gameManager.setSelectedBuildingType(type);
@@ -135,21 +156,17 @@ public class GameViewModel extends ViewModel {
 
     public void onCellClicked(int row, int col) {
         gameManager.handleCellClick(row, col);
-        gameManager.setSelectedBuildingType(null);
-        viewModelGameState.postValue(gameManager.getState());
-        refresh();
+        publishGameState();
     }
 
     public void tick(long deltaTime) {
         gameManager.update(deltaTime);
-        viewModelGameState.postValue(gameManager.getState());
-        refresh();
+        publishGameState();
     }
 
     public void skipToNextRound() {
         gameManager.skipToNextRound();
-        viewModelGameState.postValue(gameManager.getState());
-        refresh();
+        publishGameState();
     }
 
     public boolean canStartGame() {
@@ -257,7 +274,6 @@ public class GameViewModel extends ViewModel {
                     && board[p.getX()][p.getY()] != null) {
                 Cell targetCell = board[p.getX()][p.getY()];
                 e.setTargetCell(targetCell);
-            } else {
             }
         }
 
@@ -275,5 +291,9 @@ public class GameViewModel extends ViewModel {
 
     public void setDayTime(boolean dayTime) {
         gameManager.setDayTime(dayTime);
+    }
+
+    public LiveData<Integer> getEnemiesDefeatedDelta() {
+        return enemiesDefeatedDelta;
     }
 }

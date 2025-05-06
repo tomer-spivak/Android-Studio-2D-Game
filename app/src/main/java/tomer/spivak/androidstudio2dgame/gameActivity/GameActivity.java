@@ -67,17 +67,11 @@ public class GameActivity extends AppCompatActivity{
     private DatabaseRepository databaseRepository;
 
     private boolean gameIsOnGoing = false;
-
-    //every time an enemy is defeated the firebase data gets incremented. so I need to check if there has been any change in
-    // the number of enemies Defeated, and in that case increment the data in firebase.
-    private int enemiesDefeatedCache = 0;
-
     //continue a game after exiting and saving it
     private boolean continueGame;
 
     //if the user chose to remove the save
     private boolean skipAutoSave = false;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,8 +108,6 @@ public class GameActivity extends AppCompatActivity{
         RecyclerView buildingRecyclerView = findViewById(R.id.buildingRecyclerView);
         buildingRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         buildingRecyclerView.setAdapter(new BuildingsRecyclerViewAdapter(this, buildingImages,  this));
-
-
 
         viewModel = new ViewModelProvider(this).get(GameViewModel.class);
 
@@ -156,11 +148,7 @@ public class GameActivity extends AppCompatActivity{
                     triggerGameEnd(gameState.getGameStatus() == GameStatus.WON);
                 }
 
-                int enemiesDefeated = gameState.getEnemiesDefeated();
-                if (enemiesDefeated == enemiesDefeatedCache + 1){
-                    enemiesDefeatedCache = enemiesDefeated;
-                    databaseRepository.incrementEnemiesDefeated();
-                }
+
                 //update UI
                 if (gameState.isDayTime()) {
                     btnOpenMenu.setVisibility(View.VISIBLE);
@@ -195,6 +183,15 @@ public class GameActivity extends AppCompatActivity{
                 gameView.applyDelta(changedGameObjects, positionsRemoved);
             }
         });
+
+        viewModel.getEnemiesDefeatedDelta().observe(this, new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer delta) {
+                databaseRepository.incrementEnemiesDefeated(delta);
+
+            }
+        });
+
 
         btnStartGame.setOnClickListener(new View.OnClickListener() {
             @Override

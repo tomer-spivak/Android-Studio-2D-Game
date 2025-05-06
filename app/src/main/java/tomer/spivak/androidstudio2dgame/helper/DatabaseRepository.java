@@ -54,8 +54,6 @@ import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
-import tomer.spivak.androidstudio2dgame.modelObjects.Building;
-import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
 public class DatabaseRepository {
@@ -388,9 +386,9 @@ public class DatabaseRepository {
         return authHelper.isGuest();
     }
 
-    public void incrementEnemiesDefeated() {
+    public void incrementEnemiesDefeated(int enemiesDefeated) {
         FirebaseUser user = getUserInstance();
-        db.collection("users").document(user.getUid()).update("leaderboard.enemies defeated", FieldValue.increment(1));
+        db.collection("users").document(user.getUid()).update("leaderboard.enemies defeated", FieldValue.increment(enemiesDefeated));
     }
 
     public void incrementGamesPlayed() {
