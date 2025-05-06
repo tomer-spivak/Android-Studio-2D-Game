@@ -1,10 +1,10 @@
 package tomer.spivak.androidstudio2dgame.gameActivity;
 
+import static tomer.spivak.androidstudio2dgame.helper.DatabaseRepository.isOnline;
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 
 import android.util.Pair;
@@ -30,8 +30,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 
@@ -127,7 +125,7 @@ public class GameActivity extends AppCompatActivity{
                     dialogLoadingBoard.dismiss();
                 }
             };
-            databaseRepository.loadCurrentGame(listener);
+            databaseRepository.loadCurrentGame(listener, context);
         }
         else {
             //start a new game, we can take get the difficulty selected
@@ -143,12 +141,6 @@ public class GameActivity extends AppCompatActivity{
         viewModel.getGameState().observe(this, new Observer<GameState>() {
             @Override
             public void onChanged(GameState gameState) {
-                //update game view
-                if(gameState.getGameStatus() != GameStatus.PLAYING){
-                    triggerGameEnd(gameState.getGameStatus() == GameStatus.WON);
-                }
-
-
                 //update UI
                 if (gameState.isDayTime()) {
                     btnOpenMenu.setVisibility(View.VISIBLE);
@@ -171,7 +163,12 @@ public class GameActivity extends AppCompatActivity{
                     }
                 }
                 gameView.getGridView().setCellsState(states);
+
                 gameView.updateFromGameState(gameState);
+                //update game view
+                if(gameState.getGameStatus() != GameStatus.PLAYING){
+                    triggerGameEnd(gameState.getGameStatus() == GameStatus.WON);
+                }
             }
         });
 
@@ -204,7 +201,7 @@ public class GameActivity extends AppCompatActivity{
 
                     //if this is a new game update the database
                     if (!continueGame){
-                        databaseRepository.incrementGamesPlayed();
+                        databaseRepository.incrementGamesPlayed(context);
                     }
                 } else {
                     Toast.makeText(context, "In order to start a game\n" + "you need to build something",
@@ -265,26 +262,19 @@ public class GameActivity extends AppCompatActivity{
                             public void onClick(DialogInterface dialog, int which) {
                                 GameState state = viewModel.getGameState().getValue();
                                 if (state != null) {
-                                    databaseRepository.saveBoard(state,
-                                            new OnSuccessListener<Void>() {
-                                                @Override
-                                                public void onSuccess(Void unused) {
-                                                    databaseRepository.logResults(viewModel);
-                                                    gameView.stopGameLoop();
-                                                    dialog.dismiss();
-                                                    finish();
-                                                }
-                                            },
-                                            new OnFailureListener() {
-                                                @Override
-                                                public void onFailure(@NonNull Exception e) {
-                                                    Toast.makeText(context, "Saving failed: " + e.getMessage(),
-                                                            Toast.LENGTH_SHORT).show();
-                                                }
-                                            }
-                                    );
+                                    databaseRepository.saveBoard(state, new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful())
+                                                databaseRepository.logResults(viewModel);
+                                            gameView.stopGameLoop();
+                                            dialog.dismiss();
+                                            finish();
+                                        }
+                                    }, context);
                                 } else {
                                     gameView.stopGameLoop();
+                                    dialog.dismiss();
                                     finish();
                                 }
                             }
@@ -345,25 +335,18 @@ public class GameActivity extends AppCompatActivity{
                         if (gameState != null) {
                             databaseRepository.saveBoard(
                                     gameState,
-                                    new OnSuccessListener<Void>() {
+                                    new OnCompleteListener<Void>() {
                                         @Override
-                                        public void onSuccess(Void unused) {
-                                            databaseRepository.logResults(viewModel);
-                                            gameView.stopGameLoop();
-                                            Toast.makeText(context, "Game saved successfully", Toast.LENGTH_SHORT).show();
-                                            finish();
-                                        }
-                                    },
-                                    new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception e) {
-                                            Toast.makeText(context, "Failed to save game: " + e.getMessage(),
-                                                    Toast.LENGTH_SHORT).show();
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful())
+                                                databaseRepository.logResults(viewModel);
+                                            else
+                                                Toast.makeText(context, "Failed to save game: " + task.getException(), Toast.LENGTH_LONG).show();
                                             gameView.stopGameLoop();
                                             finish();
                                         }
-                                    }
-                            );
+                                    }, context);
+
                         } else {
                             gameView.stopGameLoop();
                             finish();
@@ -380,7 +363,7 @@ public class GameActivity extends AppCompatActivity{
         gameView.stopGameLoop();
         skipAutoSave = true;
 
-        if(isOnline()){
+        if(isOnline(context)){
             AlertDialog frozenDialog = showFrozenEndGameDialog(userWon);
             databaseRepository.logResults(viewModel);
             databaseRepository.removeBoard(task -> {
@@ -444,13 +427,6 @@ public class GameActivity extends AppCompatActivity{
         return dlg;
     }
 
-    private boolean isOnline() {
-        ConnectivityManager cm =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo ni = cm.getActiveNetworkInfo();
-        return ni != null && ni.isConnected();
-    }
-
     public void closeBuildingMenu() {
         cvSelectBuildingMenu.setVisibility(View.GONE);
     }
@@ -477,7 +453,12 @@ public class GameActivity extends AppCompatActivity{
         GameState gameState = viewModel.getGameState().getValue();
 
         if (gameState != null && !skipAutoSave) {
-            databaseRepository.saveBoard(gameState, null, null);
+            databaseRepository.saveBoard(gameState, new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+
+                }
+            }, context);
         }
 
         if (gameView != null) {

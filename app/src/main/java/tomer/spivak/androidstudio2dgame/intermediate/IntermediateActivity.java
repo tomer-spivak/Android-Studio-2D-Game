@@ -85,19 +85,24 @@ public class IntermediateActivity extends AppCompatActivity {
                         //startActivity(intent1);
                         return true;
                     }
-                    databaseRepository.checkIfTheresAGame(new GameCheckCallback() {
-                        @Override
-                        public void onCheckCompleted(boolean gameExists) {
-                            if (gameExists) {
-                                AlertDialog dialog = continueOrStartNewGame();
-                                dialog.show();
-                            } else {
-                                createNewGame();
-                                drawerLayout.closeDrawers();
-
+                    if (DatabaseRepository.isOnline(context)){
+                        databaseRepository.checkIfTheresAGame(new GameCheckCallback() {
+                            @Override
+                            public void onCheckCompleted(boolean gameExists) {
+                                if (gameExists) {
+                                    AlertDialog dialog = continueOrStartNewGame();
+                                    dialog.show();
+                                } else {
+                                    createNewGame();
+                                    drawerLayout.closeDrawers();
+                                }
                             }
-                        }
-                    });
+                        });
+                    } else{
+                        createNewGame();
+                        drawerLayout.closeDrawers();
+                    }
+
                 }
                 drawerLayout.closeDrawer(navigationView);
                 return true;

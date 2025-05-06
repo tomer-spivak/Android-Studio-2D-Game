@@ -5,7 +5,12 @@ import static tomer.spivak.androidstudio2dgame.helper.EmailSender.sendEmail;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+
 import android.net.Uri;
+
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -22,6 +27,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -73,18 +79,16 @@ public class DatabaseRepository {
         return instance;
     }
 
-    public void saveBoard(GameState gameState, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
-        if (isGuest()) {
+    public void saveBoard(GameState gameState, OnCompleteListener<Void> onCompleteListener, Context context) {
+        if (!isOnline(context) || isGuest()) {
+            // simulate a failure Task so onComplete still fires:
+            Task<Void> fake = Tasks.forException(new Exception("No internet"));
+            onCompleteListener.onComplete(fake);
             return;
         }
 
         FirebaseUser user = getUserInstance();
-        if (user == null || gameState == null) {
-            if (onFailure != null) {
-                onFailure.onFailure(new Exception("Invalid save conditions"));
-            }
-            return;
-        }
+
 
         Map<String, Object> boardData = convertBoardToMap(gameState.getGrid().clone());
         Map<String, Object> metaData = createMetaData(gameState);
@@ -100,19 +104,7 @@ public class DatabaseRepository {
         batch.set(boardRef, boardData, SetOptions.merge());
         batch.set(metaRef, metaData, SetOptions.merge());
 
-        batch.commit()
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void unused) {
-                        if (onSuccess != null) onSuccess.onSuccess(unused);
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        if (onFailure != null) onFailure.onFailure(e);
-                    }
-                });
+        batch.commit().addOnCompleteListener(onCompleteListener);
     }
 
     private Map<String, Object> convertBoardToMap(Cell[][] grid) {
@@ -140,8 +132,8 @@ public class DatabaseRepository {
         metaData.put("dayTime", gameState.getDayTime());
         return metaData;
     }
-    public void loadCurrentGame(OnBoardLoadedListener listener) {
-        if (isGuest()) return;
+    public void loadCurrentGame(OnBoardLoadedListener listener, Context context) {
+        if (isGuest() && !isOnline(context)) return;
         FirebaseUser user = authHelper.getUserInstance();
 
         db.collection("users").document(user.getUid()).collection("currentGame").document("meta").get()
@@ -187,7 +179,6 @@ public class DatabaseRepository {
                     }
                 });
     }
-
 
     public void checkIfTheresAGame(GameCheckCallback callback) {
         if (isGuest()) {
@@ -391,12 +382,28 @@ public class DatabaseRepository {
         db.collection("users").document(user.getUid()).update("leaderboard.enemies defeated", FieldValue.increment(enemiesDefeated));
     }
 
-    public void incrementGamesPlayed() {
+    public void incrementGamesPlayed(Context context) {
+        if(isGuest() && !isOnline(context))
+            return;
         FirebaseUser user = getUserInstance();
 
         db.collection("users").document(user.getUid()).update("leaderboard.games played", FieldValue.increment(1));
 
     }
+    public static boolean isOnline(Context context) {
+        ConnectivityManager cm =
+                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null) return false;
+
+        Network network = cm.getActiveNetwork();
+        if (network == null) return false;
+        NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+        return caps != null
+                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+    }
+
+
 
     public interface GoogleSignInCallback {
         void onSuccess();
