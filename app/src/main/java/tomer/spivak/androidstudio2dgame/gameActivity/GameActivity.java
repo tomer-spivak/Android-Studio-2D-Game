@@ -244,6 +244,8 @@ public class GameActivity extends AppCompatActivity{
                 float volume = gameView.getMusicService().getCurrentVolumeLevel();
                 gameView.pauseGameLoop();
 
+                gameIsOnGoing = false;
+
                 LayoutInflater inflater = LayoutInflater.from(context);
                 View dialogView = inflater.inflate(R.layout.dialog_pause, null);
                 SeekBar volumeSeekBar = dialogView.findViewById(R.id.volumeSeekBar);
@@ -255,9 +257,10 @@ public class GameActivity extends AppCompatActivity{
                         .setPositiveButton("resume", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                gameIsOnGoing = true;
                                 gameView.resumeGameLoop(volumeSeekBar.getProgress());
                                 soundEffectsManager.setVolume(soundEffectsSeekBar.getProgress() / 100f);
-                                dialog.dismiss();
                             }
                         })
                         .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
