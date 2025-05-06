@@ -7,6 +7,8 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -153,19 +155,10 @@ public class GameActivity extends AppCompatActivity{
                     btnSkipRound.setVisibility(View.GONE);
                     cvSelectBuildingMenu.setVisibility(View.GONE);
                 }
-
-                Cell[][] board = gameState.getGrid();
-                int R = board.length, C = board[0].length;
-                CellState[][] states = new CellState[R][C];
-                for (int i = 0; i < R; i++) {
-                    for (int j = 0; j < C; j++) {
-                        states[i][j] = board[i][j].getCellState();
-                    }
-                }
-                gameView.getGridView().setCellsState(states);
-
+                //update the game view (things related to the current state of the game - not the board)
                 gameView.updateFromGameState(gameState);
-                //update game view
+
+                //check for game end
                 if(gameState.getGameStatus() != GameStatus.PLAYING){
                     triggerGameEnd(gameState.getGameStatus() == GameStatus.WON);
                 }
@@ -175,8 +168,12 @@ public class GameActivity extends AppCompatActivity{
         viewModel.getDelta().observe(this, new Observer<Pair<List<GameObjectData>, List<Position>>>() {
             @Override
             public void onChanged(Pair<List<GameObjectData>, List<Position>> deltaPair) {
+                //list of changed and new gameObjects (gets them in the class of GameObjectData,
+                // which translates the model data types to something the view can use)
                 List<GameObjectData> changedGameObjects = deltaPair.first;
+                //list of positions where the view needs to remove the gameObject
                 List<Position> positionsRemoved = deltaPair.second;
+                //make the actual change
                 gameView.applyDelta(changedGameObjects, positionsRemoved);
             }
         });
@@ -184,11 +181,10 @@ public class GameActivity extends AppCompatActivity{
         viewModel.getEnemiesDefeatedDelta().observe(this, new Observer<Integer>() {
             @Override
             public void onChanged(Integer delta) {
+                //if an enemy (or more then one) were killed, upload the data to firebase.
                 databaseRepository.incrementEnemiesDefeated(delta);
-
             }
         });
-
 
         btnStartGame.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -363,22 +359,42 @@ public class GameActivity extends AppCompatActivity{
         gameView.stopGameLoop();
         skipAutoSave = true;
 
-        if(isOnline(context)){
-            AlertDialog frozenDialog = showFrozenEndGameDialog(userWon);
-            databaseRepository.logResults(viewModel);
-            databaseRepository.removeBoard(task -> {
-                // when Firebase finishes, dismiss the frozen dialog
-                // and immediately show the real one
-                runOnUiThread(() -> {
-                    frozenDialog.dismiss();
-                    showEndGameDialog(userWon);
-                });
-            });
-        } else{
+        if (!isOnline(context)) {
             showEndGameDialog(userWon);
+            return;
         }
 
+        // show the “frozen” dialog
+        AlertDialog frozenDialog = showFrozenEndGameDialog(userWon);
+        databaseRepository.logResults(viewModel);
+        if (userWon) {
+            databaseRepository.incrementVictories(context);
+        }
 
+        // schedule a 5-second fallback
+        Handler handler = new Handler(Looper.getMainLooper());
+        Runnable fallback = new Runnable() {
+            @Override
+            public void run() {
+                if (frozenDialog.isShowing()) {
+                    frozenDialog.dismiss();
+                    showEndGameDialog(userWon);
+                }
+            }
+        };
+        handler.postDelayed(fallback, 5_000);
+
+        // actual Firebase call; cancel fallback if it completes in time
+        databaseRepository.removeBoard(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                handler.removeCallbacks(fallback);
+                if (frozenDialog.isShowing()) {
+                    frozenDialog.dismiss();
+                }
+                showEndGameDialog(userWon);
+            }
+        });
     }
 
     private void showEndGameDialog(boolean userWon) {

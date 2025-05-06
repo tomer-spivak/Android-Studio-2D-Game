@@ -202,6 +202,14 @@ public class DatabaseRepository {
                 });
     }
 
+    public void incrementVictories(Context context) {
+        if (isGuest() || isOnline(context)){
+            return;
+        }
+        FirebaseUser user = getUserInstance();
+        db.collection("users").document(user.getUid()).update("leaderboard.victories", FieldValue.increment(1));
+    }
+
     public void removeBoard(OnCompleteListener<Void> onCompleteListener) {
         if (isGuest())
             return;
@@ -259,12 +267,19 @@ public class DatabaseRepository {
                                     int gamesPlayed = 0;
                                     String displayName = document.getString("displayName");
                                     if (leaderboard.get("games played") == null)
-                                        leaderboard.put("games played", 0); else
-                                         gamesPlayed = ((Number) Objects.requireNonNull(leaderboard.get("games played"))).intValue();
+                                        leaderboard.put("games played", 0);
+                                    else
+                                        gamesPlayed = ((Number) Objects.requireNonNull(leaderboard.get("games played"))).intValue();
 
                                     leaderboard.putIfAbsent("enemies defeated", 0);
                                     int enemiesDefeated = ((Number) Objects.requireNonNull(leaderboard.get("enemies defeated"))).intValue();
-                                    maxRounds.add(new LeaderboardEntry(maxRound, displayName, gamesPlayed, enemiesDefeated));
+
+
+                                    leaderboard.putIfAbsent("victories", 0);
+                                    int victories = ((Number) Objects.requireNonNull(leaderboard.get("victories"))).intValue();
+
+
+                                    maxRounds.add(new LeaderboardEntry(maxRound, displayName, gamesPlayed, enemiesDefeated, victories));
                                 }
                             }
                             maxRounds.sort(Collections.reverseOrder());

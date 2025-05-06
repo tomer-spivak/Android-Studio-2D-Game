@@ -27,7 +27,9 @@ import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchManager;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectFactory;
+import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.music.MusicService;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
@@ -327,6 +329,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         currentRound = gameState.getCurrentRound();
         roundsLeft    = gameState.getNumberOfRounds() - currentRound + 1;
         shnuzes       = gameState.getShnuzes();
+
+        Cell[][] board = gameState.getGrid();
+        int R = board.length, C = board[0].length;
+        CellState[][] states = new CellState[R][C];
+        for (int i = 0; i < R; i++) {
+            for (int j = 0; j < C; j++) {
+                states[i][j] = board[i][j].getCellState();
+            }
+        }
+        gridView.setCellsState(states);
+
+
     }
     public void drawHealthBar(GameObject gameObject, Canvas canvas, float scale) {
         // 1) find the logical object

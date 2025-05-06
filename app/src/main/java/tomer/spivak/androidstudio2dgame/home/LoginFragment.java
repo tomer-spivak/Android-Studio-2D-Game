@@ -3,6 +3,8 @@ package tomer.spivak.androidstudio2dgame.home;
 
 import static android.app.Activity.RESULT_OK;
 
+import static tomer.spivak.androidstudio2dgame.helper.DatabaseRepository.isOnline;
+
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -217,6 +219,11 @@ public class LoginFragment extends Fragment {
         btnGoogleLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (!isOnline(requireContext())) {
+                    Toast.makeText(getContext(), "No internet – signing in as guest", Toast.LENGTH_SHORT).show();
+                    btnGuestLogin.setVisibility(View.VISIBLE);
+                    return;
+                }
                 Intent signInIntent = databaseRepository.getGoogleSignInIntent(requireContext());
                 googleSignInLauncher.launch(signInIntent);
             }

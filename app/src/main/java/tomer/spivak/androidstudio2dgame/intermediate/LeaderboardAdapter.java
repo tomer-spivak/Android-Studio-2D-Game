@@ -82,12 +82,12 @@ public class LeaderboardAdapter
     ) {
         // position is 0-based, so rank is position+1
         holder.rankTextView.setText((position + 1) + ".");
-
         LeaderboardEntry entry = filteredList.get(position);
         holder.usernameTextView.setText(entry.getDisplayName());
         holder.maxRoundTextView.setText("🏆 Max Round: " + entry.getMaxRound());
         holder.gamesPlayedTextView.setText("🎮 Games: " + entry.getGamesPlayed());
         holder.enemiesDefeatedTextView.setText("💀 Defeated: " + entry.getEnemiesDefeated());
+        holder.victoriesTextView.setText("🏅 Victories: " + entry.getVictories());
     }
 
 
@@ -101,7 +101,8 @@ public class LeaderboardAdapter
                 usernameTextView,
                 gamesPlayedTextView,
                 enemiesDefeatedTextView,
-                maxRoundTextView;
+                maxRoundTextView,
+                victoriesTextView;
 
         public LeaderboardViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -110,6 +111,7 @@ public class LeaderboardAdapter
             gamesPlayedTextView   = itemView.findViewById(R.id.tvGamesPlayed);
             enemiesDefeatedTextView = itemView.findViewById(R.id.tvEnemiesDefeated);
             maxRoundTextView      = itemView.findViewById(R.id.tvMaxRound);
+            victoriesTextView     = itemView.findViewById(R.id.tvVictories);
         }
     }
 }

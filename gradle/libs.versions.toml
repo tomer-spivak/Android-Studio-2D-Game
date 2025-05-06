@@ -21,6 +21,7 @@ lifecycleViewmodelKtx = "2.8.7"
 playServicesAuth = "21.3.0"
 recyclerview = "1.4.0"
 volley = "1.2.1"
+gridlayout = "1.1.0"
 
 [libraries]
 android-activation = { module = "com.sun.mail:android-activation", version.ref = "androidMail" }
@@ -46,6 +47,7 @@ material-vlatestversion = { module = "com.google.android.material:material", ver
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
+gridlayout = { group = "androidx.gridlayout", name = "gridlayout", version.ref = "gridlayout" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
