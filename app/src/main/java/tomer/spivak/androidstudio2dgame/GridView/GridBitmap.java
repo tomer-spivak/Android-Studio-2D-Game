@@ -14,7 +14,6 @@ public class GridBitmap {
     private float scale;
     private final float widthFixer;
 
-
     public GridBitmap(Drawable drawable, Context context) {
         this.originalDrawable = drawable;
         this.context = context;

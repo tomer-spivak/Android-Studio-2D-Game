@@ -5,21 +5,20 @@ import android.graphics.Point;
 
 
 public class GridPathManager {
-    private final int numRows, numColumns;
+    private final int boardSize;
     private float cellWidth, cellHeight;
     private final float[] startCoordinates;
     private final Path[][] cellPaths;
     private final Point[][] cellCenters;
     private final float[] currentPosition = new float[]{0,0};
 
-    public GridPathManager(int numRows, int numColumns, float cellWidth, float cellHeight, float[] startCoordinates){
-        this.numRows = numRows;
-        this.numColumns = numColumns;
+    public GridPathManager(int boardSize, float cellWidth, float cellHeight, float[] startCoordinates){
+        this.boardSize = boardSize;
         this.cellWidth = cellWidth;
         this.cellHeight = cellHeight;
         this.startCoordinates = startCoordinates;
-        cellPaths = new Path[numRows][numColumns];
-        cellCenters = new Point[numRows][numColumns];
+        cellPaths = new Path[boardSize][boardSize];
+        cellCenters = new Point[boardSize][boardSize];
     }
 
     private void calculateCellPath(int row, int col) {
@@ -60,8 +59,8 @@ public class GridPathManager {
     }
 
     public void calculateCellPaths() {
-        for (int i = 0; i < numRows; i++) {
-            for (int j = 0; j < numColumns; j++) {
+        for (int i = 0; i < boardSize; i++) {
+            for (int j = 0; j < boardSize; j++) {
                 calculateCellPath(i, j);
             }
         }

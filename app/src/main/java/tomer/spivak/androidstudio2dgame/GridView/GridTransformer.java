@@ -7,9 +7,9 @@ public class GridTransformer {
     private final float angle;
     private final int baseCellHeight;
 
-    public GridTransformer(float initialX, float initialY, float minScale, float maxScale, int baseCellHeight) {
+    public GridTransformer(float minScale, float maxScale, int baseCellHeight) {
         this.baseCellHeight = baseCellHeight;
-        this.state = new TransformState(initialX, initialY, 1.0f);
+        this.state = new TransformState(0,0, 1.0f);
         this.minScale = minScale;
         this.maxScale = maxScale;
         this.angle = (float)(Math.PI * 0.18);

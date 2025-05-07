@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import tomer.spivak.androidstudio2dgame.GameObjectData;
-import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
+import tomer.spivak.androidstudio2dgame.GridView.GraphicalBoard;
 import tomer.spivak.androidstudio2dgame.GridView.TouchManager;
 import tomer.spivak.androidstudio2dgame.projectManagement.GameEventListener;
 import tomer.spivak.androidstudio2dgame.model.Cell;
@@ -33,7 +33,7 @@ import tomer.spivak.androidstudio2dgame.projectManagement.GameLoop;
 public class GameView extends SurfaceView implements SurfaceHolder.Callback, TouchManager.TouchListener {
     private final GameLoop gameLoop;
     //custom view class that handles the board
-    private final CustomGridView gridView;
+    private final GraphicalBoard board;
     //custom class that handles touch events (scrolls, zoom)
     private final TouchManager touchManager;
 
@@ -74,7 +74,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         this.listener = listener;
         gameLoop = new GameLoop(this, surfaceHolder, listener);
         touchManager = new TouchManager(context, this);
-        gridView = new CustomGridView(context, boardSize);
+        board = new GraphicalBoard(context, boardSize);
 
         morningBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_morning);
         nightBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_night);
@@ -118,8 +118,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     //everytime we scale we need to update everything
     @Override
     public void onScale(float scaleFactor, float focusX, float focusY) {
-        float scale = gridView.updateScale(scaleFactor, focusX, focusY);
-        Point[][] centers = gridView.getCenterCells();
+        float scale = board.updateScale(scaleFactor, focusX, focusY);
+        Point[][] centers = board.getCenterCells();
         synchronized (gameObjectListDrawOrder) {
             for (GameObject gameObject : gameObjectListDrawOrder) {
                 Position p = gameObject.getPos();
@@ -133,13 +133,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     //update the position of the grid view
     @Override
     public void onScroll(float deltaX, float deltaY) {
-        gridView.updatePosition(deltaX, deltaY);
+        board.updatePosition(deltaX, deltaY);
     }
 
     //this translates real screen coordinates to cell model coordinates
     @Override
     public void onBoxClick(float clickCoordinatesX, float clickCoordinatesY) {
-        Point cellCenterPoint = gridView.getSelectedCell(clickCoordinatesX, clickCoordinatesY);
+        Point cellCenterPoint = board.getSelectedCell(clickCoordinatesX, clickCoordinatesY);
         if (cellCenterPoint == null)
             return;
         listener.onCellClicked(cellCenterPoint.x, cellCenterPoint.y);
@@ -154,7 +154,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         //draw the background
         Bitmap scaledBackBitmap = Bitmap.createScaledBitmap(backgroundBitmap, getWidth(), getHeight(), true);
         canvas.drawBitmap(scaledBackBitmap, 0, 0, backgroundPaint);
-        gridView.draw(canvas);
+        board.draw(canvas);
 
         List<GameObject> spritesSnapshot;
         synchronized (gameObjectListDrawOrder) {
@@ -206,7 +206,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     }
 
     public void applyDelta(List<GameObjectData> changed, List<Position> removed) {
-        Point[][] centers = gridView.getCenterCells();
+        Point[][] centers = board.getCenterCells();
 
         synchronized (gameObjectListDrawOrder) {
             for (Position positionToRemove : removed) {
@@ -232,7 +232,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
                     found.updateState(gameObjectData.getState(), gameObjectData.getDirection(), gameObjectData.getHealthPercentage());
                 } else {
                     Point center = centers[gameObjectData.getX()][gameObjectData.getY()];
-                    GameObject gameObject = new GameObject(context, center, gridView.getScale(), objectPos, gameObjectData.getType(),
+                    GameObject gameObject = new GameObject(context, center, board.getScale(), objectPos, gameObjectData.getType(),
                             gameObjectData.getState(), gameObjectData.getDirection(), gameObjectData.getHealthPercentage());
                     int i = 0;
                     while (i < gameObjectListDrawOrder.size() && gameObjectListDrawOrder.get(i).getImagePoint().y < gameObject.getImagePoint().y) {
@@ -270,7 +270,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     public void resumeGameLoop(float volumeLevel) {
         MusicService musicService = ((GameActivity)context).getMusicService();
         SoundEffectManager soundEffectsManager = ((GameActivity)context).getSoundEffectsManager();
-        Point[][] centerCells = gridView.getCenterCells();
+        Point[][] centerCells = board.getCenterCells();
         soundEffectsManager.resumeSoundEffects();
         //setting the game object's image point in the new updated board
         synchronized (gameObjectListDrawOrder){
@@ -296,15 +296,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         roundsLeft    = gameState.getNumberOfRounds() - currentRound + 1;
         shnuzes       = gameState.getShnuzes();
 
-        Cell[][] board = gameState.getGrid();
-        int R = board.length, C = board[0].length;
+        Cell[][] boardCells = gameState.getGrid();
+        int R = boardCells.length, C = boardCells[0].length;
         CellState[][] states = new CellState[R][C];
         for (int i = 0; i < R; i++) {
             for (int j = 0; j < C; j++) {
-                states[i][j] = board[i][j].getCellState();
+                states[i][j] = boardCells[i][j].getCellState();
             }
         }
-        gridView.setCellsState(states);
+        board.setCellsState(states);
 
     }
 }

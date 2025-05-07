@@ -11,29 +11,17 @@ import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 
 public class DrawGridView {
     private final GridBitmap[] grasses;
-    Context context;
 
     public DrawGridView(Context context) {
         this.grasses = new GridBitmap[CellState.values().length];
-        grasses[0] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_default),
-                context);
-        grasses[1] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_burnt),
-                context);
-        grasses[2] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_enemydeath1),
-                context);
-        grasses[3] = new GridBitmap(ContextCompat.getDrawable(context,
-                R.drawable.grass_enemydeath2),
-                context);
-        grasses[4] = new GridBitmap(ContextCompat.getDrawable(context,
-                R.drawable.grass_enemydeath3),
-                context);
+        grasses[0] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_default), context);
+        grasses[1] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_burnt), context);
+        grasses[2] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_enemydeath1), context);
+        grasses[3] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_enemydeath2), context);
+        grasses[4] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_enemydeath3), context);
         grasses[5] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_explode), context);
-        this.context = context;
         grasses[6] = new GridBitmap(ContextCompat.getDrawable(context, R.drawable.grass_enemy_spawn_location), context);
-
-
     }
-
 
 
     public void draw(Canvas canvas, Point cellCenter, float scale, CellState cellState) {
@@ -48,7 +36,5 @@ public class DrawGridView {
         float topLeftGrassY = cellCenter.y - bitmap.getHeight() / 2;
         canvas.drawBitmap(bitmap.getBitmap(), topLeftGrassX, topLeftGrassY, null);
     }
-
-
 
 }
