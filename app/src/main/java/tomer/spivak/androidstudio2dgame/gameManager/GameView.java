@@ -24,6 +24,7 @@ import java.util.List;
 import tomer.spivak.androidstudio2dgame.GameObjectData;
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchManager;
+import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
 import tomer.spivak.androidstudio2dgame.gameActivity.GameEventListener;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Cell;
@@ -62,9 +63,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     //listener for events like clicking on a cell and game loop updating
     GameEventListener listener;
 
-    //the music service
-    private MusicService musicService;
-    private boolean shouldPauseMusic = false;
     private boolean shouldResumeMusic  = false;
     private float  pendingVolumeLevel = 1f;
 
@@ -78,35 +76,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     private final Paint timerPaint = new Paint();
     private final android.graphics.Rect timerBounds = new android.graphics.Rect();
     private final Paint backgroundPaint = new Paint();
-
-
-
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            //getting the music service
-            MusicService.LocalBinder binder = (MusicService.LocalBinder) service;
-            musicService = binder.getService();
-            //getting the volume
-            SharedPreferences prefs = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-            float savedVolume = prefs.getFloat("volume", 0.07f);
-            musicService.setVolumeLevel(savedVolume);
-            pendingVolumeLevel = savedVolume;
-            if (shouldPauseMusic) {
-                musicService.pauseMusic();
-                shouldPauseMusic = false;
-            }
-            if (shouldResumeMusic) {
-                musicService.resumeMusic();
-                musicService.setVolumeLevel(pendingVolumeLevel);
-                shouldResumeMusic = false;
-            }
-        }
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            musicService = null;
-        }
-    };
 
 
     public GameView(Context context, int boardSize, GameEventListener listener) {
@@ -127,7 +96,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         context.startService(musicIntent);
 
 
-        context.bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
 
         barBgPaint.setColor(Color.GRAY);
@@ -188,7 +156,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         if (gameLoop != null) {
             gameLoop.stopLoop();
         }
-        context.unbindService(serviceConnection);
     }
 
     @Override
@@ -270,9 +237,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     }
 
     public void pauseGameLoop() {
-        shouldPauseMusic = true;
+        MusicService musicService = ((GameActivity)context).getMusicService();
+        SoundEffectManager soundEffectsManager = ((GameActivity)context).getSoundEffectsManager();
+        shouldResumeMusic = false;
+        soundEffectsManager.pauseSoundEffects();
         if (musicService != null) {
-            shouldPauseMusic = false;
             musicService.pauseMusic();
         }
         gameLoop.stopLoop();
@@ -280,32 +249,28 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
 
     public void stopGameLoop() {
-        shouldPauseMusic = true;
-        if (musicService != null) {
-            shouldPauseMusic = false;
-            SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-
-            float volume = musicService.getVolume();
-            editor.putFloat("volume", volume);
-
-            editor.apply();
-            musicService.stopMusic();
+        // grab the already‐bound service from your host Activity
+        MusicService svc = ((GameActivity)context).getMusicService();
+        SoundEffectManager soundEffectsManager = ((GameActivity)context).getSoundEffectsManager();
+        soundEffectsManager.stopAllSoundEffects();
+        if (svc != null) {
+            // persist the current volume
+            SharedPreferences prefs = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putFloat("volume", svc.getCurrentVolumeLevel())
+                    .apply();
+            // stop the music playback
+            svc.stopMusic();
         }
-
-        context.stopService(musicIntent);
-
+        // stop your game loop as before
         gameLoop.stopLoop();
     }
 
-    public MusicService getMusicService() {
-        return musicService;
-    }
-
-
     public void resumeGameLoop(float volumeLevel) {
+        MusicService musicService = ((GameActivity)context).getMusicService();
+        SoundEffectManager soundEffectsManager = ((GameActivity)context).getSoundEffectsManager();
         Point[][] centerCells = gridView.getCenterCells();
-
+        soundEffectsManager.resumeSoundEffects();
         synchronized (gameObjectListDrawOrder){
             for(GameObject gameObject : gameObjectListDrawOrder){
                 gameObject.setImagePoint(centerCells[gameObject.getPos().getX()][gameObject.getPos().getY()]);

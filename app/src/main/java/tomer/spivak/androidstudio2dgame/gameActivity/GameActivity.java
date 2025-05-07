@@ -2,12 +2,16 @@ package tomer.spivak.androidstudio2dgame.gameActivity;
 
 import static tomer.spivak.androidstudio2dgame.helper.DatabaseRepository.isOnline;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -71,6 +75,10 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
 
     //if the user chose to remove the save
     private boolean skipAutoSave = false;
+
+    private Intent musicIntent;
+    private ServiceConnection serviceConnection;
+    private MusicService musicService;      // get from the connection
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,6 +193,21 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
             }
         });
 
+        musicIntent = new Intent(this, MusicService.class);
+        serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder binder) {
+                musicService = ((MusicService.LocalBinder)binder).getService();
+                float vol = getSharedPreferences("MyPrefs", MODE_PRIVATE)
+                        .getFloat("volume", 0.07f);
+                musicService.setVolumeLevel(vol);
+            }
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                musicService = null;
+            }
+        };
+
         btnStartGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -202,7 +225,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                 }
             }
         });
-
         btnOpenMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -228,19 +250,18 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
         btnPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MusicService service = gameView.getMusicService();
                 int volumeLevel;
-                if (service == null)
+                if (musicService == null)
                     volumeLevel = 7;
                 else
-                    volumeLevel = service.getCurrentVolumeLevel();
-                soundEffectsManager.pauseSoundEffects();
+                    volumeLevel = musicService.getCurrentVolumeLevel();
+
                 gameView.pauseGameLoop();
                 gameIsOnGoing = false;
                 LayoutInflater inflater = LayoutInflater.from(context);
                 View dialogView = inflater.inflate(R.layout.dialog_pause, null);
                 SeekBar musicVolumeSeekBar = dialogView.findViewById(R.id.volumeSeekBar);
-                musicVolumeSeekBar.setProgress((int) volumeLevel);
+                musicVolumeSeekBar.setProgress(volumeLevel);
                 SeekBar soundEffectsVolumeSeekBar = dialogView.findViewById(R.id.soundEffectsSeekBar);
                 soundEffectsVolumeSeekBar.setProgress(soundEffectsManager.getVolumeLevel());
                 new AlertDialog.Builder(context).setTitle("Game Paused").setView(dialogView)
@@ -249,7 +270,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();
                                 gameIsOnGoing = true;
-                                soundEffectsManager.resumeSoundEffects();
                                 gameView.resumeGameLoop(musicVolumeSeekBar.getProgress());
                                 soundEffectsManager.setVolume(soundEffectsVolumeSeekBar.getProgress() / 100f);
                             }
@@ -285,10 +305,9 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
         OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
             @Override
             public void handleOnBackPressed() {
-                MusicService service = gameView.getMusicService();
                 int volumeLevel = 7;
-                if(service != null)
-                    volumeLevel = service.getCurrentVolumeLevel();
+                if(musicService != null)
+                    volumeLevel = musicService.getCurrentVolumeLevel();
                 int finalVolumeLevel = volumeLevel;
                 soundEffectsManager.pauseSoundEffects();
                 gameView.pauseGameLoop();
@@ -469,6 +488,13 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        startForegroundService(musicIntent);
+        bindService(musicIntent, serviceConnection, BIND_AUTO_CREATE);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         if (gameView != null) {
@@ -487,6 +513,14 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
         }
         super.onPause();
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unbindService(serviceConnection);
+        stopService(musicIntent);
+    }
+
     @Override
     protected void onDestroy() {
         GameState gameState = viewModel.getGameState().getValue();
@@ -524,5 +558,13 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
 
     public void onBuildingSelected(String buildingType) {
         viewModel.selectBuilding(buildingType);
+    }
+
+    public MusicService getMusicService() {
+        return musicService;
+    }
+
+    public SoundEffectManager getSoundEffectsManager() {
+        return soundEffectsManager;
     }
 }
