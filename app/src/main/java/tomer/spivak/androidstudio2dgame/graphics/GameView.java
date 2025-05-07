@@ -115,7 +115,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         return touchManager.onTouchEvent(event) || super.onTouchEvent(event);
     }
 
-    //everytime we s
+    //everytime we scale we need to update everything
     @Override
     public void onScale(float scaleFactor, float focusX, float focusY) {
         float scale = gridView.updateScale(scaleFactor, focusX, focusY);
@@ -164,8 +164,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         for (GameObject gameObject : spritesSnapshot) {
             gameObject.drawView(canvas);
             float healthPer =  gameObject.getHealthPercentage();
-            int healthBarWidth = (int)(gameObject.getScaledWidth() * 0.2f);
-            int healthBarHeight = (int)(gameObject.getScaledHeight() * 0.04f);
+            int[] scaledSize = gameObject.getScaledSize();
+            int healthBarWidth = (int)(scaledSize[0] * 0.2f);
+            int healthBarHeight = (int)(scaledSize[1] * 0.04f);
             Point imagePoint = gameObject.getImagePoint();
             int x = imagePoint.x - healthBarWidth/2;
             int offset;

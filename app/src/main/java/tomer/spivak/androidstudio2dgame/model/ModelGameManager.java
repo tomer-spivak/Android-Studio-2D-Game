@@ -256,10 +256,11 @@ public class ModelGameManager {
                 if (Math.max(Math.abs(dr), Math.abs(dc)) == radius) {
                     Cell cell = board[r][c];
                     ModelObject object = cell.getObject();
-                    if (!(object instanceof Enemy))
+                    if (object instanceof Building)
                         continue;
+                    if(object != null)
+                        object.takeDamage(((ExplodingBuilding)explodingCell.getObject()).getDamage());
                     cell.executeExplosion();
-                    object.takeDamage(((ExplodingBuilding)explodingCell.getObject()).getDamage());
                 }
             }
         }

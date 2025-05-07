@@ -200,9 +200,8 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
             @Override
             public void onServiceConnected(ComponentName name, IBinder binder) {
                 musicService = ((MusicService.LocalBinder)binder).getService();
-                float vol = getSharedPreferences("MyPrefs", MODE_PRIVATE)
-                        .getFloat("volume", 0.07f);
-                musicService.setVolumeLevel(vol);
+                float volumeLevel = getSharedPreferences("MyPrefs", MODE_PRIVATE).getFloat("volume", 0.07f) * 100;
+                musicService.setVolumeLevel(volumeLevel);
             }
             @Override
             public void onServiceDisconnected(ComponentName name) {
@@ -520,8 +519,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
     @Override
     protected void onStop() {
         super.onStop();
-        unbindService(serviceConnection);
-        stopService(musicIntent);
     }
 
     @Override

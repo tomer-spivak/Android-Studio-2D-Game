@@ -76,6 +76,8 @@ public class Cell {
     }
 
     public void setState(CellState cellState) {
+        Log.d("cell", position.toString());
+        Log.d("cell", "setting state: " + cellState);
         this.cellState = cellState;
     }
 
@@ -114,9 +116,6 @@ public class Cell {
     }
 
     public void executeEnemyDeathAnimation() {
-        CellState state = getCellState();
-        if (state == CellState.ENEMYDEATH1 || state == CellState.ENEMYDEATH2 || state == CellState.ENEMYDEATH3)
-            state = defaultState;
         final CellState[] states = {
                 CellState.ENEMYDEATH1,
                 CellState.ENEMYDEATH2,

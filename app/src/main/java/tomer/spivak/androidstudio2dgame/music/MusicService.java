@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Binder;
-import android.os.Build;
 import android.os.IBinder;
 
 import androidx.core.app.NotificationCompat;
@@ -30,10 +29,6 @@ public class MusicService extends Service {
 
     public int getCurrentVolumeLevel() {
         return (int) (volume * 100);
-    }
-
-    public float getVolume() {
-        return volume;
     }
 
     public void setVolumeLevel(float progress) {
@@ -110,20 +105,18 @@ public class MusicService extends Service {
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
+            mediaPlayer = null;
         }
-        stopForeground(true);
-        super.onDestroy();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
     }
-
-
 
     public void pauseMusic() {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
