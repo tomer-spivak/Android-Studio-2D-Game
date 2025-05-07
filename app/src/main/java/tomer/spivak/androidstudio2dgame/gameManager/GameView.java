@@ -12,7 +12,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -25,7 +24,7 @@ import java.util.List;
 import tomer.spivak.androidstudio2dgame.GameObjectData;
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchManager;
-import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
+import tomer.spivak.androidstudio2dgame.gameActivity.GameEventListener;
 import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectFactory;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.Position;
@@ -36,29 +35,40 @@ import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 
-import android.os.Handler;
-import android.os.Looper;
+import android.widget.LinearLayout;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback, TouchManager.TouchListener {
     private final GameLoop gameLoop;
+    //custom view class that handles the board
     private final CustomGridView gridView;
-
     //custom class that handles touch events (scrolls, zoom)
     private final TouchManager touchManager;
 
-    private final SoundEffectManager soundEffects;
-    private Float scale = 1F;
+    //stores the images of the background
     private final Bitmap morningBackground;
     private final Bitmap nightBackground;
+    //stores the current background
     private Bitmap backgroundBitmap;
+
+    //saved for displaying to the user
     long timeTillNextRound = 0;
-    int currentRound = 0;
-    int boardSize;
-    Context context;
-    private final List<GameObject> drawOrder = new ArrayList<>();
     private int shnuzes = 0;
-    GameActivity gameActivity;
+
+    Context context;
+
+    //the order in which to draw the game objects on the screen (we dont anything to hide eachother that it shouldnt
+    private final List<GameObject> gameObjectListDrawOrder = new ArrayList<>();
+
+    //listener for events like clicking on a cell and game loop updating
+    GameEventListener listener;
+
+    //the music service
     private MusicService musicService;
+    private boolean shouldPauseMusic = false;
+    private boolean shouldResumeMusic  = false;
+    private float  pendingVolumeLevel = 1f;
+
+
     private final Intent musicIntent;
     private int roundsLeft = Integer.MAX_VALUE;
 
@@ -70,39 +80,52 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     private final Paint backgroundPaint = new Paint();
 
 
+
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d("music", "connected");
+            //getting the music service
             MusicService.LocalBinder binder = (MusicService.LocalBinder) service;
             musicService = binder.getService();
+            //getting the volume
+            SharedPreferences prefs = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+            float savedVolume = prefs.getFloat("volume", 0.07f);
+            musicService.setVolumeLevel(savedVolume);
+            pendingVolumeLevel = savedVolume;
+            if (shouldPauseMusic) {
+                musicService.pauseMusic();
+                shouldPauseMusic = false;
+            }
+            if (shouldResumeMusic) {
+                musicService.resumeMusic();
+                musicService.setVolumeLevel(pendingVolumeLevel);
+                shouldResumeMusic = false;
+            }
         }
-
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            Log.d("music", "disconnected");
             musicService = null;
         }
     };
 
 
-    public GameView(Context context, int boardSize, GameActivity gameActivity, SoundEffectManager soundEffects) {
+    public GameView(Context context, int boardSize, GameEventListener listener) {
         super(context);
         this.context = context;
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
-        gameLoop = new GameLoop(this, surfaceHolder, gameActivity);
+        gameLoop = new GameLoop(this, surfaceHolder, listener);
         touchManager = new TouchManager(context, this);
-        this.boardSize = boardSize;
         gridView = new CustomGridView(context, boardSize);
-        this.soundEffects = soundEffects;
         morningBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_morning);
         nightBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_night);
         backgroundBitmap = morningBackground;
-        this.gameActivity = gameActivity;
+        this.listener = listener;
 
-        musicIntent = new Intent(getContext(), MusicService.class);
+        musicIntent = new Intent(context, MusicService.class);
+        context.startForegroundService(musicIntent);
         context.startService(musicIntent);
+
 
         context.bindService(musicIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
@@ -139,17 +162,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     @Override
     public void onScale(float scaleFactor, float focusX, float focusY) {
-        this.scale =  gridView.updateScale(scaleFactor, focusX, focusY);
-
-        // 2) reposition and rescale every sprite under the same lock you use in draw/applyDelta
+        float scale = gridView.updateScale(scaleFactor, focusX, focusY);
         Point[][] centers = gridView.getCenterCells();
-        synchronized (drawOrder) {
-            for (GameObject go : drawOrder) {
-                // move it to the new scaled center
-                Position p = go.getPos();
-                go.setImagePoint(centers[p.getX()][p.getY()]);
-                // tell it the new scale so it draws its bitmap larger/smaller
-                go.setScale(scale);
+        synchronized (gameObjectListDrawOrder) {
+            for (GameObject gameObject : gameObjectListDrawOrder) {
+                Position p = gameObject.getPos();
+                gameObject.setImagePoint(centers[p.getX()][p.getY()]);
+                gameObject.setScale(scale);
             }
         }
 
@@ -178,7 +197,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         if (cellCenterPointArray == null)
             return;
         Point cellPoint = cellCenterPointArray[1];
-        gameActivity.onCellClicked(cellPoint.x, cellPoint.y);
+        listener.onCellClicked(cellPoint.x, cellPoint.y);
     }
 
 
@@ -194,13 +213,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         gridView.draw(canvas);
 
         List<GameObject> spritesSnapshot;
-        synchronized (drawOrder) {
-            spritesSnapshot = new ArrayList<>(drawOrder);
+        synchronized (gameObjectListDrawOrder) {
+            spritesSnapshot = new ArrayList<>(gameObjectListDrawOrder);
         }
 
         for (GameObject gameObject : spritesSnapshot) {
             gameObject.drawView(canvas);
-            drawHealthBar(gameObject, canvas, scale);
+            drawHealthBar(gameObject, canvas);
         }
 
         if (timeTillNextRound > 0){
@@ -212,26 +231,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     }
 
     public void applyDelta(List<GameObjectData> changed, List<Position> removed) {
-        // grab your current transform info
         Point[][] centers = gridView.getCenterCells();
 
-        // synchronize the whole mutation so draw() can’t run at the same time
-        synchronized (drawOrder) {
-            // 1) remove disappeared
+        synchronized (gameObjectListDrawOrder) {
             for (Position p : removed) {
-                for (int i = 0; i < drawOrder.size(); i++) {
-                    if (drawOrder.get(i).getPos().equals(p)) {
-                        drawOrder.remove(i);
+                for (int i = 0; i < gameObjectListDrawOrder.size(); i++) {
+                    if (gameObjectListDrawOrder.get(i).getPos().equals(p)) {
+                        gameObjectListDrawOrder.remove(i);
                         break;
                     }
                 }
             }
 
-            // 2) update existing or insert new
             for (GameObjectData gameObjectData : changed) {
                 Position pos = new Position(gameObjectData.getX(), gameObjectData.getY());
                 GameObject found = null;
-                for (GameObject go : drawOrder) {
+                for (GameObject go : gameObjectListDrawOrder) {
                     if (go.getPos().equals(pos)) {
                         found = go;
                         break;
@@ -242,41 +257,32 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
                     found.updateState(gameObjectData.getState(), gameObjectData.getDirection(), gameObjectData.getHealthPercentage());
                 } else {
                     Point center = centers[gameObjectData.getX()][gameObjectData.getY()];
-                    GameObject go = GameObjectFactory.create(
-                            context, center,
-                            gameObjectData.getType(),
-                            scale,
-                            pos,
-                            gameObjectData.getState(),
-                            gameObjectData.getDirection(), gameObjectData.getHealthPercentage()
-                    );
-                    // insert sorted by Y
-                    int idx = 0;
-                    while (idx < drawOrder.size() &&
-                            drawOrder.get(idx).getImagePoint().y < go.getImagePoint().y) {
-                        idx++;
+                    GameObject go = GameObjectFactory.create(context, center, gameObjectData.getType(), gridView.getScale(), pos, gameObjectData.getState(),
+                            gameObjectData.getDirection(), gameObjectData.getHealthPercentage());
+                    int i = 0;
+                    while (i < gameObjectListDrawOrder.size() && gameObjectListDrawOrder.get(i).getImagePoint().y < go.getImagePoint().y) {
+                        i++;
                     }
-                    drawOrder.add(idx, go);
+                    gameObjectListDrawOrder.add(i, go);
                 }
             }
         }
     }
 
     public void pauseGameLoop() {
-        soundEffects.pauseSoundEffects();
-
+        shouldPauseMusic = true;
         if (musicService != null) {
+            shouldPauseMusic = false;
             musicService.pauseMusic();
         }
-        else {
-            new Handler(Looper.getMainLooper()).postDelayed(this::pauseGameLoop, 100);
-        }
-
         gameLoop.stopLoop();
     }
 
+
     public void stopGameLoop() {
+        shouldPauseMusic = true;
         if (musicService != null) {
+            shouldPauseMusic = false;
             SharedPreferences sharedPreferences = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPreferences.edit();
 
@@ -288,8 +294,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         }
 
         context.stopService(musicIntent);
-        soundEffects.stopAllSoundEffects();
-
 
         gameLoop.stopLoop();
     }
@@ -302,17 +306,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     public void resumeGameLoop(float volumeLevel) {
         Point[][] centerCells = gridView.getCenterCells();
 
-        synchronized (drawOrder){
-            for(GameObject gameObject : drawOrder){
+        synchronized (gameObjectListDrawOrder){
+            for(GameObject gameObject : gameObjectListDrawOrder){
                 gameObject.setImagePoint(centerCells[gameObject.getPos().getX()][gameObject.getPos().getY()]);
             }
         }
-
+        shouldResumeMusic = true;
+        pendingVolumeLevel = volumeLevel;
         if (musicService != null) {
+            shouldResumeMusic = false;
             musicService.resumeMusic();
-            musicService.setVolumeLevel(volumeLevel);
+            musicService.setVolumeLevel(pendingVolumeLevel);
         }
-        soundEffects.resumeSoundEffects();
         gameLoop.startLoop();
     }
     public void updateFromGameState(GameState gameState) {
@@ -322,10 +327,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
             timeTillNextRound = gameState.getTimeToNextRound();
         } else {
             backgroundBitmap = nightBackground;
-            timeTillNextRound = -1;
+            timeTillNextRound = 0;
         }
-        // if you’re also tracking rounds/shnuzes here, update those too:
-        currentRound = gameState.getCurrentRound();
+        int currentRound = gameState.getCurrentRound();
         roundsLeft    = gameState.getNumberOfRounds() - currentRound + 1;
         shnuzes       = gameState.getShnuzes();
 
@@ -341,7 +345,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
 
     }
-    public void drawHealthBar(GameObject gameObject, Canvas canvas, float scale) {
+    public void drawHealthBar(GameObject gameObject, Canvas canvas) {
         // 1) find the logical object
         float healthPer =  gameObject.getHealthPercentage();
 
@@ -352,7 +356,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         Point ip = gameObject.getImagePoint();
         int x = ip.x - barW/2;
         int offset = (!gameObject.getType().equals("monster")) ? 310 : 170;
-        int y = (int)(ip.y - offset * scale);
+        int y = (int)(ip.y - offset * gameObject.getScale());
 
         // 3) draw background
         canvas.drawRect(x, y, x + barW, y + barH, barBgPaint);

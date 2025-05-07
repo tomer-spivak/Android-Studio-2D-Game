@@ -195,4 +195,8 @@ public class CustomGridView extends GridView {
     public void setCellsState(CellState[][] cellStates) {
         this.cellStates = cellStates;
     }
+
+    public float getScale() {
+        return gridTransformer.getScale();
+    }
 }

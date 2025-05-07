@@ -45,11 +45,12 @@ import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
+import tomer.spivak.androidstudio2dgame.music.MusicService;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 
-public class GameActivity extends AppCompatActivity{
+public class GameActivity extends AppCompatActivity implements GameEventListener{
     private Context context;
 
     private GameView gameView;
@@ -96,7 +97,7 @@ public class GameActivity extends AppCompatActivity{
 
         //init game view
         LinearLayout gameLayout = findViewById(R.id.gameLinearLayout);
-        gameView = new GameView(context, boardSize, this, soundEffectsManager);
+        gameView = new GameView(context, boardSize, this);
         gameLayout.addView(gameView);
 
         databaseRepository = DatabaseRepository.getInstance(context);
@@ -227,13 +228,19 @@ public class GameActivity extends AppCompatActivity{
         btnPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                float volume = gameView.getMusicService().getCurrentVolumeLevel();
+                MusicService service = gameView.getMusicService();
+                int volumeLevel;
+                if (service == null)
+                    volumeLevel = 7;
+                else
+                    volumeLevel = service.getCurrentVolumeLevel();
+                soundEffectsManager.pauseSoundEffects();
                 gameView.pauseGameLoop();
                 gameIsOnGoing = false;
                 LayoutInflater inflater = LayoutInflater.from(context);
                 View dialogView = inflater.inflate(R.layout.dialog_pause, null);
                 SeekBar musicVolumeSeekBar = dialogView.findViewById(R.id.volumeSeekBar);
-                musicVolumeSeekBar.setProgress((int) volume);
+                musicVolumeSeekBar.setProgress((int) volumeLevel);
                 SeekBar soundEffectsVolumeSeekBar = dialogView.findViewById(R.id.soundEffectsSeekBar);
                 soundEffectsVolumeSeekBar.setProgress(soundEffectsManager.getVolumeLevel());
                 new AlertDialog.Builder(context).setTitle("Game Paused").setView(dialogView)
@@ -242,6 +249,7 @@ public class GameActivity extends AppCompatActivity{
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();
                                 gameIsOnGoing = true;
+                                soundEffectsManager.resumeSoundEffects();
                                 gameView.resumeGameLoop(musicVolumeSeekBar.getProgress());
                                 soundEffectsManager.setVolume(soundEffectsVolumeSeekBar.getProgress() / 100f);
                             }
@@ -256,12 +264,14 @@ public class GameActivity extends AppCompatActivity{
                                         public void onComplete(@NonNull Task<Void> task) {
                                             if (task.isSuccessful())
                                                 databaseRepository.logResults(viewModel);
+                                            soundEffectsManager.stopAllSoundEffects();
                                             gameView.stopGameLoop();
                                             dialog.dismiss();
                                             finish();
                                         }
                                     }, context);
                                 } else {
+                                    soundEffectsManager.stopAllSoundEffects();
                                     gameView.stopGameLoop();
                                     dialog.dismiss();
                                     finish();
@@ -275,7 +285,12 @@ public class GameActivity extends AppCompatActivity{
         OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true /* enabled by default */) {
             @Override
             public void handleOnBackPressed() {
-                int volume = gameView.getMusicService().getCurrentVolumeLevel();
+                MusicService service = gameView.getMusicService();
+                int volumeLevel = 7;
+                if(service != null)
+                    volumeLevel = service.getCurrentVolumeLevel();
+                int finalVolumeLevel = volumeLevel;
+                soundEffectsManager.pauseSoundEffects();
                 gameView.pauseGameLoop();
 
                 LayoutInflater inflater = LayoutInflater.from(context);
@@ -288,11 +303,13 @@ public class GameActivity extends AppCompatActivity{
                 Button btnDiscardSave = dialogView.findViewById(R.id.dialog_exit_without_saving);
                 Button btnSave = dialogView.findViewById(R.id.dialog_exit_with_saving);
 
+
                 btnCancel.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         alertDialog.dismiss();
-                        gameView.resumeGameLoop(volume);
+                        soundEffectsManager.resumeSoundEffects();
+                        gameView.resumeGameLoop(finalVolumeLevel);
                     }
                 });
 
@@ -306,6 +323,7 @@ public class GameActivity extends AppCompatActivity{
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
                                 alertDialog.dismiss();
+                                soundEffectsManager.stopAllSoundEffects();
                                 gameView.stopGameLoop();
                                 skipAutoSave = true;
                                 finish();
@@ -329,12 +347,14 @@ public class GameActivity extends AppCompatActivity{
                                                 databaseRepository.logResults(viewModel);
                                             else
                                                 Toast.makeText(context, "Failed to save game: " + task.getException(), Toast.LENGTH_LONG).show();
+                                            soundEffectsManager.stopAllSoundEffects();
                                             gameView.stopGameLoop();
                                             finish();
                                         }
                                     }, context);
 
                         } else {
+                            soundEffectsManager.stopAllSoundEffects();
                             gameView.stopGameLoop();
                             finish();
                         }
@@ -348,6 +368,7 @@ public class GameActivity extends AppCompatActivity{
     }
 
     private void triggerGameEnd(boolean userWon) {
+        soundEffectsManager.stopAllSoundEffects();
         gameView.stopGameLoop();
         skipAutoSave = true;
 
@@ -453,6 +474,7 @@ public class GameActivity extends AppCompatActivity{
         if (gameView != null) {
             SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
             float volume = prefs.getFloat("volume", 0.07f) ;
+            soundEffectsManager.resumeSoundEffects();
             gameView.resumeGameLoop(volume * 100);
         }
     }
@@ -460,6 +482,7 @@ public class GameActivity extends AppCompatActivity{
     @Override
     protected void onPause() {
         if (gameView != null) {
+            soundEffectsManager.pauseSoundEffects();
             gameView.pauseGameLoop();
         }
         super.onPause();
@@ -478,6 +501,7 @@ public class GameActivity extends AppCompatActivity{
         }
 
         if (gameView != null) {
+            soundEffectsManager.stopAllSoundEffects();
             gameView.stopGameLoop();
         }
 
@@ -488,6 +512,12 @@ public class GameActivity extends AppCompatActivity{
         super.onDestroy();
     }
 
+    @Override
+    public void onTick(long deltaTime) {
+        if(gameIsOnGoing)
+            viewModel.tick(deltaTime);
+    }
+
     public void onCellClicked(int row, int col) {
         viewModel.onCellClicked(row, col);
     }
@@ -495,10 +525,4 @@ public class GameActivity extends AppCompatActivity{
     public void onBuildingSelected(String buildingType) {
         viewModel.selectBuilding(buildingType);
     }
-
-    public void updateGameState(long elapsedTime) {
-        if (gameIsOnGoing)
-            viewModel.tick(elapsedTime);
-    }
-
 }

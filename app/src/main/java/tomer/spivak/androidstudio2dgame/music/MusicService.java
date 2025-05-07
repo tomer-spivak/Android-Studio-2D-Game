@@ -1,11 +1,18 @@
 package tomer.spivak.androidstudio2dgame.music;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
+
+import androidx.core.app.NotificationCompat;
+
 import java.util.Random;
 
 import tomer.spivak.androidstudio2dgame.R;
@@ -17,6 +24,7 @@ public class MusicService extends Service {
     private final Random random = new Random();
     private int lastSongIndex = -1;
     float volume;
+    public static final String CHANNEL_ID = "music_service_channel";
 
     private final IBinder binder = new LocalBinder();
 
@@ -48,7 +56,13 @@ public class MusicService extends Service {
         super.onCreate();
         SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         volume = prefs.getFloat("volume", 0.07f) ;
-
+        NotificationChannel chan = new NotificationChannel(
+                CHANNEL_ID,
+                "Music Playback",
+                NotificationManager.IMPORTANCE_LOW
+        );
+        NotificationManager mgr = getSystemService(NotificationManager.class);
+        mgr.createNotificationChannel(chan);
     }
 
 
@@ -81,17 +95,27 @@ public class MusicService extends Service {
         if (mediaPlayer == null) {
             playRandomSong();
         }
+        Notification notif = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Game Music")
+                .setContentText("Playing background music")
+                .setSmallIcon(R.drawable.logo)   // your app’s music icon
+                .setOngoing(true)
+                .build();
+
+        // Enter foreground mode:
+        startForeground(1, notif);
         return START_STICKY;
     }
 
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
         }
+        stopForeground(true);
+        super.onDestroy();
     }
 
     @Override

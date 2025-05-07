@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 
 import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
+import tomer.spivak.androidstudio2dgame.gameActivity.GameEventListener;
 
 public class GameLoop implements Runnable {
 
@@ -28,12 +29,12 @@ public class GameLoop implements Runnable {
     private Thread gameThread;
 
     //listener that updates the game state. its implemented in the game activity
-    private final GameActivity gameActivity;
+    private final GameEventListener listener;
 
-    public GameLoop(GameView gameView, SurfaceHolder surfaceHolder, GameActivity gameActivity) {
+    public GameLoop(GameView gameView, SurfaceHolder surfaceHolder, GameEventListener listener) {
         this.surfaceHolder = surfaceHolder;
         this.gameView = gameView;
-        this.gameActivity = gameActivity;
+        this.listener = listener;
     }
 
     //function that starts the game loop
@@ -62,7 +63,7 @@ public class GameLoop implements Runnable {
                 //locks the canvas to only this thread and avoids any race conditions
                 synchronized (surfaceHolder) {
                     //update the game state
-                    gameActivity.updateGameState(deltaTime);
+                    listener.onTick(deltaTime);
                     //draws on the canvas
                     gameView.draw(canvas);
                 }

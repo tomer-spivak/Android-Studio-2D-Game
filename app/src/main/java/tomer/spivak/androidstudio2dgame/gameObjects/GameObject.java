@@ -168,4 +168,7 @@ public class GameObject {
         return scaledSize[1];
     }
 
+    public float getScale() {
+        return scale;
+    }
 }
