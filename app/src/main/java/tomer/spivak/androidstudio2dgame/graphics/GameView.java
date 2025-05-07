@@ -1,9 +1,6 @@
-package tomer.spivak.androidstudio2dgame.gameManager;
+package tomer.spivak.androidstudio2dgame.graphics;
 
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,7 +8,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
-import android.os.IBinder;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -24,19 +20,15 @@ import java.util.List;
 import tomer.spivak.androidstudio2dgame.GameObjectData;
 import tomer.spivak.androidstudio2dgame.GridView.CustomGridView;
 import tomer.spivak.androidstudio2dgame.GridView.TouchManager;
-import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
-import tomer.spivak.androidstudio2dgame.gameActivity.GameEventListener;
-import tomer.spivak.androidstudio2dgame.gameObjects.GameObjectFactory;
+import tomer.spivak.androidstudio2dgame.projectManagement.GameEventListener;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.music.MusicService;
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.gameObjects.GameObject;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
-
-import android.widget.LinearLayout;
+import tomer.spivak.androidstudio2dgame.projectManagement.GameLoop;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback, TouchManager.TouchListener {
     private final GameLoop gameLoop;
@@ -54,6 +46,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     //saved for displaying to the user
     long timeTillNextRound = 0;
     private int shnuzes = 0;
+    private int roundsLeft = Integer.MAX_VALUE;
 
     Context context;
 
@@ -63,51 +56,38 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     //listener for events like clicking on a cell and game loop updating
     GameEventListener listener;
 
-    private boolean shouldResumeMusic  = false;
-    private float  pendingVolumeLevel = 1f;
 
-
-    private final Intent musicIntent;
-    private int roundsLeft = Integer.MAX_VALUE;
-
-    private final Paint barBgPaint = new Paint();
-    private final Paint barFgPaint = new Paint();
-    // at the top of your class, alongside barBgPaint/barFgPaint:
-    private final Paint timerPaint = new Paint();
-    private final android.graphics.Rect timerBounds = new android.graphics.Rect();
+    //draw on the screen the health bar, the time to next round, and the background image
+    private final Paint healthBarPaint = new Paint();
+    private final Paint healthBarBackgroundPaint = new Paint();
+    private final Paint hudPaint = new Paint();
+    private final android.graphics.Rect hudBounds = new android.graphics.Rect();
     private final Paint backgroundPaint = new Paint();
 
 
     public GameView(Context context, int boardSize, GameEventListener listener) {
         super(context);
         this.context = context;
+        //surface view
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
+        this.listener = listener;
         gameLoop = new GameLoop(this, surfaceHolder, listener);
         touchManager = new TouchManager(context, this);
         gridView = new CustomGridView(context, boardSize);
+
         morningBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_morning);
         nightBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background_game_night);
         backgroundBitmap = morningBackground;
-        this.listener = listener;
 
-        musicIntent = new Intent(context, MusicService.class);
-        context.startForegroundService(musicIntent);
-        context.startService(musicIntent);
-
-
-
-
-        barBgPaint.setColor(Color.GRAY);
-        barBgPaint.setStyle(Paint.Style.FILL);
-
-        barFgPaint.setColor(Color.RED);
-        barFgPaint.setStyle(Paint.Style.FILL);
-
-        timerPaint.setColor(Color.WHITE);
-        timerPaint.setTextSize(48);           // tweak size as needed
-        timerPaint.setAntiAlias(true);
-        timerPaint.setTextAlign(Paint.Align.LEFT);
+        healthBarBackgroundPaint.setColor(Color.GRAY);
+        healthBarBackgroundPaint.setStyle(Paint.Style.FILL);
+        healthBarPaint.setColor(Color.RED);
+        healthBarPaint.setStyle(Paint.Style.FILL);
+        hudPaint.setColor(Color.WHITE);
+        hudPaint.setTextSize(48);
+        hudPaint.setAntiAlias(true);
+        hudPaint.setTextAlign(Paint.Align.LEFT);
         backgroundPaint.setFilterBitmap(true);
 
     }
@@ -118,16 +98,24 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     }
 
     @Override
-    public boolean performClick() {
-        return super.performClick();
+    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
+
     }
 
     @Override
+    public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
+        if (gameLoop != null) {
+            gameLoop.stopLoop();
+        }
+    }
+
+    //override the default touch event with my touch manager.
+    @Override
     public boolean onTouchEvent(MotionEvent event) {
-        performClick();
         return touchManager.onTouchEvent(event) || super.onTouchEvent(event);
     }
 
+    //everytime we s
     @Override
     public void onScale(float scaleFactor, float focusX, float focusY) {
         float scale = gridView.updateScale(scaleFactor, focusX, focusY);
@@ -142,29 +130,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
     }
 
+    //update the position of the grid view
     @Override
     public void onScroll(float deltaX, float deltaY) {
         gridView.updatePosition(deltaX, deltaY);
     }
 
+    //this translates real screen coordinates to cell model coordinates
     @Override
-    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
-    }
-
-    @Override
-    public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
-        if (gameLoop != null) {
-            gameLoop.stopLoop();
-        }
-    }
-
-    @Override
-    public void onBoxClick(float x, float y) {
-        Point[] cellCenterPointArray = gridView.getSelectedCell(x, y);
-        if (cellCenterPointArray == null)
+    public void onBoxClick(float clickCoordinatesX, float clickCoordinatesY) {
+        Point cellCenterPoint = gridView.getSelectedCell(clickCoordinatesX, clickCoordinatesY);
+        if (cellCenterPoint == null)
             return;
-        Point cellPoint = cellCenterPointArray[1];
-        listener.onCellClicked(cellPoint.x, cellPoint.y);
+        listener.onCellClicked(cellCenterPoint.x, cellCenterPoint.y);
     }
 
 
@@ -173,10 +151,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         if (canvas == null)
             return;
         super.draw(canvas);
-        int screenWidth = getWidth();
-        int screenHeight = getHeight();
-
-        drawBackground(canvas, backgroundBitmap, screenWidth, screenHeight);
+        //draw the background
+        Bitmap scaledBackBitmap = Bitmap.createScaledBitmap(backgroundBitmap, getWidth(), getHeight(), true);
+        canvas.drawBitmap(scaledBackBitmap, 0, 0, backgroundPaint);
         gridView.draw(canvas);
 
         List<GameObject> spritesSnapshot;
@@ -186,24 +163,54 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
         for (GameObject gameObject : spritesSnapshot) {
             gameObject.drawView(canvas);
-            drawHealthBar(gameObject, canvas);
-        }
+            float healthPer =  gameObject.getHealthPercentage();
+            int healthBarWidth = (int)(gameObject.getScaledWidth() * 0.2f);
+            int healthBarHeight = (int)(gameObject.getScaledHeight() * 0.04f);
+            Point imagePoint = gameObject.getImagePoint();
+            int x = imagePoint.x - healthBarWidth/2;
+            int offset;
+            if (!gameObject.getType().equals("monster")) {
+                offset = 310;
+            } else {
+                offset = 170;
+            }
+            int y = (int)(imagePoint.y - offset * gameObject.getScale());
+            canvas.drawRect(x, y, x + healthBarWidth, y + healthBarHeight, healthBarBackgroundPaint);
+            int fill = (int)(healthPer * healthBarWidth);
+            canvas.drawRect(x, y, x + fill, y + healthBarHeight, healthBarPaint);        }
 
         if (timeTillNextRound > 0){
-            drawTimeTillNextRound(canvas, timeTillNextRound, screenWidth);
+            String timeText = "Next round: " + (timeTillNextRound / 1000) + "." + (timeTillNextRound % 1000) / 100 + "s";
+            hudPaint.getTextBounds(timeText, 0, timeText.length(), hudBounds);
+            int x = getWidth() / 2 - hudBounds.width() / 2 + 50;
+            int y = 250;
+            canvas.drawText(timeText, x, y, hudPaint);
         }
 
-        drawNumberOfRoundsLeft(canvas, roundsLeft, screenWidth);
-        drawShnuzes(canvas, shnuzes, screenWidth);
+        String roundText = "number of rounds left: " + roundsLeft;
+        hudPaint.getTextBounds(roundText, 0, roundText.length(), hudBounds);
+        int x = getWidth() / 2 - hudBounds.width() / 2 + 50;
+        int y = 100;
+        canvas.drawText(roundText, x, y, hudPaint);
+
+        //the number should be displyad in a formatted way
+        String formattedShunzes = NumberFormat.getNumberInstance().format(shnuzes);
+
+        String shunzesText = "Shnuzes: " + formattedShunzes + " \uD83D\uDCB0";
+
+        x = getWidth() / 2 - hudBounds.width() / 2 + 100;
+        y = 180;
+
+        canvas.drawText(shunzesText, x, y, hudPaint);
     }
 
     public void applyDelta(List<GameObjectData> changed, List<Position> removed) {
         Point[][] centers = gridView.getCenterCells();
 
         synchronized (gameObjectListDrawOrder) {
-            for (Position p : removed) {
+            for (Position positionToRemove : removed) {
                 for (int i = 0; i < gameObjectListDrawOrder.size(); i++) {
-                    if (gameObjectListDrawOrder.get(i).getPos().equals(p)) {
+                    if (gameObjectListDrawOrder.get(i).getPos().equals(positionToRemove)) {
                         gameObjectListDrawOrder.remove(i);
                         break;
                     }
@@ -211,11 +218,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
             }
 
             for (GameObjectData gameObjectData : changed) {
-                Position pos = new Position(gameObjectData.getX(), gameObjectData.getY());
+                Position objectPos = new Position(gameObjectData.getX(), gameObjectData.getY());
                 GameObject found = null;
-                for (GameObject go : gameObjectListDrawOrder) {
-                    if (go.getPos().equals(pos)) {
-                        found = go;
+                for (GameObject gameObject : gameObjectListDrawOrder) {
+                    if (gameObject.getPos().equals(objectPos)) {
+                        found = gameObject;
                         break;
                     }
                 }
@@ -224,13 +231,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
                     found.updateState(gameObjectData.getState(), gameObjectData.getDirection(), gameObjectData.getHealthPercentage());
                 } else {
                     Point center = centers[gameObjectData.getX()][gameObjectData.getY()];
-                    GameObject go = GameObjectFactory.create(context, center, gameObjectData.getType(), gridView.getScale(), pos, gameObjectData.getState(),
-                            gameObjectData.getDirection(), gameObjectData.getHealthPercentage());
+                    GameObject gameObject = new GameObject(context, center, gridView.getScale(), objectPos, gameObjectData.getType(),
+                            gameObjectData.getState(), gameObjectData.getDirection(), gameObjectData.getHealthPercentage());
                     int i = 0;
-                    while (i < gameObjectListDrawOrder.size() && gameObjectListDrawOrder.get(i).getImagePoint().y < go.getImagePoint().y) {
+                    while (i < gameObjectListDrawOrder.size() && gameObjectListDrawOrder.get(i).getImagePoint().y < gameObject.getImagePoint().y) {
                         i++;
                     }
-                    gameObjectListDrawOrder.add(i, go);
+                    gameObjectListDrawOrder.add(i, gameObject);
                 }
             }
         }
@@ -239,7 +246,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     public void pauseGameLoop() {
         MusicService musicService = ((GameActivity)context).getMusicService();
         SoundEffectManager soundEffectsManager = ((GameActivity)context).getSoundEffectsManager();
-        shouldResumeMusic = false;
         soundEffectsManager.pauseSoundEffects();
         if (musicService != null) {
             musicService.pauseMusic();
@@ -249,20 +255,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
 
 
     public void stopGameLoop() {
-        // grab the already‐bound service from your host Activity
-        MusicService svc = ((GameActivity)context).getMusicService();
+        MusicService musicService = ((GameActivity)context).getMusicService();
         SoundEffectManager soundEffectsManager = ((GameActivity)context).getSoundEffectsManager();
         soundEffectsManager.stopAllSoundEffects();
-        if (svc != null) {
-            // persist the current volume
+        if (musicService != null) {
             SharedPreferences prefs = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-            prefs.edit()
-                    .putFloat("volume", svc.getCurrentVolumeLevel())
-                    .apply();
-            // stop the music playback
-            svc.stopMusic();
+            prefs.edit().putFloat("volume", musicService.getCurrentVolumeLevel()).apply();
+            musicService.stopMusic();
         }
-        // stop your game loop as before
         gameLoop.stopLoop();
     }
 
@@ -271,22 +271,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         SoundEffectManager soundEffectsManager = ((GameActivity)context).getSoundEffectsManager();
         Point[][] centerCells = gridView.getCenterCells();
         soundEffectsManager.resumeSoundEffects();
+        //setting the game object's image point in the new updated board
         synchronized (gameObjectListDrawOrder){
             for(GameObject gameObject : gameObjectListDrawOrder){
                 gameObject.setImagePoint(centerCells[gameObject.getPos().getX()][gameObject.getPos().getY()]);
             }
         }
-        shouldResumeMusic = true;
-        pendingVolumeLevel = volumeLevel;
         if (musicService != null) {
-            shouldResumeMusic = false;
             musicService.resumeMusic();
-            musicService.setVolumeLevel(pendingVolumeLevel);
+            musicService.setVolumeLevel(volumeLevel);
         }
         gameLoop.startLoop();
     }
     public void updateFromGameState(GameState gameState) {
-        // swap the bitmap
         if (gameState.isDayTime()) {
             backgroundBitmap = morningBackground;
             timeTillNextRound = gameState.getTimeToNextRound();
@@ -308,59 +305,5 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         }
         gridView.setCellsState(states);
 
-
-    }
-    public void drawHealthBar(GameObject gameObject, Canvas canvas) {
-        // 1) find the logical object
-        float healthPer =  gameObject.getHealthPercentage();
-
-        // 2) compute bar geometry
-        int barW = (int)(gameObject.getScaledWidth() * 0.1f);
-        int barH = (int)(gameObject.getScaledHeight() * 0.02f);
-
-        Point ip = gameObject.getImagePoint();
-        int x = ip.x - barW/2;
-        int offset = (!gameObject.getType().equals("monster")) ? 310 : 170;
-        int y = (int)(ip.y - offset * gameObject.getScale());
-
-        // 3) draw background
-        canvas.drawRect(x, y, x + barW, y + barH, barBgPaint);
-
-        // 4) draw fill
-        int fill = (int)(healthPer * barW);
-        canvas.drawRect(x, y, x + fill, y + barH, barFgPaint);
-    }
-
-    public void drawTimeTillNextRound(Canvas canvas, long timeTillNextRound, int screenWidth) {
-        String timeText = "Next round: " + (timeTillNextRound / 1000) + "." +
-                (timeTillNextRound % 1000) / 100 + "s";
-        timerPaint.getTextBounds(timeText, 0, timeText.length(), timerBounds);
-        int x = screenWidth / 2 - timerBounds.width() / 2 + 50;
-        int y = 250;
-        canvas.drawText(timeText, x, y, timerPaint);
-    }
-
-    public void drawBackground(Canvas canvas, Bitmap backgroundBitmap, int screenWidth, int screenHeight) {
-        Bitmap scaledBackBitmap = Bitmap.createScaledBitmap(backgroundBitmap, screenWidth, screenHeight, true);
-        canvas.drawBitmap(scaledBackBitmap, 0, 0, backgroundPaint);
-    }
-
-    public void drawShnuzes(Canvas canvas, int shunzes, int screenWidth) {
-        String formattedShunzes = NumberFormat.getNumberInstance().format(shunzes);
-
-        String shunzesText = "Shnuzes: " + formattedShunzes + " \uD83D\uDCB0";
-
-        int x = screenWidth / 2 - timerBounds.width() / 2 + 100;
-        int y = 180;
-
-        canvas.drawText(shunzesText, x, y, timerPaint);
-    }
-
-    public void drawNumberOfRoundsLeft(Canvas canvas, int roundsLeft, int screenWidth) {
-        String roundText = "number of rounds left: " + roundsLeft;
-        timerPaint.getTextBounds(roundText, 0, roundText.length(), timerBounds);
-        int x = screenWidth / 2 - timerBounds.width() / 2 + 50;
-        int y = 100;
-        canvas.drawText(roundText, x, y, timerPaint);
     }
 }

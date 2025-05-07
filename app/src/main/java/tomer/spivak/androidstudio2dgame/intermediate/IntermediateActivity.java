@@ -39,8 +39,8 @@ import com.google.firebase.auth.FirebaseUser;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
-import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
-import tomer.spivak.androidstudio2dgame.gameActivity.GameCheckCallback;
+import tomer.spivak.androidstudio2dgame.graphics.GameActivity;
+import tomer.spivak.androidstudio2dgame.helper.GameCheckCallback;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 
 public class IntermediateActivity extends AppCompatActivity {

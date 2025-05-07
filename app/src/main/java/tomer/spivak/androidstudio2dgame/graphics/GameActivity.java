@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.gameActivity;
+package tomer.spivak.androidstudio2dgame.graphics;
 
 import static tomer.spivak.androidstudio2dgame.helper.DatabaseRepository.isOnline;
 
@@ -43,8 +43,9 @@ import java.util.List;
 import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.GameObjectData;
+import tomer.spivak.androidstudio2dgame.projectManagement.GameEventListener;
+import tomer.spivak.androidstudio2dgame.projectManagement.OnBoardLoadedListener;
 import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
-import tomer.spivak.androidstudio2dgame.gameManager.GameView;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
@@ -54,7 +55,7 @@ import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 
-public class GameActivity extends AppCompatActivity implements GameEventListener{
+public class GameActivity extends AppCompatActivity implements GameEventListener {
     private Context context;
 
     private GameView gameView;
@@ -194,6 +195,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
         });
 
         musicIntent = new Intent(this, MusicService.class);
+
         serviceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder binder) {
@@ -212,7 +214,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
             @Override
             public void onClick(View v) {
                 //if the game can be started (if there are any buildings) start the game
-                if (viewModel.canStartGame()) {
+                if (viewModel.canStartGame() || continueGame) {
                     gameIsOnGoing = true;
                     btnStartGame.setVisibility(View.GONE);
                     btnSkipRound.setVisibility(View.VISIBLE);
@@ -257,6 +259,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                     volumeLevel = musicService.getCurrentVolumeLevel();
 
                 gameView.pauseGameLoop();
+                boolean oldGameIsOnGoing = gameIsOnGoing;
                 gameIsOnGoing = false;
                 LayoutInflater inflater = LayoutInflater.from(context);
                 View dialogView = inflater.inflate(R.layout.dialog_pause, null);
@@ -269,7 +272,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();
-                                gameIsOnGoing = true;
+                                gameIsOnGoing = oldGameIsOnGoing;
                                 gameView.resumeGameLoop(musicVolumeSeekBar.getProgress());
                                 soundEffectsManager.setVolume(soundEffectsVolumeSeekBar.getProgress() / 100f);
                             }

@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.gameActivity;
+package tomer.spivak.androidstudio2dgame.projectManagement;
 
 
 import java.util.Map;

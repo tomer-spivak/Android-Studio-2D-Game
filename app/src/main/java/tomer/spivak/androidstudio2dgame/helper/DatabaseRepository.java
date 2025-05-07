@@ -53,8 +53,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.gameActivity.GameCheckCallback;
-import tomer.spivak.androidstudio2dgame.gameActivity.OnBoardLoadedListener;
+import tomer.spivak.androidstudio2dgame.projectManagement.OnBoardLoadedListener;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardCallback;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;

@@ -41,7 +41,7 @@
 
         </activity>
         <activity
-            android:name=".gameActivity.GameActivity"
+            android:name=".graphics.GameActivity"
             android:exported="true"
             android:screenOrientation="landscape"
             android:theme="@style/Base.Theme.AndroidStudio2DGame">

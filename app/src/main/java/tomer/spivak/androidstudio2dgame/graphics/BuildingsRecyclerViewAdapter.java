@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.gameActivity;
+package tomer.spivak.androidstudio2dgame.graphics;
 
 import android.content.Context;
 

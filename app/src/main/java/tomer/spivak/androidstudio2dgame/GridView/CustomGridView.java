@@ -61,15 +61,13 @@ public class CustomGridView extends GridView {
                 cellStates[i][j] = CellState.NORMAL;
     }
 
-    public Point[] getSelectedCell(float x, float y) {
+    public Point getSelectedCell(float clickCoordinatesX, float clickCoordinatesY) {
         Path[][] cellPaths = gridPathManager.getCellPaths();
-        Point[][] cellCenters = gridPathManager.getCellCenters();
-
         for (int row = 0; row < numRows; row++) {
             for (int col = 0; col < numColumns; col++) {
                 Path path = cellPaths[row][col];
-                if (isPointInsidePath(path, x, y)){
-                    return new Point[]{cellCenters[row][col], new Point(row,col)};
+                if (isPointInsidePath(path, clickCoordinatesX, clickCoordinatesY)){
+                    return new Point(row,col);
                 }
             }
         }

@@ -1,12 +1,11 @@
-package tomer.spivak.androidstudio2dgame.gameManager;
+package tomer.spivak.androidstudio2dgame.projectManagement;
 
 
 import android.graphics.Canvas;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
-import tomer.spivak.androidstudio2dgame.gameActivity.GameActivity;
-import tomer.spivak.androidstudio2dgame.gameActivity.GameEventListener;
+import tomer.spivak.androidstudio2dgame.graphics.GameView;
 
 public class GameLoop implements Runnable {
 
