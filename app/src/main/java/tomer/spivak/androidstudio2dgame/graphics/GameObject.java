@@ -37,6 +37,7 @@ public class GameObject {
         imageResourceString = type.toLowerCase() + "_" + state;
         if ("monster".contains(type)) {
             imageResourceString += "_" + direction;
+            Log.d("img", "new image: " + imageResourceString);
         }
         scaledSize = new int[2];
         originalSize = new int[2];
@@ -78,7 +79,7 @@ public class GameObject {
             topLeftY = imagePoint.y - (int) (scaledSize[1] * 0.75);
         }
         if (imageResourceString.contains("mainbuilding")){
-            topLeftY = imagePoint.y - (int) (scaledSize[1] * 0.5);
+            topLeftY = imagePoint.y - (int) (scaledSize[1] * 0.45);
         }
         canvas.drawBitmap(scaledBitmap, topLeftX, topLeftY, null);
     }

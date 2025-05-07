@@ -266,7 +266,6 @@ public class ModelGameManager {
         }
     }
 
-
     private void initDefeat(GameState state) {
         state.setGameStatus(GameStatus.LOST);
     }

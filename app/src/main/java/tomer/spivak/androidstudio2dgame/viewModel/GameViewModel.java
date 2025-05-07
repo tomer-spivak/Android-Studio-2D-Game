@@ -248,6 +248,9 @@ public class GameViewModel extends ViewModel {
                                     ((Number) Objects.requireNonNull(tposMap.get("y"))).intValue());
                             pendingTargets.add(Pair.create(e, targetPos));
                         }
+                        e.setTimeSinceLastAttack((float)((double) objectMap.get("timeSinceLastAttack")));
+                        e.setTimeSinceLastMove((float)((double) objectMap.get("timeSinceLastMove")));
+
                         cell.spawnEnemy(e);
 
                     } else {

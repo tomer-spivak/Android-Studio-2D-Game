@@ -51,16 +51,17 @@ public class Enemy extends ModelObject implements IDamager{
 
     public void updateDirection(Position prevPos, Position nextPos) {
         Direction chosen;
-        if (prevPos.getX() > nextPos.getX()){
+        if (prevPos.getY() > nextPos.getY()){
             chosen = Direction.UPRIGHT;
-        } else if(prevPos.getX() < nextPos.getX()){
+        } else if(prevPos.getY() < nextPos.getY()){
             chosen = Direction.DOWNLEFT;
         } else {
-            if (nextPos.getY() < prevPos.getY()){
+            if (nextPos.getX() < prevPos.getX()){
                 chosen = Direction.UPLEFT;
             } else
                 chosen = Direction.DOWNRIGHT;
         }
+        Log.d("chosen", "chosen:" + chosen.name());
         setCurrentDirection(chosen);
 
     }
