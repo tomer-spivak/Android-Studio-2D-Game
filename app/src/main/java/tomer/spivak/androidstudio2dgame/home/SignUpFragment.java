@@ -60,15 +60,7 @@ public class SignUpFragment extends Fragment {
                             }
                         }
 
-                        repository.signUpWithEmailPassword(email, password, username,
-                                new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void unused) {
-                                        startActivity(
-                                                new Intent(requireActivity(), IntermediateActivity.class)
-                                        );
-                                    }
-                                }, requireContext(), imageUri
+                        repository.signUpWithEmailPassword(email, password, username, requireContext(), imageUri
                         );
                     }
                 }

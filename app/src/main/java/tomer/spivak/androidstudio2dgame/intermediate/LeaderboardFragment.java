@@ -81,7 +81,7 @@ public class LeaderboardFragment extends Fragment {
                     public void onLeaderboardFetched(List<LeaderboardEntry> leaderboardEntries) {
                         adapter.updateData(leaderboardEntries);
                     }
-                });
+                }, getContext());
 
         return view;
     }

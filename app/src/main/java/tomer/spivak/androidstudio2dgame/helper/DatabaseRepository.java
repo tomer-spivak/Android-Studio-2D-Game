@@ -1,8 +1,6 @@
 package tomer.spivak.androidstudio2dgame.helper;
 
 
-import static tomer.spivak.androidstudio2dgame.helper.EmailSender.sendEmail;
-
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -17,6 +15,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -35,15 +36,18 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
-import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,22 +57,23 @@ import java.util.Map;
 import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 import tomer.spivak.androidstudio2dgame.projectManagement.OnBoardLoadedListener;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardCallback;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
-import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 
 public class DatabaseRepository {
     private final FirebaseFirestore db;
-    private AuthenticationHelper authHelper;
     private static DatabaseRepository instance;
+    private final FirebaseAuth mAuth;
 
     private DatabaseRepository(Context context){
         FirebaseApp.initializeApp(context);
         db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
     }
 
     public static synchronized DatabaseRepository getInstance(Context context) {
@@ -79,8 +84,7 @@ public class DatabaseRepository {
     }
 
     public void saveBoard(GameState gameState, OnCompleteListener<Void> onCompleteListener, Context context) {
-        if (!isOnline(context) || isGuest()) {
-            // simulate a failure Task so onComplete still fires:
+        if (isGuest(context)) {
             Task<Void> fake = Tasks.forException(new Exception("No internet"));
             onCompleteListener.onComplete(fake);
             return;
@@ -88,81 +92,56 @@ public class DatabaseRepository {
 
         FirebaseUser user = getUserInstance();
 
-
-        Map<String, Object> boardData = convertBoardToMap(gameState.getGrid().clone());
-        Map<String, Object> metaData = createMetaData(gameState);
-
-        WriteBatch batch = db.batch();
-
-        DocumentReference boardRef = db.collection("users").document(user.getUid()).collection("currentGame")
-                .document("board objects");
-
-        DocumentReference metaRef = db.collection("users").document(user.getUid()).collection("currentGame")
-                .document("meta");
-
-        batch.set(boardRef, boardData, SetOptions.merge());
-        batch.set(metaRef, metaData, SetOptions.merge());
-
-        batch.commit().addOnCompleteListener(onCompleteListener);
-    }
-
-    private Map<String, Object> convertBoardToMap(Cell[][] grid) {
         Map<String, Object> boardData = new HashMap<>();
-        for (int i = 0; i < grid.length; i++) {
+        Cell[][] board = gameState.getGrid().clone();
+        for (int i = 0; i < board.length; i++) {
             List<Map<String, Object>> rowData = new ArrayList<>();
-            for (int j = 0; j < grid[i].length; j++) {
-                Log.d("zig", "i, j: " + i + ", " + j + ", grid:" + grid[i][j].toMap().toString());
-                Cell cell = grid[i][j];
+            for (int j = 0; j < board[i].length; j++) {
+                Cell cell = board[i][j];
                 if (cell.getObject() != null && !cell.getPosition().equals(cell.getObject().getPosition()))
                     cell.removeObject();
                 rowData.add(cell.toMap());
             }
             boardData.put("row_" + i, rowData);
         }
-        return boardData;
-    }
 
-    private Map<String, Object> createMetaData(GameState gameState) {
         Map<String, Object> metaData = new HashMap<>();
-        metaData.put("level", gameState.getDifficulty().name());
-        metaData.put("millis from start of the game", gameState.getCurrentTimeOfGame());
-        metaData.put("currentRound", gameState.getCurrentRound());
-        metaData.put("shnuzes", gameState.getShnuzes());
-        metaData.put("dayTime", gameState.getDayTime());
-        return metaData;
-    }
-    public void loadCurrentGame(OnBoardLoadedListener listener, Context context) {
-        if (isGuest() && !isOnline(context)) return;
-        FirebaseUser user = authHelper.getUserInstance();
+        metaData.put("Difficulty Level", gameState.getDifficulty().name());
+        metaData.put("Time Since Game Start", gameState.getCurrentTimeOfGame());
+        metaData.put("Current Round", gameState.getCurrentRound());
+        metaData.put("Shnuzes", gameState.getShnuzes());
+        metaData.put("Is Day Time", gameState.getDayTime());
 
+        db.collection("users").document(user.getUid()).collection("currentGame").document("meta").set(metaData, SetOptions.merge())
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (!task.isSuccessful()) {
+                    onCompleteListener.onComplete(task);
+                    return;
+                }
+                db.collection("users").document(user.getUid()).collection("currentGame").document("board objects").set(boardData, SetOptions.merge())
+                        .addOnCompleteListener(onCompleteListener);
+            }
+        });
+}
+
+    public void loadCurrentGame(OnBoardLoadedListener listener, Context context) {
+        if (isGuest(context))
+            return;
+        FirebaseUser user = getUserInstance();
+        OnFailureListener failureListener = new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(context, "Failed to load game: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                listener.onBoardLoaded(null, DifficultyLevel.MEDIUM, 0L, 1, -1, false);
+            }
+        };
         db.collection("users").document(user.getUid()).collection("currentGame").document("meta").get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        String difficultyName = documentSnapshot.getString("level");
-                        Long gameTime        = documentSnapshot.getLong("millis from start of the game");
-                        Long currentRoundL    = documentSnapshot.getLong("currentRound");
-                        Long shnuzesL         = documentSnapshot.getLong("shnuzes");
-                        Boolean dt           = documentSnapshot.getBoolean("dayTime");
-                        DifficultyLevel difficultyLevel = DifficultyLevel.MEDIUM;
-                        long timeSinceGameStart = 0L;
-                        int currentRound = 1, shnuzes = -1;
-                        boolean dayTime;
-                        if (difficultyName != null)
-                            difficultyLevel = DifficultyLevel.valueOf(difficultyName);
-                        if (gameTime     != null)
-                            timeSinceGameStart = gameTime;
-                        if (currentRoundL != null)
-                            currentRound = (currentRoundL.intValue());
-                        if (shnuzesL      != null)
-                            shnuzes = (shnuzesL.intValue());
-                        dayTime = (Boolean.TRUE.equals(dt));
+                    public void onSuccess(DocumentSnapshot metaSnapshot) {
 
-                        DifficultyLevel finalDifficultyLevel = difficultyLevel;
-                        Long finalTimeSinceGameStart = timeSinceGameStart;
-                        int finalCurrentRound = currentRound;
-                        int finalShnuzes = shnuzes;
-                        boolean finalDayTime = dayTime;
                         db.collection("users")
                                 .document(user.getUid())
                                 .collection("currentGame")
@@ -171,20 +150,36 @@ public class DatabaseRepository {
                                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                                     @Override
                                     public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                        listener.onBoardLoaded(documentSnapshot.getData(), finalDifficultyLevel, finalTimeSinceGameStart, finalCurrentRound,
-                                                finalShnuzes, finalDayTime);
+                                        String difficultyName = metaSnapshot.getString("Difficulty Level");
+                                        Long gameTimeL = metaSnapshot.getLong("Time Since Game Start");
+                                        Long currentRoundL = metaSnapshot.getLong("Current Round");
+                                        Long shnuzesL = metaSnapshot.getLong("Shnuzes");
+                                        Boolean dayTime = metaSnapshot.getBoolean("Is Day Time");
+                                        DifficultyLevel difficultyLevel = DifficultyLevel.MEDIUM;
+                                        long timeSinceGameStart = 0L;
+                                        int currentRound = 1, shnuzes = -1;
+                                        if (difficultyName != null)
+                                            difficultyLevel = DifficultyLevel.valueOf(difficultyName);
+                                        if (gameTimeL!= null)
+                                            timeSinceGameStart = gameTimeL;
+                                        if (currentRoundL != null)
+                                            currentRound = (currentRoundL.intValue());
+                                        if (shnuzesL != null)
+                                            shnuzes = (shnuzesL.intValue());
+
+                                        listener.onBoardLoaded(documentSnapshot.getData(), difficultyLevel, timeSinceGameStart, currentRound, shnuzes, Boolean.TRUE.equals(dayTime));
                                     }
-                                });
+                                }).addOnFailureListener(failureListener);
                     }
-                });
+                }).addOnFailureListener(failureListener);
     }
 
-    public void checkIfTheresAGame(GameCheckCallback callback) {
-        if (isGuest()) {
+    public void checkIfTheresAGame(GameCheckCallback callback, Context context) {
+        if (isGuest(context)) {
             callback.onCheckCompleted(false);
             return;
         }
-        FirebaseUser user = authHelper.getUserInstance();
+        FirebaseUser user = getUserInstance();
         db.collection("users").document(user.getUid()).collection("currentGame").document("board objects").get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
@@ -201,23 +196,23 @@ public class DatabaseRepository {
     }
 
     public void incrementVictories(Context context) {
-        if (isGuest() || isOnline(context)){
+        if (isGuest(context)){
             return;
         }
         FirebaseUser user = getUserInstance();
         db.collection("users").document(user.getUid()).update("leaderboard.victories", FieldValue.increment(1));
     }
 
-    public void removeBoard(OnCompleteListener<Void> onCompleteListener) {
-        if (isGuest())
+    public void removeBoard(OnCompleteListener<Void> onCompleteListener, Context context) {
+        if (isGuest(context)){
+            onCompleteListener.onComplete(null);
             return;
-        FirebaseUser user = authHelper.getUserInstance();
-        Log.d("sigma", "removing board: " + user);
+        }
+        FirebaseUser user = getUserInstance();
         db.collection("users").document(user.getUid()).collection("currentGame").document("board objects").delete().
                 addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                Log.d("sigma", "board removed:" + task.isSuccessful());
                 db.collection("users").document(user.getUid()).collection("currentGame").document("meta").delete().
                         addOnCompleteListener(onCompleteListener);
             }
@@ -225,139 +220,79 @@ public class DatabaseRepository {
 
     }
 
+    public void logMaxRound(int round, Context context) {
+        if (isGuest(context))
+            return;
 
-
-    public void logResults(GameViewModel vm) {
-        if (isGuest()) return;
-
-        FirebaseUser user = authHelper.getUserInstance();
-        int round = vm.getRound();
+        FirebaseUser user = getUserInstance();
 
         db.collection("users").document(user.getUid()).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        Map<String,Object> lb = documentSnapshot.exists() ? (Map<String,Object>)documentSnapshot.get("leaderboard") : null;
+                        Map<String, Object> leaderboardMap = null;
+                        if (documentSnapshot.exists()) {
+                            leaderboardMap = (Map<String, Object>) documentSnapshot.get("leaderboard");
 
-                        Long maxR = lb == null ? null : (Long)lb.get("max round");
-                        if (maxR == null || round > maxR) {
+                        }
+                        Long maxRounds = null;
+                        if (leaderboardMap != null) {
+                            maxRounds = (Long) leaderboardMap.get("max round");
+                        }
+                        if (maxRounds == null || round > maxRounds) {
                             Map<String, Object> leaderboard = new HashMap<>();
                             leaderboard.put("max round", round);
 
-                            db.collection("users").document(user.getUid()).set(Collections.singletonMap("leaderboard", leaderboard), SetOptions
-                                    .merge());
+                            db.collection("users").document(user.getUid()).set(Collections.singletonMap("leaderboard", leaderboard), SetOptions.merge());
                         }
                     }
                 });
     }
 
-
-    public void fetchLeaderboardFromDatabase(final LeaderboardCallback callback) {
-        final List<LeaderboardEntry> maxRounds = new ArrayList<>();
+    public void fetchLeaderboardFromDatabase(final LeaderboardCallback callback, Context context) {
+        if(isGuest(context)){
+            callback.onLeaderboardFetched(new ArrayList<>());
+            return;
+        }
         db.collection("users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        List<LeaderboardEntry> leaderboardEntries = new ArrayList<>();
                         if (task.isSuccessful()) {
                             for (DocumentSnapshot document : task.getResult()) {
-                                Map<String, Object> leaderboard = (Map<String, Object>) document.get("leaderboard");
-                                if (leaderboard != null && leaderboard.get("max round") != null) {
-                                    int maxRound = ((Number) Objects.requireNonNull(leaderboard.get("max round"))).intValue();
-                                    int gamesPlayed = 0;
+                                Map<String, Object> leaderboardMap = (Map<String, Object>) document.get("leaderboard");
+                                if (leaderboardMap != null && leaderboardMap.get("max round") != null) {
+                                    int maxRound = ((Number) Objects.requireNonNull(leaderboardMap.get("max round"))).intValue();
                                     String displayName = document.getString("displayName");
-                                    if (leaderboard.get("games played") == null)
-                                        leaderboard.put("games played", 0);
-                                    else
-                                        gamesPlayed = ((Number) Objects.requireNonNull(leaderboard.get("games played"))).intValue();
-
-                                    leaderboard.putIfAbsent("enemies defeated", 0);
-                                    int enemiesDefeated = ((Number) Objects.requireNonNull(leaderboard.get("enemies defeated"))).intValue();
-
-
-                                    leaderboard.putIfAbsent("victories", 0);
-                                    int victories = ((Number) Objects.requireNonNull(leaderboard.get("victories"))).intValue();
-
-
-                                    maxRounds.add(new LeaderboardEntry(maxRound, displayName, gamesPlayed, enemiesDefeated, victories));
+                                    leaderboardMap.putIfAbsent("games played", 0);
+                                    int gamesPlayed = ((Number) Objects.requireNonNull(leaderboardMap.get("games played"))).intValue();
+                                    leaderboardMap.putIfAbsent("enemies defeated", 0);
+                                    int enemiesDefeated = ((Number) Objects.requireNonNull(leaderboardMap.get("enemies defeated"))).intValue();
+                                    leaderboardMap.putIfAbsent("victories", 0);
+                                    int victories = ((Number) Objects.requireNonNull(leaderboardMap.get("victories"))).intValue();
+                                    leaderboardEntries.add(new LeaderboardEntry(maxRound, displayName, gamesPlayed, enemiesDefeated, victories));
                                 }
                             }
-                            maxRounds.sort(Collections.reverseOrder());
-                            callback.onLeaderboardFetched(maxRounds);
+                            leaderboardEntries.sort(Collections.reverseOrder());
+                            callback.onLeaderboardFetched(leaderboardEntries);
                         } else {
-                            callback.onLeaderboardFetched(new ArrayList<>());
+                            callback.onLeaderboardFetched(leaderboardEntries);
                         }
                     }
-                });
-    }
-
-    public void handleGoogleSignInResult(Intent data, GoogleSignInCallback googleSignInCallback) {
-        if (authHelper == null)
-            authHelper = new AuthenticationHelper();
-        authHelper.handleGoogleSignInResult(data, googleSignInCallback);
-    }
-
-    public Intent getGoogleSignInIntent(Context context) {
-        if (authHelper == null)
-            authHelper = new AuthenticationHelper();
-        return authHelper.getGoogleSignInIntent(context);
-    }
-
-    public void signUpWithEmailPassword(String string, String string1, String username, OnSuccessListener onSuccessListener, Context context,
-                                        Uri uri) {
-        if (authHelper == null)
-            authHelper = new AuthenticationHelper();
-        authHelper.signUpWithEmailPassword(string, string1, username, onSuccessListener, context, uri);
-    }
-
-    public void loginWithEmailAndPassword(String string, String string1, OnSuccessListener onSuccessListener,
-                                          OnFailureListener onFailureListener) {
-        if (authHelper == null)
-            authHelper = new AuthenticationHelper();
-        authHelper.loginWithEmailAndPassword(string, string1, onSuccessListener, onFailureListener);
-    }
-
-    public void forgotPassword(String email, OnSuccessListener onSuccessListener, OnFailureListener onFailureListener) {
-        if (authHelper == null)
-            authHelper = new AuthenticationHelper();
-        authHelper.forgotPassword(email, onSuccessListener, onFailureListener);
-    }
-
-    public void uploadImage(Uri imageUri, OnSuccessListener<Void> onSuccess, Context context, String uid) {
-        // 1) Get a fresh root ref
-
-        // 2) Create a one-off child ref for this upload
-
-        // Upload under UID
-        StorageReference profileRef = FirebaseStorage
-                .getInstance()
-                .getReference("profileImages/" + uid + ".jpg");
-
-        // 3) Upload
-        Log.d("sigma", "Uploading image for UID = " + uid);
-
-        profileRef.putFile(imageUri)
-                .addOnSuccessListener(task -> profileRef.getDownloadUrl()
-                        .addOnSuccessListener(uri -> {
-                            Log.d("sigma", "URL is " + uri);
-                            onSuccess.onSuccess(null);
-                        }))
-                .addOnFailureListener(e -> {
-                    Log.d("sigma", "upload failed: " + e.getMessage());
-                    Toast.makeText(context,
-                            "failed to upload image: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
                 });
     }
 
     public void fetchAndSetImage(ImageView imageView, Context context) {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) return;
+        if (isGuest(context)) {
+            imageView.setImageResource(R.drawable.logo);
+            return;
+        }
+        FirebaseUser user = getUserInstance();
         StorageReference storageRef = FirebaseStorage.getInstance().getReference();
         Uri photoUrl = user.getPhotoUrl();
 
         if (photoUrl != null) {
-            Glide.with(context)
-                    .load(photoUrl)
-                    .into(imageView);
+            Glide.with(context).load(photoUrl).into(imageView);
             return;
         }
 
@@ -376,151 +311,196 @@ public class DatabaseRepository {
                 });
     }
 
-    public FirebaseUser getUserInstance() {
-        if (authHelper == null) {
-            authHelper = new AuthenticationHelper();
+    public void incrementEnemiesDefeated(int enemiesDefeated, Context context) {
+        if(isGuest(context)){
+            return;
         }
-        return authHelper.getUserInstance();
-    }
-
-    public boolean isGuest() {
-        if (authHelper == null) {
-            authHelper = new AuthenticationHelper();
-        }
-        return authHelper.isGuest();
-    }
-
-    public void incrementEnemiesDefeated(int enemiesDefeated) {
         FirebaseUser user = getUserInstance();
         db.collection("users").document(user.getUid()).update("leaderboard.enemies defeated", FieldValue.increment(enemiesDefeated));
     }
 
+    public FirebaseUser getUserInstance() {
+        return mAuth.getCurrentUser();
+    }
+
     public void incrementGamesPlayed(Context context) {
-        if(isGuest() && !isOnline(context))
+        if(isGuest(context))
             return;
         FirebaseUser user = getUserInstance();
 
         db.collection("users").document(user.getUid()).update("leaderboard.games played", FieldValue.increment(1));
 
     }
+
     public static boolean isOnline(Context context) {
-        ConnectivityManager cm =
-                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (cm == null) return false;
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null)
+            return false;
 
         Network network = cm.getActiveNetwork();
-        if (network == null) return false;
+        if (network == null)
+            return false;
         NetworkCapabilities caps = cm.getNetworkCapabilities(network);
-        return caps != null
-                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+        return caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
     }
 
+    public boolean isGuest(Context context) {
+        if(!isOnline(context))
+            return true;
+        FirebaseUser u = getUserInstance();
+        return u == null || u.isAnonymous();
+    }
 
+    public void signUpWithEmailPassword(String email, String password, String username, Context context, Uri uri) {
+        if(!isOnline(context)){
+            Toast.makeText(context, "You have no internet connection. Continue as guest.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                    @Override
+                    public void onSuccess(AuthResult authResult) {
+                        FirebaseUser newUser = authResult.getUser();
+                        if (newUser == null) {
+                            Toast.makeText(context, "Failed to sign up. Continue as guest.", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        String uid = newUser.getUid();
+
+                        StorageReference profileRef = FirebaseStorage.getInstance().getReference("profileImages/" + uid + ".jpg");
+
+                        profileRef.putFile(uri)
+                                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                        profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                            @Override
+                                            public void onSuccess(Uri uri) {
+                                                UserProfileChangeRequest upd = new UserProfileChangeRequest.Builder().setDisplayName(username)
+                                                        .setPhotoUri(uri).build();
+                                                newUser.updateProfile(upd)
+                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                            @Override
+                                                            public void onSuccess(Void unused) {
+                                                                Map<String,Object> userData = new HashMap<>();
+                                                                userData.put("displayName", username);
+                                                                db.collection("users").document(uid).set(userData, SetOptions.merge());
+                                                                context.startActivity(new Intent(context, IntermediateActivity.class));
+                                                            }
+                                                        });
+                                            }
+                                        }).addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                Toast.makeText(context, "Failed to upload image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Toast.makeText(context, "Failed to upload image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(context, "Sign-up failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    public void loginWithEmailAndPassword(String email, String password, OnFailureListener onFailure, Context context) {
+        if(!isOnline(context)){
+            onFailure.onFailure(new Exception("No internet"));
+            return;
+        }
+        mAuth.signInWithEmailAndPassword(email, password).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+            @Override
+            public void onSuccess(AuthResult authResult) {
+                Intent intent = new Intent(context, IntermediateActivity.class);
+                intent.putExtra("guest", false);
+                context.startActivity(intent);
+            }
+        }).addOnFailureListener(onFailure);
+    }
+
+    public void forgotPassword(String email, Context context) {
+        if(isOnline(context)){
+            Toast.makeText(context, "no internet connection", Toast.LENGTH_LONG).show();
+            return;
+        }
+        mAuth.sendPasswordResetEmail(email).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                Toast.makeText(context, "Reset link sent to your email.", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(context, "Error sending link: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    public Intent getGoogleSignInIntent(Context ctx) {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(ctx.getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        GoogleSignInClient client = GoogleSignIn.getClient(ctx, gso);
+        client.signOut();
+        return client.getSignInIntent();
+    }
+
+    public void handleGoogleSignInResult(Intent data,
+                                         GoogleSignInCallback callback) {
+        Task<GoogleSignInAccount> task = GoogleSignIn
+                .getSignedInAccountFromIntent(data);
+        try {
+            GoogleSignInAccount acct = task.getResult(ApiException.class);
+            AuthCredential cred = GoogleAuthProvider
+                    .getCredential(acct.getIdToken(), null);
+            mAuth.signInWithCredential(cred)
+                    .addOnCompleteListener(t -> {
+                        if (t.isSuccessful() && mAuth.getCurrentUser() != null) {
+                            // ensure user doc exists
+                            Map<String,Object> userData = new HashMap<>();
+                            userData.put("displayName",
+                                    mAuth.getCurrentUser().getDisplayName());
+                            db.collection("users")
+                                    .document(mAuth.getCurrentUser().getUid())
+                                    .set(userData, SetOptions.merge());
+                            callback.onSuccess();
+                        } else {
+                            callback.onFailure(t.getException());
+                        }
+                    });
+        } catch (ApiException e) {
+            callback.onFailure(e);
+        }
+    }
+
+    public void reloadUser(OnSuccessListener<Void> onSuccess, OnFailureListener onFailure, Context context) {
+        if(isGuest(context)){
+            return;
+        }
+        getUserInstance().reload().addOnSuccessListener(onSuccess).addOnFailureListener(onFailure);
+    }
+
+    public String getDisplayName(Context context) {
+        if(isGuest(context))
+            return "guest";
+        return getUserInstance().getDisplayName();
+    }
 
     public interface GoogleSignInCallback {
         void onSuccess();
         void onFailure(Exception e);
     }
 
-    private class AuthenticationHelper {
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
-
-        public void loginWithEmailAndPassword(String email, String password, OnSuccessListener onSuccessListener,
-                                              OnFailureListener onFailureListener){
-            mAuth.signInWithEmailAndPassword(email, password).addOnSuccessListener(onSuccessListener)
-                    .addOnFailureListener(onFailureListener);
-        }
-        public void forgotPassword(String email, OnSuccessListener onSuccessListener,
-                                   OnFailureListener onFailureListener){
-            FirebaseAuth.getInstance().sendPasswordResetEmail(email).addOnSuccessListener(onSuccessListener)
-                    .addOnFailureListener(onFailureListener);
-        }
-
-        public Intent getGoogleSignInIntent(Context context) {
-            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(context.getString(R.string.default_web_client_id)).requestEmail().build();
-
-            GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(context, gso);
-            googleSignInClient.signOut();
-            return googleSignInClient.getSignInIntent();
-        }
-
-        public void handleGoogleSignInResult(Intent data, GoogleSignInCallback callback) {
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            try {
-                GoogleSignInAccount account = task.getResult(ApiException.class);
-                firebaseAuthWithGoogle(account, callback);
-            } catch (ApiException e) {
-                callback.onFailure(e);
-            }
-        }
-
-        private void firebaseAuthWithGoogle(GoogleSignInAccount acct,
-                                            final GoogleSignInCallback callback) {
-            AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-            mAuth.signInWithCredential(credential)
-                    .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                            if (task.isSuccessful() && user != null) {
-                                FirebaseFirestore db = FirebaseFirestore.getInstance();
-                                Map<String, Object> userData = new HashMap<>();
-                                String displayName = user.getDisplayName();
-                                userData.put("displayName", displayName);
-
-                                db.collection("users").document(user.getUid()).set(userData, SetOptions.merge());
-                                callback.onSuccess();
-                            } else {
-                                callback.onFailure(task.getException());
-                            }
-                        }
-                    });
-        }
-
-        public void signUpWithEmailPassword(String email, String password, String username, OnSuccessListener onSuccessListener, Context context,
-                                            Uri uri){
-            mAuth.createUserWithEmailAndPassword(email, password)
-                    .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
-                        @Override
-                        public void onSuccess(AuthResult authResult) {
-                            FirebaseUser newUser = authResult.getUser();
-
-                            String uid = newUser.getUid();
-                            sendEmail(email, context);
-                            uploadImage(uri, onSuccessListener, context, uid);
-                            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder().setDisplayName(username).build();
-                            newUser.updateProfile(profileUpdates)
-                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void unused) {
-                                            FirebaseFirestore db = FirebaseFirestore.getInstance();
-                                            Map<String, Object> userData = new HashMap<>();
-                                            userData.put("displayName", username);
-                                            db.collection("users").document(newUser.getUid()).set(userData, SetOptions.merge());
-                                        }
-                                    });
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(context, "failed to sign up: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                    });
-        }
-
-
-        public FirebaseUser getUserInstance() {
-            return FirebaseAuth.getInstance().getCurrentUser();
-        }
-        public boolean isGuest(){
-            if (authHelper == null) {
-                authHelper = new AuthenticationHelper();
-            }
-            return getUserInstance() == null ||
-                    Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).isAnonymous();
-        }
-    }
 }
+

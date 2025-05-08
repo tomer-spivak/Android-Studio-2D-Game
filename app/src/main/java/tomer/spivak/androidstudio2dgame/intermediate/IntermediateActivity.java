@@ -32,6 +32,8 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseUser;
@@ -97,7 +99,7 @@ public class IntermediateActivity extends AppCompatActivity {
                                     drawerLayout.closeDrawers();
                                 }
                             }
-                        });
+                        }, context);
                     } else{
                         createNewGame();
                         drawerLayout.closeDrawers();
@@ -211,24 +213,28 @@ public class IntermediateActivity extends AppCompatActivity {
     }
 
     private void initHeader() {
-        FirebaseUser user = databaseRepository.getUserInstance();
-        if (user != null) {
-            user.reload()
-                    .addOnSuccessListener(aVoid -> actuallyPopulateHeader(user))
-                    .addOnFailureListener(e -> actuallyPopulateHeader(user));  // even on failure, use whatever you have
+        if (databaseRepository.isGuest(context)){
+            databaseRepository.reloadUser(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void unused) {
+                    actuallyPopulateHeader();
+                }
+            }, new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    actuallyPopulateHeader();
+                }
+            }, context);
         } else {
-            actuallyPopulateHeader(null);
+            actuallyPopulateHeader();
         }
     }
 
-    private void actuallyPopulateHeader(@Nullable FirebaseUser user) {
-        TextView tvUsername =
-                navigationView.getHeaderView(0).findViewById(R.id.header_username);
-        ImageView ivProfile =
-                navigationView.getHeaderView(0).findViewById(R.id.header_image);
+    private void actuallyPopulateHeader() {
+        TextView tvUsername = navigationView.getHeaderView(0).findViewById(R.id.header_username);
+        ImageView ivProfile = navigationView.getHeaderView(0).findViewById(R.id.header_image);
 
-        String displayName = user != null && user.getDisplayName() != null ? user.getDisplayName() : "guest";
-        tvUsername.setText(displayName);
+        tvUsername.setText(databaseRepository.getDisplayName(context));
 
         databaseRepository.fetchAndSetImage(ivProfile, this);
     }

@@ -118,28 +118,19 @@ public class LoginFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 databaseRepository.loginWithEmailAndPassword(etEmail.getText().toString(),
-                        etPassword.getText().toString(), new OnSuccessListener() {
-                            @Override
-                            public void onSuccess(Object o) {
-                                Intent intent = new Intent(getActivity(), IntermediateActivity.class);
-                                intent.putExtra("guest", false);
-                                startActivity(intent);
-                            }
-                        }, new OnFailureListener() {
+                        etPassword.getText().toString(), new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 LayoutInflater inflater = LayoutInflater.from(getContext());
                                 View layout = inflater.inflate(R.layout.custom_toast, null);
-
-                                TextView text = layout.findViewById(R.id.toast_text);
-                                text.setText("Couldn't Log in" + e.getMessage());
+                                TextView toastText = layout.findViewById(R.id.toast_text);
+                                toastText.setText("Couldn't Log in: " + e.getMessage());
                                 Toast toast = new Toast(getContext());
-                                toast.setDuration(Toast.LENGTH_SHORT);
                                 toast.setView(layout);
                                 toast.show();
                                 btnGuestLogin.setVisibility(View.VISIBLE);
                             }
-                        });
+                        }, getContext());
             }
         });
 
@@ -161,19 +152,7 @@ public class LoginFragment extends Fragment {
                     public void onClick(DialogInterface dialog, int which) {
                         String email = editTextEmail.getText().toString().trim();
                         if (!email.isEmpty()) {
-                            databaseRepository.forgotPassword(email, new OnSuccessListener() {
-                                @Override
-                                public void onSuccess(Object o) {
-                                    Toast.makeText(getContext(), "Reset link sent to your email.",
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                            }, new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Toast.makeText(getContext(), "Error sending link: " + e.getMessage(), Toast.LENGTH_LONG)
-                                            .show();
-                                }
-                            });
+                            databaseRepository.forgotPassword(email, getContext());
                         } else {
                             Toast.makeText(getContext(), "Please enter an email.", Toast.LENGTH_SHORT).show();
                         }

@@ -190,7 +190,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
             @Override
             public void onChanged(Integer delta) {
                 //if an enemy (or more then one) were killed, upload the data to firebase.
-                databaseRepository.incrementEnemiesDefeated(delta);
+                databaseRepository.incrementEnemiesDefeated(delta, context);
             }
         });
 
@@ -285,7 +285,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
                                             if (task.isSuccessful())
-                                                databaseRepository.logResults(viewModel);
+                                                databaseRepository.logMaxRound(viewModel.getRound(), context);
                                             soundEffectsManager.stopAllSoundEffects();
                                             gameView.stopGameLoop();
                                             dialog.dismiss();
@@ -338,7 +338,8 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                     @Override
                     public void onClick(View v) {
                         //logs in the leaderboard
-                        databaseRepository.logResults(viewModel);
+                        if(DatabaseRepository.isOnline(context))
+                            databaseRepository.logMaxRound(viewModel.getRound(), context);
                         //removes the save
                         databaseRepository.removeBoard(new OnCompleteListener<Void>() {
                             @Override
@@ -349,7 +350,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                                 skipAutoSave = true;
                                 finish();
                             }
-                        });
+                        }, context);
                     }
                 });
 
@@ -365,7 +366,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
                                             if (task.isSuccessful())
-                                                databaseRepository.logResults(viewModel);
+                                                databaseRepository.logMaxRound(viewModel.getRound(), context);
                                             else
                                                 Toast.makeText(context, "Failed to save game: " + task.getException(), Toast.LENGTH_LONG).show();
                                             soundEffectsManager.stopAllSoundEffects();
@@ -416,7 +417,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
         AlertDialog alertDialog = new AlertDialog.Builder(this).setView(view).setCancelable(false).create();
         alertDialog.show();
 
-        databaseRepository.logResults(viewModel);
+        databaseRepository.logMaxRound(viewModel.getRound(), context);
         if (userWon) {
             databaseRepository.incrementVictories(context);
         }
@@ -435,7 +436,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                             public void onComplete(@NonNull Task<Void> task) {
 
                             }
-                        });
+                        }, context);
                     }
                 }
             }
@@ -452,7 +453,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                     showEndGameDialog(userWon);
                 }
             }
-        });
+        }, context);
     }
 
     private void showEndGameDialog(boolean userWon) {
