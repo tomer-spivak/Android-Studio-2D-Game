@@ -3,7 +3,7 @@ package tomer.spivak.androidstudio2dgame.home;
 
 import static android.app.Activity.RESULT_OK;
 
-import static tomer.spivak.androidstudio2dgame.helper.DatabaseRepository.isOnline;
+import static tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository.isOnline;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -31,12 +31,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-
 
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
+import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 
 
@@ -181,23 +179,15 @@ public class LoginFragment extends Fragment {
             @Override
             public void onActivityResult(ActivityResult result) {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    databaseRepository.handleGoogleSignInResult(result.getData(), new DatabaseRepository.GoogleSignInCallback() {
+                    databaseRepository.handleGoogleSignInResult(result.getData(), new OnFailureListener() {
                         @Override
-                        public void onSuccess() {
-                            Intent intent = new Intent(getContext(), IntermediateActivity.class);
-                            intent.putExtra("guest", false);
-                            startActivity(intent);
-                        }
-
-                        @Override
-                        public void onFailure(Exception e) {
+                        public void onFailure(@NonNull Exception e) {
                             btnGuestLogin.setVisibility(View.VISIBLE);
                         }
                     }, getContext());
                 }
             }
         });
-
         btnGoogleLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

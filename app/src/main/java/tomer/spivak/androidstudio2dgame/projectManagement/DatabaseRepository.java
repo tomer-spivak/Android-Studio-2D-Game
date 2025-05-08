@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.helper;
+package tomer.spivak.androidstudio2dgame.projectManagement;
 
 
 import android.content.Context;
@@ -9,21 +9,14 @@ import android.net.NetworkCapabilities;
 
 import android.net.Uri;
 
-import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.android.volley.Request;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -45,10 +38,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -57,8 +46,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.helper.GameCheckCallback;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
-import tomer.spivak.androidstudio2dgame.projectManagement.OnBoardLoadedListener;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardCallback;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;
@@ -357,6 +346,7 @@ public class DatabaseRepository {
                                                                 userData.put("username", username);
                                                                 db.collection("users").document(uid).set(userData, SetOptions.merge());
                                                                 context.startActivity(new Intent(context, IntermediateActivity.class));
+                                                                initLeaderboard(newUser.getUid());
                                                             }
                                                         });
                                             }
@@ -417,9 +407,9 @@ public class DatabaseRepository {
         });
     }
 
-    public void handleGoogleSignInResult(Intent data, GoogleSignInCallback callback, Context context) {
+    public void handleGoogleSignInResult(Intent data, OnFailureListener onFailure, Context context) {
         if(!isOnline(context)){
-            callback.onFailure(new Exception("No internet"));
+            onFailure.onFailure(new Exception("No internet"));
             return;
         }
         GoogleSignIn.getSignedInAccountFromIntent(data).addOnSuccessListener(new OnSuccessListener<GoogleSignInAccount>() {
@@ -432,7 +422,7 @@ public class DatabaseRepository {
                                     public void onSuccess(AuthResult authResult) {
                                         FirebaseUser user = getUserInstance();
                                         if (user == null) {
-                                            callback.onFailure(new IllegalStateException("No current user after sign-in"));
+                                            onFailure.onFailure(new IllegalStateException("No current user after sign-in"));
                                             return;
                                         }
                                         Map<String,Object> userData = new HashMap<>();
@@ -441,12 +431,15 @@ public class DatabaseRepository {
                                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                     @Override
                                                     public void onSuccess(Void unused) {
-                                                        callback.onSuccess();
+                                                        Intent intent = new Intent(context, IntermediateActivity.class);
+                                                        intent.putExtra("guest", false);
+                                                        context.startActivity(intent);
+                                                        initLeaderboard(user.getUid());
                                                     }
                                                 }).addOnFailureListener(new OnFailureListener() {
                                                     @Override
                                                     public void onFailure(@NonNull Exception e) {
-                                                        callback.onFailure(e);
+                                                        onFailure.onFailure(e);
                                                     }
                                                 });
                                     }
@@ -454,7 +447,7 @@ public class DatabaseRepository {
                                 .addOnFailureListener(new OnFailureListener() {
                                     @Override
                                     public void onFailure(@NonNull Exception e) {
-                                        callback.onFailure(e);
+                                        onFailure.onFailure(e);
                                     }
                                 });
                     }
@@ -462,13 +455,23 @@ public class DatabaseRepository {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        callback.onFailure(e);
+                        onFailure.onFailure(e);
                     }
                 });
     }
 
+    private void initLeaderboard(String uid) {
+        Map<String,Object> board = new HashMap<>();
+        board.put("max round", 0);
+        board.put("games played", 0);
+        board.put("enemies defeated", 0);
+        board.put("victories", 0);
+        db.collection("users").document(uid).set(Collections.singletonMap("leaderboard", board), SetOptions.merge());
+    }
+
     public void reloadUser(OnSuccessListener<Void> onSuccess, OnFailureListener onFailure, Context context) {
         if(isGuest(context)){
+            onFailure.onFailure(new Exception("No user signed in"));
             return;
         }
         getUserInstance().reload().addOnSuccessListener(onSuccess).addOnFailureListener(onFailure);
@@ -482,25 +485,23 @@ public class DatabaseRepository {
         }
 
         FirebaseUser user = getUserInstance();
-        StorageReference storageRef = FirebaseStorage.getInstance().getReference();
         Uri photoUrl = user.getPhotoUrl();
-        if (photoUrl != null) {
+        if (photoUrl == null) {
+            StorageReference profileImageRef = FirebaseStorage.getInstance().getReference().child("profileImages/" + user.getUid() + ".jpg");
+            profileImageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Glide.with(context).load(uri).into(imageView);
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(context, "Failed to fetch image: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+        } else
             Glide.with(context).load(photoUrl).into(imageView);
-            return;
-        }
-        StorageReference profileImageRef = storageRef.child("profileImages/" + user.getUid() + ".jpg");
-        profileImageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                    @Override
-                    public void onSuccess(Uri uri) {
-                        Glide.with(context).load(uri).into(imageView);
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(context, "Failed to fetch image: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
 
         String uid = user.getUid();
         db.collection("users").document(uid).get()
@@ -526,10 +527,9 @@ public class DatabaseRepository {
                 });
     }
 
-    public interface GoogleSignInCallback {
-        void onSuccess();
-        void onFailure(Exception e);
+    public void signOut(Context context) {
+        if(isGuest(context))
+            return;
+        FirebaseAuth.getInstance().signOut();
     }
-
 }
-

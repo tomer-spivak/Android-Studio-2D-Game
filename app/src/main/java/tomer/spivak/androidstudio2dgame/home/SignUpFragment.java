@@ -22,15 +22,14 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
-import com.google.android.gms.tasks.OnSuccessListener;
+
 import com.google.android.material.internal.TextWatcherAdapter;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
-import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
+import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 
 public class SignUpFragment extends Fragment {
     private DatabaseRepository repository;

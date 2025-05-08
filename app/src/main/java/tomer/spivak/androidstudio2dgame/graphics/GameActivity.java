@@ -1,6 +1,6 @@
 package tomer.spivak.androidstudio2dgame.graphics;
 
-import static tomer.spivak.androidstudio2dgame.helper.DatabaseRepository.isOnline;
+import static tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository.isOnline;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -45,7 +45,7 @@ import java.util.Map;
 import tomer.spivak.androidstudio2dgame.GameObjectData;
 import tomer.spivak.androidstudio2dgame.projectManagement.GameEventListener;
 import tomer.spivak.androidstudio2dgame.projectManagement.OnBoardLoadedListener;
-import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
+import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
@@ -67,7 +67,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
     private  Button btnOpenMenu, btnStartGame, btnSkipRound;
     private  CardView cvSelectBuildingMenu;
 
-    //helper class which does firebase operations
     private DatabaseRepository databaseRepository;
 
     private boolean gameIsOnGoing = false;
@@ -126,10 +125,10 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
             //we need a listener that will tell us if the board was loaded, and if so get all the data.
             OnBoardLoadedListener listener = new OnBoardLoadedListener() {
                 @Override
-                public void onBoardLoaded(Map<String, Object> boardFirebaseData, DifficultyLevel finalDifficultyLevel, Long finalTimeSinceGameStart,
+                public void onBoardLoaded(Map<String, Object> boardData, DifficultyLevel finalDifficultyLevel, Long finalTimeSinceGameStart,
                                           int finalCurrentRound, int finalShnuzes, boolean finalDayTime) {
                     //init the board in the model
-                    viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, boardFirebaseData, boardSize, finalDifficultyLevel,
+                    viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, boardData, boardSize, finalDifficultyLevel,
                             finalCurrentRound, finalShnuzes, finalTimeSinceGameStart, finalDayTime);
                     //loading finish
                     dialogLoadingBoard.dismiss();
@@ -189,7 +188,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
         viewModel.getEnemiesDefeatedDelta().observe(this, new Observer<Integer>() {
             @Override
             public void onChanged(Integer delta) {
-                //if an enemy (or more then one) were killed, upload the data to firebase.
                 databaseRepository.incrementEnemiesDefeated(delta, context);
             }
         });
@@ -338,8 +336,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                     @Override
                     public void onClick(View v) {
                         //logs in the leaderboard
-                        if(DatabaseRepository.isOnline(context))
-                            databaseRepository.logMaxRound(viewModel.getRound(), context);
+                        databaseRepository.logMaxRound(viewModel.getRound(), context);
                         //removes the save
                         databaseRepository.removeBoard(new OnCompleteListener<Void>() {
                             @Override
@@ -408,11 +405,9 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
 
         View view = LayoutInflater.from(this).inflate(layout, null);
 
-        // remove all buttons (we wait for the firebase call to complete)
         view.findViewById(R.id.tvMessage).setVisibility(View.GONE);
         view.findViewById(R.id.btnMenu).setVisibility(View.GONE);
         view.findViewById(R.id.btnExit).setVisibility(View.GONE);
-
 
         AlertDialog alertDialog = new AlertDialog.Builder(this).setView(view).setCancelable(false).create();
         alertDialog.show();
@@ -423,7 +418,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
         }
 
         Handler handler = new Handler(Looper.getMainLooper());
-        //if after 5 seconds, the firebase call isnt done yet, we give up on re
         Runnable fallback = new Runnable() {
             @Override
             public void run() {
@@ -443,7 +437,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
         };
         handler.postDelayed(fallback, 5_000);
 
-        // actual Firebase call; cancel fallback if it completes in time
         databaseRepository.removeBoard(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {

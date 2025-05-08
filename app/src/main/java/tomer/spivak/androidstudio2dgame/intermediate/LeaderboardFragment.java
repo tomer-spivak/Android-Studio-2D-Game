@@ -1,6 +1,8 @@
 package tomer.spivak.androidstudio2dgame.intermediate;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +14,7 @@ import android.widget.Spinner;
 import androidx.fragment.app.Fragment;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
+import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -38,9 +40,19 @@ public class LeaderboardFragment extends Fragment {
         rv.setAdapter(adapter);
 
         EditText searchBar = view.findViewById(R.id.searchBar);
-        searchBar.addTextChangedListener(new TextWatcherAdapter() {
+        searchBar.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
                 adapter.filter(s.toString());
             }
         });

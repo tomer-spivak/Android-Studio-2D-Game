@@ -19,12 +19,11 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
-import com.google.firebase.auth.FirebaseAuth;
-
 import java.util.Calendar;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.helper.NotificationReceiver;
+import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 
 public class HomeActivity extends AppCompatActivity{
     BottomNavigationView bottomNavigationView;
@@ -37,8 +36,7 @@ public class HomeActivity extends AppCompatActivity{
         setContentView(R.layout.activity_home);
         init();
 
-        FirebaseAuth.getInstance().signOut();
-
+        DatabaseRepository.getInstance(this).signOut(this);
 
         replaceFragment(new HomeFragment());
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {

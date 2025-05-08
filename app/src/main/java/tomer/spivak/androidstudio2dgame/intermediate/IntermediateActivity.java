@@ -23,7 +23,6 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,11 +35,10 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.auth.FirebaseUser;
 
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.helper.DatabaseRepository;
+import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.graphics.GameActivity;
 import tomer.spivak.androidstudio2dgame.helper.GameCheckCallback;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
@@ -87,23 +85,18 @@ public class IntermediateActivity extends AppCompatActivity {
                         //startActivity(intent1);
                         return true;
                     }
-                    if (DatabaseRepository.isOnline(context)){
-                        databaseRepository.checkIfTheresAGame(new GameCheckCallback() {
-                            @Override
-                            public void onCheckCompleted(boolean gameExists) {
-                                if (gameExists) {
-                                    AlertDialog dialog = continueOrStartNewGame();
-                                    dialog.show();
-                                } else {
-                                    createNewGame();
-                                    drawerLayout.closeDrawers();
-                                }
+                    databaseRepository.checkIfTheresAGame(new GameCheckCallback() {
+                        @Override
+                        public void onCheckCompleted(boolean gameExists) {
+                            if (gameExists) {
+                                AlertDialog dialog = continueOrStartNewGame();
+                                dialog.show();
+                            } else {
+                                createNewGame();
+                                drawerLayout.closeDrawers();
                             }
-                        }, context);
-                    } else{
-                        createNewGame();
-                        drawerLayout.closeDrawers();
-                    }
+                        }
+                    }, context);
 
                 }
                 drawerLayout.closeDrawer(navigationView);
@@ -213,21 +206,17 @@ public class IntermediateActivity extends AppCompatActivity {
     }
 
     private void initHeader() {
-        if (databaseRepository.isGuest(context)){
-            databaseRepository.reloadUser(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void unused) {
-                    actuallyPopulateHeader();
-                }
-            }, new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    actuallyPopulateHeader();
-                }
-            }, context);
-        } else {
-            actuallyPopulateHeader();
-        }
+        databaseRepository.reloadUser(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                actuallyPopulateHeader();
+            }
+        }, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                actuallyPopulateHeader();
+            }
+        }, context);
     }
 
     private void actuallyPopulateHeader() {
