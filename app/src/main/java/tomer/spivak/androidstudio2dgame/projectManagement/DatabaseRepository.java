@@ -9,6 +9,7 @@ import android.net.NetworkCapabilities;
 
 import android.net.Uri;
 
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -50,7 +51,6 @@ import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
-import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 
 public class DatabaseRepository {
     private final FirebaseFirestore db;
@@ -113,17 +113,8 @@ public class DatabaseRepository {
         });
 }
 
-    public void loadCurrentGame(OnBoardLoadedListener listener, Context context) {
-        if (isGuest(context))
-            return;
+    public void loadCurrentGame(OnSuccessListener<Map<String,Object>> onSuccess, OnFailureListener onFailure) {
         FirebaseUser user = getUserInstance();
-        OnFailureListener failureListener = new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(context, "Failed to load game: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                listener.onBoardLoaded(null, DifficultyLevel.MEDIUM, 0L, 1, -1, false);
-            }
-        };
         db.collection("users").document(user.getUid()).collection("currentGame").document("meta").get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
@@ -137,28 +128,19 @@ public class DatabaseRepository {
                                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                                     @Override
                                     public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                        String difficultyName = metaSnapshot.getString("Difficulty Level");
-                                        Long gameTimeL = metaSnapshot.getLong("Time Since Game Start");
-                                        Long currentRoundL = metaSnapshot.getLong("Current Round");
-                                        Long shnuzesL = metaSnapshot.getLong("Shnuzes");
-                                        Boolean dayTime = metaSnapshot.getBoolean("Is Day Time");
-                                        DifficultyLevel difficultyLevel = DifficultyLevel.MEDIUM;
-                                        long timeSinceGameStart = 0L;
-                                        int currentRound = 1, shnuzes = -1;
-                                        if (difficultyName != null)
-                                            difficultyLevel = DifficultyLevel.valueOf(difficultyName);
-                                        if (gameTimeL!= null)
-                                            timeSinceGameStart = gameTimeL;
-                                        if (currentRoundL != null)
-                                            currentRound = (currentRoundL.intValue());
-                                        if (shnuzesL != null)
-                                            shnuzes = (shnuzesL.intValue());
-
-                                        listener.onBoardLoaded(documentSnapshot.getData(), difficultyLevel, timeSinceGameStart, currentRound, shnuzes, Boolean.TRUE.equals(dayTime));
+                                        Map<String,Object> result = new HashMap<>();
+                                        result.put("boardData",            documentSnapshot.getData());
+                                        result.put("Difficulty Level",     metaSnapshot.getString("Difficulty Level"));
+                                        result.put("Time Since Game Start", metaSnapshot.getLong("Time Since Game Start"));
+                                        result.put("Current Round",        metaSnapshot.getLong("Current Round"));
+                                        result.put("Shnuzes",              metaSnapshot.getLong("Shnuzes"));
+                                        result.put("Is Day Time",          metaSnapshot.getBoolean("Is Day Time"));
+                                        Log.d("fuck", "mr matoz: " + result.get("Difficulty Level"));
+                                        onSuccess.onSuccess(result);
                                     }
-                                }).addOnFailureListener(failureListener);
+                                }).addOnFailureListener(onFailure);
                     }
-                }).addOnFailureListener(failureListener);
+                }).addOnFailureListener(onFailure);
     }
 
     public void checkIfTheresAGame(OnSuccessListener<Boolean> successListener, Context context) {

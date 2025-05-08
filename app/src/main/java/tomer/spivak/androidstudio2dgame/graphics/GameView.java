@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -176,7 +177,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
             int y = (int)(imagePoint.y - offset * gameObject.getScale());
             canvas.drawRect(x, y, x + healthBarWidth, y + healthBarHeight, healthBarBackgroundPaint);
             int fill = (int)(healthPer * healthBarWidth);
-            canvas.drawRect(x, y, x + fill, y + healthBarHeight, healthBarPaint);        }
+            Log.d("health", gameObject.getType() + ", " + healthPer);
+            canvas.drawRect(x, y, x + fill, y + healthBarHeight, healthBarPaint);
+        }
 
         if (timeTillNextRound > 0){
             String timeText = "Next round: " + (timeTillNextRound / 1000) + "." + (timeTillNextRound % 1000) / 100 + "s";

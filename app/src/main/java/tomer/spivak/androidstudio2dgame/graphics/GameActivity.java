@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,6 +37,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 
@@ -44,7 +47,6 @@ import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.GameObjectData;
 import tomer.spivak.androidstudio2dgame.projectManagement.GameEventListener;
-import tomer.spivak.androidstudio2dgame.projectManagement.OnBoardLoadedListener;
 import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.model.Position;
@@ -121,20 +123,47 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
         //did the user continue a game or started a new one
         continueGame = getIntent().getBooleanExtra("isContinue", false);
 
-        if(continueGame){
-            //we need a listener that will tell us if the board was loaded, and if so get all the data.
-            OnBoardLoadedListener listener = new OnBoardLoadedListener() {
+        if(continueGame && isOnline(this)){
+            databaseRepository.loadCurrentGame(new OnSuccessListener<Map<String, Object>>() {
                 @Override
-                public void onBoardLoaded(Map<String, Object> boardData, DifficultyLevel finalDifficultyLevel, Long finalTimeSinceGameStart,
-                                          int finalCurrentRound, int finalShnuzes, boolean finalDayTime) {
+                public void onSuccess(Map<String, Object> data) {
+                    Map<String,Object> boardData = (Map<String,Object>) data.get("boardData");
+                    String diffName = (String) data.get("Difficulty Level");
+                    DifficultyLevel difficulty = DifficultyLevel.MEDIUM;
+                    if (diffName != null) {
+                        difficulty = DifficultyLevel.valueOf(diffName);
+                    }
+                    long timeSinceStart = 0L;
+                    Long timeObj = (Long) data.get("Time Since Game Start");
+                    if (timeObj != null)
+                        timeSinceStart = timeObj;
+                    int currentRound = 1;
+                    Long roundObj = (Long) data.get("Current Round");
+                    if (roundObj != null)
+                        currentRound = roundObj.intValue();
+                    int shnuzes = -1;
+                    Long shnuzesObj = (Long) data.get("Shnuzes");
+                    if (shnuzesObj != null)
+                        shnuzes = shnuzesObj.intValue();
+                    boolean dayTime = Boolean.TRUE.equals(data.get("Is Day Time"));
+                    Log.d("fuck", "shit: " + difficulty);
                     //init the board in the model
-                    viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, boardData, boardSize, finalDifficultyLevel,
-                            finalCurrentRound, finalShnuzes, finalTimeSinceGameStart, finalDayTime);
+                    viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, boardData, boardSize, difficulty, currentRound, shnuzes, timeSinceStart, dayTime);
                     //loading finish
                     dialogLoadingBoard.dismiss();
                 }
-            };
-            databaseRepository.loadCurrentGame(listener, context);
+            }, new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    //init the board in the model with default values
+                    viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, null, boardSize, DifficultyLevel.MEDIUM,
+                            1, -1, 0L, true);
+                    Toast.makeText(context, "Failed to load game: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    //loading finish
+                    Log.d("fuck", "shit: " + " med");
+                    dialogLoadingBoard.dismiss();
+                }
+            });
         }
         else {
             //start a new game, we can take get the difficulty selected
@@ -144,7 +173,9 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                     1, -1, 0L, true);
             //loading finish
             dialogLoadingBoard.dismiss();
+            Log.d("fuck", "shit: " + difficultyLevel);
         }
+        Log.d("fuck", "shit: ");
 
         //start observing changes in model
         viewModel.getGameState().observe(this, new Observer<GameState>() {
@@ -164,6 +195,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                 }
                 //update the game view (things related to the current state of the game - not the board)
                 gameView.updateFromGameState(gameState);
+                Log.d("health", "diff: " + gameState.getDifficulty());
 
                 //check for game end
                 if(gameState.getGameStatus() != GameStatus.PLAYING){

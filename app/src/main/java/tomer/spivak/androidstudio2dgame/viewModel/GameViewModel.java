@@ -231,12 +231,9 @@ public class GameViewModel extends ViewModel {
                 if(objectMap != null)
                 {
                     String type = (String) objectMap.get("type");
-                    ModelObject obj = ModelObjectFactory.create(type,
-                            new Position(x, y), difficultyLevel);
+                    ModelObject obj = ModelObjectFactory.create(type, new Position(x, y), difficultyLevel);
                     obj.setHealth((float)((double) objectMap.get("health")));
                     if ("monster".equals(type)) {
-                        // reconstruct your Enemy
-                         // …populate e’s health / direction / etc…
                         Enemy e = (Enemy) obj;
                         e.setState(EnemyState.valueOf((String) objectMap.get("state")));
                         e.setCurrentDirection(Direction.valueOf((String) objectMap.get("currentDirection")));
@@ -250,7 +247,6 @@ public class GameViewModel extends ViewModel {
                         }
                         e.setTimeSinceLastAttack((float)((double) objectMap.get("timeSinceLastAttack")));
                         e.setTimeSinceLastMove((float)((double) objectMap.get("timeSinceLastMove")));
-
                         cell.spawnEnemy(e);
 
                     } else {

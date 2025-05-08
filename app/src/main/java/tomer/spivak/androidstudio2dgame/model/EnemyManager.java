@@ -172,7 +172,9 @@ public class EnemyManager {
         enemy.updateDirection(prevPos, nextPos);
 
         enemy.incrementTargetIndex();
-        enemy.decreaseAccumulatedTime(timePerStep);
+        do {
+            enemy.decreaseAccumulatedTime(timePerStep);
+        } while (enemy.getAccumulatedTime() >= timePerStep);
 
         return enemy.getCurrentTargetIndex();
     }
