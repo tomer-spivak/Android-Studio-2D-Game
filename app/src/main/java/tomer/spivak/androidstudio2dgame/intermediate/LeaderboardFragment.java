@@ -19,6 +19,7 @@ import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.internal.TextWatcherAdapter;
 
 import java.util.ArrayList;
@@ -87,10 +88,9 @@ public class LeaderboardFragment extends Fragment {
             }
         });
 
-        DatabaseRepository.getInstance(requireContext())
-                .fetchLeaderboardFromDatabase(new LeaderboardCallback() {
+        DatabaseRepository.getInstance(requireContext()).fetchLeaderboardFromDatabase(new OnSuccessListener<List<LeaderboardEntry>>() {
                     @Override
-                    public void onLeaderboardFetched(List<LeaderboardEntry> leaderboardEntries) {
+                    public void onSuccess(List<LeaderboardEntry> leaderboardEntries) {
                         adapter.updateData(leaderboardEntries);
                     }
                 }, getContext());

@@ -47,7 +47,6 @@ import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
-import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardCallback;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
@@ -237,9 +236,9 @@ public class DatabaseRepository {
                 });
     }
 
-    public void fetchLeaderboardFromDatabase(final LeaderboardCallback callback, Context context) {
+    public void fetchLeaderboardFromDatabase(OnSuccessListener<List<LeaderboardEntry>> onSuccess, Context context) {
         if(isGuest(context)){
-            callback.onLeaderboardFetched(new ArrayList<>());
+            onSuccess.onSuccess(new ArrayList<>());
             return;
         }
         db.collection("users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -262,12 +261,16 @@ public class DatabaseRepository {
                                 }
                             }
                             leaderboardEntries.sort(Collections.reverseOrder());
-                            callback.onLeaderboardFetched(leaderboardEntries);
-                        } else {
-                            callback.onLeaderboardFetched(leaderboardEntries);
                         }
+                        onSuccess.onSuccess(leaderboardEntries);
                     }
-                });
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(context, "unable to get leaderboard: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                onSuccess.onSuccess(new ArrayList<>());
+            }
+        });
     }
 
     public void incrementEnemiesDefeated(int enemiesDefeated, Context context) {
