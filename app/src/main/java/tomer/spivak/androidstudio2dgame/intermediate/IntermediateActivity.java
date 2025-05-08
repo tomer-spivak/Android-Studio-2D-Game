@@ -40,7 +40,6 @@ import com.google.android.material.navigation.NavigationView;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.graphics.GameActivity;
-import tomer.spivak.androidstudio2dgame.helper.GameCheckCallback;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 
 public class IntermediateActivity extends AppCompatActivity {
@@ -85,9 +84,9 @@ public class IntermediateActivity extends AppCompatActivity {
                         //startActivity(intent1);
                         return true;
                     }
-                    databaseRepository.checkIfTheresAGame(new GameCheckCallback() {
+                    databaseRepository.checkIfTheresAGame(new OnSuccessListener<Boolean>() {
                         @Override
-                        public void onCheckCompleted(boolean gameExists) {
+                        public void onSuccess(Boolean gameExists) {
                             if (gameExists) {
                                 AlertDialog dialog = continueOrStartNewGame();
                                 dialog.show();

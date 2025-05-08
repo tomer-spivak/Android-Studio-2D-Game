@@ -46,7 +46,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.helper.GameCheckCallback;
 import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardCallback;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
@@ -163,9 +162,9 @@ public class DatabaseRepository {
                 }).addOnFailureListener(failureListener);
     }
 
-    public void checkIfTheresAGame(GameCheckCallback callback, Context context) {
+    public void checkIfTheresAGame(OnSuccessListener<Boolean> successListener, Context context) {
         if (isGuest(context)) {
-            callback.onCheckCompleted(false);
+            successListener.onSuccess(false);
             return;
         }
         FirebaseUser user = getUserInstance();
@@ -173,13 +172,13 @@ public class DatabaseRepository {
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        callback.onCheckCompleted(documentSnapshot.exists() && documentSnapshot.getData() != null);
+                        successListener.onSuccess(documentSnapshot.exists() && documentSnapshot.getData() != null);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        callback.onCheckCompleted(false);
+                        successListener.onSuccess(false);
                     }
                 });
     }
