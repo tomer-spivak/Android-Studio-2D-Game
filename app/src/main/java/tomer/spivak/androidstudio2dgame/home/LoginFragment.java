@@ -26,6 +26,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
@@ -177,8 +181,7 @@ public class LoginFragment extends Fragment {
             @Override
             public void onActivityResult(ActivityResult result) {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    databaseRepository.handleGoogleSignInResult(result.getData(),
-                            new DatabaseRepository.GoogleSignInCallback() {
+                    databaseRepository.handleGoogleSignInResult(result.getData(), new DatabaseRepository.GoogleSignInCallback() {
                         @Override
                         public void onSuccess() {
                             Intent intent = new Intent(getContext(), IntermediateActivity.class);
@@ -190,7 +193,7 @@ public class LoginFragment extends Fragment {
                         public void onFailure(Exception e) {
                             btnGuestLogin.setVisibility(View.VISIBLE);
                         }
-                    });
+                    }, getContext());
                 }
             }
         });
@@ -203,7 +206,12 @@ public class LoginFragment extends Fragment {
                     btnGuestLogin.setVisibility(View.VISIBLE);
                     return;
                 }
-                Intent signInIntent = databaseRepository.getGoogleSignInIntent(requireContext());
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken(requireContext()
+                                .getString(R.string.default_web_client_id)).requestEmail().build();
+                GoogleSignInClient client = GoogleSignIn.getClient(requireContext(), gso);
+                client.signOut();
+
+                Intent signInIntent = client.getSignInIntent();
                 googleSignInLauncher.launch(signInIntent);
             }
         });

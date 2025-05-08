@@ -234,9 +234,13 @@ public class IntermediateActivity extends AppCompatActivity {
         TextView tvUsername = navigationView.getHeaderView(0).findViewById(R.id.header_username);
         ImageView ivProfile = navigationView.getHeaderView(0).findViewById(R.id.header_image);
 
-        tvUsername.setText(databaseRepository.getDisplayName(context));
+        databaseRepository.getUsernameAndImage(new OnSuccessListener<String>() {
+            @Override
+            public void onSuccess(String str) {
+                tvUsername.setText(str);
+            }
+        }, ivProfile, context);
 
-        databaseRepository.fetchAndSetImage(ivProfile, this);
     }
 
 
