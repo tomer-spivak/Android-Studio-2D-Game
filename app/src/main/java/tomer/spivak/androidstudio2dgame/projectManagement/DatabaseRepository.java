@@ -174,7 +174,7 @@ public class DatabaseRepository {
 
     public void removeBoard(OnCompleteListener<Void> onCompleteListener, Context context) {
         if (isGuest(context)){
-            onCompleteListener.onComplete(null);
+            onCompleteListener.onComplete(Tasks.forResult(null));
             return;
         }
         FirebaseUser user = getUserInstance();
@@ -374,7 +374,7 @@ public class DatabaseRepository {
     }
 
     public void forgotPassword(String email, Context context) {
-        if(isOnline(context)){
+        if(!isOnline(context)){
             Toast.makeText(context, "no internet connection", Toast.LENGTH_LONG).show();
             return;
         }

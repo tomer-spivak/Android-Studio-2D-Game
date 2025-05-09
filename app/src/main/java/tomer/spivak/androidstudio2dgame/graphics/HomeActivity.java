@@ -24,8 +24,6 @@ import com.google.android.material.navigation.NavigationBarView;
 import java.util.Calendar;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.home.HomeFragment;
-import tomer.spivak.androidstudio2dgame.home.LoginFragment;
 import tomer.spivak.androidstudio2dgame.home.SignUpFragment;
 import tomer.spivak.androidstudio2dgame.projectManagement.NotificationReceiver;
 import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;

@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.home;
+package tomer.spivak.androidstudio2dgame.graphics;
 
 import android.os.Bundle;
 
