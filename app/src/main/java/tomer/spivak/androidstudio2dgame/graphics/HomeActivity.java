@@ -1,9 +1,11 @@
-package tomer.spivak.androidstudio2dgame.home;
+package tomer.spivak.androidstudio2dgame.graphics;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +24,9 @@ import com.google.android.material.navigation.NavigationBarView;
 import java.util.Calendar;
 
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.home.HomeFragment;
+import tomer.spivak.androidstudio2dgame.home.LoginFragment;
+import tomer.spivak.androidstudio2dgame.home.SignUpFragment;
 import tomer.spivak.androidstudio2dgame.projectManagement.NotificationReceiver;
 import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 
@@ -57,6 +62,15 @@ public class HomeActivity extends AppCompatActivity{
                 return true;
             }
         });
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(
+                        new String[]{ Manifest.permission.POST_NOTIFICATIONS },
+                        10001
+                );
+            }
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
