@@ -29,15 +29,19 @@ public class NotificationReceiver extends BroadcastReceiver {
         scheduleNextReminder(context, hour);
     }
 
+    public static void createChannel(Context ctx) {
+        NotificationManager nm = ctx.getSystemService(NotificationManager.class);
+        nm.createNotificationChannel(
+                new NotificationChannel(
+                        CHANNEL_ID,
+                        "Game Reminders",
+                        NotificationManager.IMPORTANCE_HIGH
+                )
+        );
+    }
+
     private void showNotification(Context context, int hour) {
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationChannel channel = new NotificationChannel(
-                CHANNEL_ID,
-                "Reminders",
-                NotificationManager.IMPORTANCE_HIGH
-        );
-        channel.setDescription("Daily reminder notifications");
-        nm.createNotificationChannel(channel);
 
         Intent tapIntent = new Intent(context, HomeActivity.class);
         tapIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
