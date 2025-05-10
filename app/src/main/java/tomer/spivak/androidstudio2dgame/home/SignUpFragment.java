@@ -8,8 +8,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +24,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.internal.TextWatcherAdapter;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -48,19 +48,22 @@ public class SignUpFragment extends Fragment {
                         if (result.getResultCode() != Activity.RESULT_OK) return;
                         Intent data = result.getData();
                         Uri imageUri = null;
-
                         if (data != null && data.getData() != null) {
                             imageUri = data.getData();
                         }
                         else if (data != null && data.getExtras() != null) {
-                            Bitmap bmp = (Bitmap) data.getExtras().get("data");
-                            if (bmp != null) {
-                                imageUri = saveBitmapToFile(bmp);
+                            Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+                            if (bitmap != null) {
+                                try {
+                                    File file = new File(requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), "signup_pic.jpg");
+                                    try (FileOutputStream fos = new FileOutputStream(file)) {
+                                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                                    }
+                                    imageUri = Uri.fromFile(file);
+                                } catch (IOException ignored){}
                             }
                         }
-
-                        repository.signUpWithEmailPassword(email, password, username, requireContext(), imageUri
-                        );
+                        repository.signUpWithEmailPassword(email, password, username, requireContext(), imageUri);
                     }
                 }
         );
@@ -79,85 +82,63 @@ public class SignUpFragment extends Fragment {
         TextView tvNameErr  = view.findViewById(R.id.tvUsernameError);
         Button   btnSignUp  = view.findViewById(R.id.btnSignUp);
 
-        TextWatcher combinedWatcher = new TextWatcherAdapter() {
-            @Override public void onTextChanged(CharSequence s, int i, int b, int c) {
-                email    = etEmail.getText().toString().trim();
+
+        TextWatcher combinedWatcher = new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                email = etEmail.getText().toString().trim();
                 password = etPassword.getText().toString().trim();
                 username = etUsername.getText().toString().trim();
-                boolean valid = validateEmail(email, tvEmailErr)
-                        && validatePassword(password, tvPassErr)
-                        && validateUsername(username, tvNameErr);
-                btnSignUp.setEnabled(valid);
+                if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    tvEmailErr.setText("Invalid Email");
+                    btnSignUp.setEnabled(false);
+                    return;
+                } else
+                    tvEmailErr.setText("");
+
+                if (password.length() < 6){
+                    tvPassErr.setText("Password must be at least 6 characters");
+                    btnSignUp.setEnabled(false);
+                    return;
+                } else
+                    tvPassErr.setText("");
+
+                if (username.length() < 3) {
+                    tvNameErr.setText("Username must be at least 3 characters");
+                    btnSignUp.setEnabled(false);
+                    return;
+                } else
+                    tvNameErr.setText("");
+                btnSignUp.setEnabled(true);
+            }
+            @Override
+            public void afterTextChanged(Editable s) {
             }
         };
+
         etEmail.addTextChangedListener(combinedWatcher);
         etPassword.addTextChangedListener(combinedWatcher);
         etUsername.addTextChangedListener(combinedWatcher);
 
-        btnSignUp.setOnClickListener(v -> showImageSourceChooser());
-
-        return view;
-    }
-
-    private void showImageSourceChooser() {
-        new AlertDialog.Builder(requireContext()).setTitle("Choose Profile Image")
-                .setItems(new String[]{"Camera", "Gallery"}, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent;
-                        if (which == 0) {
-                            intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                        } else {
-                            intent = new Intent(Intent.ACTION_GET_CONTENT)
-                                    .setType("image/*");
-                        }
-                        pickImageLauncher.launch(intent);
-                    }
-                })
-                .setCancelable(true)
-                .show();
-    }
-
-    private boolean validateEmail(String email, TextView err) {
-        if (!email.contains("@") || !email.substring(email.indexOf("@")).contains(".com")) {
-            err.setText("Invalid Email");
-            return false;
-        }
-        err.setText("");
-        return true;
-    }
-
-    private boolean validatePassword(String pass, TextView err) {
-        if (pass.length() < 6) {
-            err.setText("Password must be at least 6 characters");
-            return false;
-        }
-        err.setText("");
-        return true;
-    }
-
-    private boolean validateUsername(String name, TextView err) {
-        if (name.length() < 3) {
-            err.setText("Username must be at least 3 characters");
-            return false;
-        }
-        err.setText("");
-        return true;
-    }
-
-    private Uri saveBitmapToFile(Bitmap bitmap) {
-        try {
-            File file = new File(
-                    requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES),
-                    "signup_pic.jpg"
-            );
-            try (FileOutputStream fos = new FileOutputStream(file)) {
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+        btnSignUp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new AlertDialog.Builder(requireContext()).setTitle("Choose Profile Image")
+                        .setItems(new String[]{"Camera", "Gallery"}, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Intent intent;
+                                if (which == 0) {
+                                    intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                                } else {
+                                    intent = new Intent(Intent.ACTION_GET_CONTENT)
+                                            .setType("image/*");
+                                }
+                                pickImageLauncher.launch(intent);
+                            }
+                        }).setCancelable(true).show();
             }
-            return Uri.fromFile(file);
-        } catch (IOException e) {
-            Log.e("SignUpFragment", "Error saving camera image", e);
-            return null;
-        }
+        });
+        return view;
     }
 }
