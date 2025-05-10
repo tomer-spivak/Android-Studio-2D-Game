@@ -1,6 +1,6 @@
 package tomer.spivak.androidstudio2dgame.intermediate;
 
-public class LeaderboardEntry implements Comparable<LeaderboardEntry> {
+public class LeaderboardEntry  {
     private final int maxRound;
     private final String displayName;
     private final int gamesPlayed;
@@ -31,10 +31,5 @@ public class LeaderboardEntry implements Comparable<LeaderboardEntry> {
         return victories;
     }
 
-    @Override
-    public int compareTo(LeaderboardEntry other) {
-        return Integer.compare(this.maxRound, other.maxRound);
-
-    }
 }
 

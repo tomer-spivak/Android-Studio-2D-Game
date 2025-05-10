@@ -12,91 +12,93 @@ import android.widget.EditText;
 import android.widget.Spinner;
 
 import androidx.fragment.app.Fragment;
-
-import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
-
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.material.internal.TextWatcherAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 
 public class LeaderboardFragment extends Fragment {
     private LeaderboardAdapter adapter;
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_leaderboard, container, false);
 
+        // 1) RecyclerView + adapter
         RecyclerView rv = view.findViewById(R.id.rvLeaderboard);
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new LeaderboardAdapter(new ArrayList<>());
         rv.setAdapter(adapter);
 
         EditText searchBar = view.findViewById(R.id.searchBar);
-        searchBar.addTextChangedListener(new TextWatcher() {
+
+        searchBar.addTextChangedListener( new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 adapter.filter(s.toString());
             }
+            @Override
+            public void afterTextChanged(Editable s) {}
         });
 
-        Spinner spinner = view.findViewById(R.id.spinnerSort);
+        Spinner spinnerSort = view.findViewById(R.id.spinnerSort);
         String[] options = getResources().getStringArray(R.array.leaderboard_sort_options);
-
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(requireContext(), R.layout.spinner_item, android.R.id.text1, options);
-
         spinnerAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        spinnerSort.setAdapter(spinnerAdapter);
 
-        spinner.setAdapter(spinnerAdapter);
+        // default UI to "Victories" (last item in your array)
+        int victoriesIndex = options.length - 1;
+        spinnerSort.setSelection(victoriesIndex, false);
 
+        spinnerSort.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onNothingSelected(AdapterView<?> parent) { }
 
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                switch (position) {
+            public void onItemSelected(AdapterView<?> parent, View v, int pos, long id) {
+                switch (pos) {
+                    case 0:
+                        adapter.sortByMaxRound();
+                        break;
                     case 1:
-                        adapter.sortBy(LeaderboardAdapter.SortType.GAMES_PLAYED);
+                        adapter.sortByGamesPlayed();
                         break;
                     case 2:
-                        adapter.sortBy(LeaderboardAdapter.SortType.ENEMIES_DEFEATED);
+                        adapter.sortByEnemiesDefeated();
                         break;
+                    case 3:
                     default:
-                        adapter.sortBy(LeaderboardAdapter.SortType.MAX_ROUND);
+                        adapter.sortByVictories();
+                        break;
                 }
             }
         });
 
-        DatabaseRepository.getInstance(requireContext()).fetchLeaderboardFromDatabase(new OnSuccessListener<List<LeaderboardEntry>>() {
-                    @Override
-                    public void onSuccess(List<LeaderboardEntry> leaderboardEntries) {
-                        adapter.updateData(leaderboardEntries);
-                    }
-                }, getContext());
-
         return view;
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // every time we come back, re‐fetch + default‐sort‐by‐victories
+        DatabaseRepository
+                .getInstance(requireContext())
+                .fetchLeaderboardFromDatabase(
+                        new OnSuccessListener<List<LeaderboardEntry>>() {
+                            @Override
+                            public void onSuccess(List<LeaderboardEntry> entries) {
+                                adapter.updateData(entries);
+                            }
+                        },
+                        requireContext()
+                );
+    }
 }
-
-

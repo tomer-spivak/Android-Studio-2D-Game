@@ -50,7 +50,7 @@
         android:id="@+id/btnMenu"
         android:layout_width="0dp"
         android:layout_height="48dp"
-        android:text="Go Back"
+        android:text="Main Menu"
         android:textAllCaps="false"
         android:textColor="#FFFFFF"
         android:backgroundTint="#4CAF50"

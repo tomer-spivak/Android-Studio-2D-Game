@@ -9,49 +9,81 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import tomer.spivak.androidstudio2dgame.R;
 
-public class LeaderboardAdapter
-        extends RecyclerView.Adapter<LeaderboardAdapter.LeaderboardViewHolder> {
-    private final List<LeaderboardEntry> fullList = new ArrayList<>();
+public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
+
+    private enum SortBy { VICTORIES, GAMES_PLAYED, MAX_ROUND, ENEMIES_DEFEATED }
+
+    private final List<LeaderboardEntry> fullList     = new ArrayList<>();
     private final List<LeaderboardEntry> filteredList = new ArrayList<>();
     private String lastQuery = "";
+    private SortBy currentSort = SortBy.VICTORIES;
 
-    public LeaderboardAdapter(List<LeaderboardEntry> initialData) {
-        updateData(initialData);
+    public LeaderboardAdapter(List<LeaderboardEntry> data) {
+        updateData(data);
     }
 
-    public void updateData(List<LeaderboardEntry> newData) {
+    public void updateData(List<LeaderboardEntry> data) {
         fullList.clear();
-        fullList.addAll(newData);
-        sortBy(SortType.MAX_ROUND);     // default initial sort
+        fullList.addAll(data);
+        sortByVictories();
     }
 
-    public enum SortType { MAX_ROUND, GAMES_PLAYED, ENEMIES_DEFEATED }
+    public void sortByVictories() {
+        sort(SortBy.VICTORIES);
+    }
+    public void sortByGamesPlayed() {
+        sort(SortBy.GAMES_PLAYED);
+    }
+    public void sortByMaxRound() {
+        sort(SortBy.MAX_ROUND);
+    }
+    public void sortByEnemiesDefeated() {
+        sort(SortBy.ENEMIES_DEFEATED);
+    }
 
-    public void sortBy(SortType type) {
-        Comparator<LeaderboardEntry> cmp;
-        switch (type) {
-            case GAMES_PLAYED:
-                cmp = (a, b) -> Integer.compare(b.getGamesPlayed(), a.getGamesPlayed());
-                break;
-            case ENEMIES_DEFEATED:
-                cmp = (a, b) -> Integer.compare(b.getEnemiesDefeated(), a.getEnemiesDefeated());
-                break;
-            case MAX_ROUND:
-            default:
-                cmp = (a, b) -> Integer.compare(b.getMaxRound(), a.getMaxRound());
-                break;
+    private void sort(SortBy field) {
+        currentSort = field;
+        for (int i = 0; i < fullList.size(); i++) {
+            for (int j = 0; j < fullList.size() - 1; j++) {
+                LeaderboardEntry a = fullList.get(j);
+                LeaderboardEntry b = fullList.get(j + 1);
+                if (shouldSwap(a, b)) {
+                    fullList.set(j, b);
+                    fullList.set(j + 1, a);
+                }
+            }
         }
-        fullList.sort(cmp);
-        filter(lastQuery);
+        applyFilter();
+    }
+
+    private boolean shouldSwap(LeaderboardEntry a, LeaderboardEntry b) {
+        switch (currentSort) {
+            case GAMES_PLAYED:
+                return a.getGamesPlayed() < b.getGamesPlayed();
+            case MAX_ROUND:
+                return a.getMaxRound() < b.getMaxRound();
+            case ENEMIES_DEFEATED:
+                return a.getEnemiesDefeated() < b.getEnemiesDefeated();
+            case VICTORIES:
+            default:
+                return a.getVictories() < b.getVictories();
+        }
     }
 
     public void filter(String query) {
-        lastQuery = query == null ? "" : query.trim().toLowerCase();
+        if (query == null) {
+            lastQuery = "";
+        } else {
+            lastQuery = query.trim().toLowerCase();
+        }
+        applyFilter();
+    }
+
+    private void applyFilter() {
         filteredList.clear();
         if (lastQuery.isEmpty()) {
             filteredList.addAll(fullList);
@@ -65,53 +97,40 @@ public class LeaderboardAdapter
         notifyDataSetChanged();
     }
 
-
     @NonNull
     @Override
-    public LeaderboardViewHolder onCreateViewHolder(
-            @NonNull ViewGroup parent, int viewType
-    ) {
-        View view = LayoutInflater.from(parent.getContext())
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_leaderboard, parent, false);
-        return new LeaderboardViewHolder(view);
+        return new ViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(
-            @NonNull LeaderboardViewHolder holder, int position
-    ) {
-        // position is 0-based, so rank is position+1
-        holder.rankTextView.setText((position + 1) + ".");
-        LeaderboardEntry entry = filteredList.get(position);
-        holder.usernameTextView.setText(entry.getDisplayName());
-        holder.maxRoundTextView.setText("🏆 Max Round: " + entry.getMaxRound());
-        holder.gamesPlayedTextView.setText("🎮 Games: " + entry.getGamesPlayed());
-        holder.enemiesDefeatedTextView.setText("💀 Defeated: " + entry.getEnemiesDefeated());
-        holder.victoriesTextView.setText("🏅 Victories: " + entry.getVictories());
+    public void onBindViewHolder(@NonNull ViewHolder h, int pos) {
+        LeaderboardEntry e = filteredList.get(pos);
+        h.rank .setText((pos + 1) + ".");
+        h.user .setText(e.getDisplayName());
+        h.max  .setText("🏆 Max Round: "    + e.getMaxRound());
+        h.games.setText("🎮 Games: "        + e.getGamesPlayed());
+        h.kills.setText("💀 Defeated: "     + e.getEnemiesDefeated());
+        h.wins .setText("🏅 Victories: "    + e.getVictories());
     }
-
 
     @Override
     public int getItemCount() {
         return filteredList.size();
     }
 
-    static class LeaderboardViewHolder extends RecyclerView.ViewHolder {
-        TextView rankTextView,
-                usernameTextView,
-                gamesPlayedTextView,
-                enemiesDefeatedTextView,
-                maxRoundTextView,
-                victoriesTextView;
-
-        public LeaderboardViewHolder(@NonNull View itemView) {
-            super(itemView);
-            rankTextView          = itemView.findViewById(R.id.tvRank);
-            usernameTextView      = itemView.findViewById(R.id.usernameTextView);
-            gamesPlayedTextView   = itemView.findViewById(R.id.tvGamesPlayed);
-            enemiesDefeatedTextView = itemView.findViewById(R.id.tvEnemiesDefeated);
-            maxRoundTextView      = itemView.findViewById(R.id.tvMaxRound);
-            victoriesTextView     = itemView.findViewById(R.id.tvVictories);
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView rank, user, games, kills, max, wins;
+        ViewHolder(View v) {
+            super(v);
+            rank  = v.findViewById(R.id.tvRank);
+            user  = v.findViewById(R.id.usernameTextView);
+            games = v.findViewById(R.id.tvGamesPlayed);
+            kills = v.findViewById(R.id.tvEnemiesDefeated);
+            max   = v.findViewById(R.id.tvMaxRound);
+            wins  = v.findViewById(R.id.tvVictories);
         }
     }
 }

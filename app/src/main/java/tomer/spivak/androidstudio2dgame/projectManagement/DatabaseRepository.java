@@ -33,6 +33,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -245,7 +246,7 @@ public class DatabaseRepository {
                                     leaderboardEntries.add(new LeaderboardEntry(maxRound, username, gamesPlayed, enemiesDefeated, victories));
                                 }
                             }
-                            leaderboardEntries.sort(Collections.reverseOrder());
+                            //leaderboardEntries;
                         }
                         onSuccess.onSuccess(leaderboardEntries);
                     }
@@ -449,12 +450,20 @@ public class DatabaseRepository {
     }
 
     private void initLeaderboard(String uid) {
-        Map<String,Object> board = new HashMap<>();
-        board.put("max round", 0);
-        board.put("games played", 0);
-        board.put("enemies defeated", 0);
-        board.put("victories", 0);
-        db.collection("users").document(uid).set(Collections.singletonMap("leaderboard", board), SetOptions.merge());
+        DocumentReference ref = db.collection("users").document(uid);
+        ref.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                if (!documentSnapshot.contains("leaderboard")) {
+                    Map<String,Object> board = new HashMap<>();
+                    board.put("max round",      0);
+                    board.put("games played",   0);
+                    board.put("enemies defeated",0);
+                    board.put("victories",      0);
+                    ref.update("leaderboard", board);
+                }
+            }
+        });
     }
 
     public void reloadUser(TextView tvUsername, ImageView ivProfile, Context context) {
