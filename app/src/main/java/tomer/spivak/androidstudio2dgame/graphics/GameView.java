@@ -43,17 +43,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     private Bitmap backgroundBitmap;
 
     //saved for displaying to the user
-    long timeTillNextRound = 0;
+    private long timeTillNextRound = 0;
     private int shnuzes = 0;
     private int roundsLeft = Integer.MAX_VALUE;
 
-    Context context;
+    private final Context context;
 
     //the order in which to draw the game objects on the screen (we dont anything to hide eachother that it shouldnt
     private final List<GameObject> gameObjectListDrawOrder = new ArrayList<>();
 
     //listener for events like clicking on a cell and game loop updating
-    GameEventListener listener;
+    private final GameEventListener listener;
 
 
     //draw on the screen the health bar, the time to next round, and the background image

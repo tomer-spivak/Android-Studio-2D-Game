@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -35,11 +36,12 @@ public class SignUpFragment extends Fragment {
     private DatabaseRepository repository;
     private ActivityResultLauncher<Intent> pickImageLauncher;
     private String email, password, username;
+    private ProgressBar progressBar;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
+        repository = DatabaseRepository.getInstance(requireContext());
         pickImageLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult>() {
@@ -63,17 +65,10 @@ public class SignUpFragment extends Fragment {
                                 } catch (IOException ignored){}
                             }
                         }
-                        repository.signUpWithEmailPassword(email, password, username, requireContext(), imageUri);
+                        repository.signUpWithEmailPassword(email, password, username, requireContext(), imageUri, progressBar);
                     }
                 }
         );
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
-        repository = DatabaseRepository.getInstance(requireContext());
-
         EditText etEmail    = view.findViewById(R.id.etEmail);
         EditText etPassword = view.findViewById(R.id.etPassword);
         EditText etUsername = view.findViewById(R.id.etUsername);
@@ -81,7 +76,7 @@ public class SignUpFragment extends Fragment {
         TextView tvPassErr  = view.findViewById(R.id.tvPasswordError);
         TextView tvNameErr  = view.findViewById(R.id.tvUsernameError);
         Button   btnSignUp  = view.findViewById(R.id.btnSignUp);
-
+        progressBar = view.findViewById(R.id.progressBar);
 
         TextWatcher combinedWatcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -119,10 +114,10 @@ public class SignUpFragment extends Fragment {
         etEmail.addTextChangedListener(combinedWatcher);
         etPassword.addTextChangedListener(combinedWatcher);
         etUsername.addTextChangedListener(combinedWatcher);
-
         btnSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                progressBar.setVisibility(View.VISIBLE);
                 new AlertDialog.Builder(requireContext()).setTitle("Choose Profile Image")
                         .setItems(new String[]{"Camera", "Gallery"}, new DialogInterface.OnClickListener() {
                             @Override
@@ -134,6 +129,7 @@ public class SignUpFragment extends Fragment {
                                     intent = new Intent(Intent.ACTION_GET_CONTENT)
                                             .setType("image/*");
                                 }
+
                                 pickImageLauncher.launch(intent);
                             }
                         }).setCancelable(true).show();

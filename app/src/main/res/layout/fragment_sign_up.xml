@@ -1,114 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@drawable/gradient_signup_page_background"
-  >
+    android:orientation="vertical">
 
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="75dp"
         android:layout_marginTop="40dp"
-        android:src="@drawable/logo"/>
+        android:src="@drawable/logo" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <TextView
-            android:textColor="@color/white"
-            android:textSize="17sp"
             android:id="@+id/tvUsernameError"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="10dp"
+            android:textColor="@color/white"
+            android:textSize="17sp"
             app:layout_constraintBottom_toTopOf="@+id/etEmail"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/etUsername" />
 
         <EditText
-            android:backgroundTint="@color/white"
-            android:textSize="25sp"
             android:id="@+id/etUsername"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginTop="25dp"
             android:layout_marginEnd="12dp"
+            android:backgroundTint="@color/white"
             android:fontFamily="@font/roboto"
             android:hint="@string/prompt_name"
             android:importantForAccessibility="yes"
             android:inputType="text"
             android:padding="8dp"
             android:textColorHint="#FFFFFF"
+            android:textSize="25sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
-            android:backgroundTint="@color/white"
-
-            android:textSize="25sp"
             android:id="@+id/etEmail"
+
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginTop="2dp"
             android:layout_marginEnd="12dp"
+            android:backgroundTint="@color/white"
             android:fontFamily="@font/roboto"
             android:hint="@string/prompt_email"
             android:inputType="textEmailAddress"
             android:padding="8dp"
             android:selectAllOnFocus="true"
             android:textColorHint="#FFFFFF"
+            android:textSize="25sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvUsernameError" />
 
         <TextView
-            android:textColor="@color/white"
-            android:textSize="17sp"
             android:id="@+id/tvEmailError"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:textColor="@color/white"
+            android:textSize="17sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/etEmail" />
 
         <EditText
-            android:backgroundTint="@color/white"
-
-            android:textSize="25sp"
             android:id="@+id/etPassword"
+
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginTop="24dp"
             android:layout_marginEnd="12dp"
+            android:backgroundTint="@color/white"
             android:fontFamily="@font/roboto"
             android:hint="@string/prompt_password"
             android:imeActionLabel="@string/action_sign_in_short"
             android:imeOptions="actionDone"
             android:inputType="textPassword"
             android:padding="8dp"
-
             android:selectAllOnFocus="true"
+
             android:textColorHint="#FFFFFF"
+            android:textSize="25sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvEmailError" />
 
         <TextView
-            android:textColor="@color/white"
-            android:textSize="17sp"
             android:id="@+id/tvPasswordError"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
+            android:textColor="@color/white"
+            android:textSize="17sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/etPassword" />
@@ -131,5 +134,12 @@
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-</LinearLayout>
+    </LinearLayout>
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/Widget.AppCompat.ProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:layout_gravity="center"/>
+</FrameLayout>

@@ -28,7 +28,6 @@ import tomer.spivak.androidstudio2dgame.projectManagement.NotificationReceiver;
 import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 
 public class HomeActivity extends AppCompatActivity{
-    BottomNavigationView bottomNavigationView;
 
 
     @Override
@@ -37,12 +36,12 @@ public class HomeActivity extends AppCompatActivity{
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_home);
 
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
         DatabaseRepository.getInstance(this).signOut(this);
 
         //init activity with home fragment
-        getSupportFragmentManager().beginTransaction().replace(R.id.flHome, new HomeFragment()).commit();
+        replaceFragment(new HomeFragment(), false);
 
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
@@ -50,11 +49,11 @@ public class HomeActivity extends AppCompatActivity{
                 int id = item.getItemId();
                 Fragment current = getSupportFragmentManager().findFragmentById(R.id.flHome);
                 if (id == R.id.nav_home && !(current instanceof HomeFragment)) {
-                    replaceFragment(new HomeFragment());
+                    replaceFragment(new HomeFragment(), true);
                 } else if (id == R.id.nav_Login && !(current instanceof LoginFragment)) {
-                    replaceFragment(new LoginFragment());
+                    replaceFragment(new LoginFragment(), true);
                 } else if (id == R.id.nav_SignUp && !(current instanceof SignUpFragment)) {
-                    replaceFragment(new SignUpFragment());
+                    replaceFragment(new SignUpFragment(), true);
                 }
                 return true;
             }
@@ -102,10 +101,12 @@ public class HomeActivity extends AppCompatActivity{
         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
     }
 
-    private void replaceFragment(Fragment fragment) {
+    private void replaceFragment(Fragment fragment, boolean addToBackStack) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.flHome, fragment);
-        transaction.addToBackStack(null);
+        if (addToBackStack) {
+            transaction.addToBackStack(null);
+        }
         transaction.commit();
     }
 }

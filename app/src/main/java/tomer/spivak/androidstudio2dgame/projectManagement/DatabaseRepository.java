@@ -10,7 +10,10 @@ import android.net.NetworkCapabilities;
 import android.net.Uri;
 
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -47,7 +50,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
+import tomer.spivak.androidstudio2dgame.graphics.IntermediateActivity;
 import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
@@ -295,7 +298,7 @@ public class DatabaseRepository {
         return u == null || u.isAnonymous();
     }
 
-    public void signUpWithEmailPassword(String email, String password, String username, Context context, Uri uri) {
+    public void signUpWithEmailPassword(String email, String password, String username, Context context, Uri uri, ProgressBar progressBar) {
         if(!isOnline(context)){
             Toast.makeText(context, "You have no internet connection. Continue as guest.", Toast.LENGTH_SHORT).show();
             return;
@@ -329,6 +332,7 @@ public class DatabaseRepository {
                                                                 Map<String,Object> userData = new HashMap<>();
                                                                 userData.put("username", username);
                                                                 db.collection("users").document(uid).set(userData, SetOptions.merge());
+                                                                progressBar.setVisibility(View.GONE);
                                                                 context.startActivity(new Intent(context, IntermediateActivity.class));
                                                                 initLeaderboard(newUser.getUid());
                                                             }
@@ -453,62 +457,69 @@ public class DatabaseRepository {
         db.collection("users").document(uid).set(Collections.singletonMap("leaderboard", board), SetOptions.merge());
     }
 
-    public void reloadUser(OnSuccessListener<Void> onSuccess, OnFailureListener onFailure, Context context) {
-        if(isGuest(context)){
-            onFailure.onFailure(new Exception("No user signed in"));
-            return;
-        }
-        getUserInstance().reload().addOnSuccessListener(onSuccess).addOnFailureListener(onFailure);
-    }
-
-    public void getUsernameAndImage(OnSuccessListener<String> onSuccess, ImageView imageView, Context context) {
-        if(isGuest(context)){
-            imageView.setImageResource(R.drawable.logo);
-            onSuccess.onSuccess("guest");
-            return;
-        }
-
-        FirebaseUser user = getUserInstance();
-        Uri photoUrl = user.getPhotoUrl();
-        if (photoUrl == null) {
-            StorageReference profileImageRef = FirebaseStorage.getInstance().getReference().child("profileImages/" + user.getUid() + ".jpg");
-            profileImageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-                            Glide.with(context).load(uri).into(imageView);
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(context, "Failed to fetch image: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                    });
-        } else
-            Glide.with(context).load(photoUrl).into(imageView);
-
-        String uid = user.getUid();
-        db.collection("users").document(uid).get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+    public void reloadUser(TextView tvUsername, ImageView ivProfile, Context context) {
+        OnCompleteListener listener = new OnCompleteListener() {
+            @Override
+            public void onComplete(@NonNull Task task) {
+                OnSuccessListener onSuccess = new OnSuccessListener<String>() {
                     @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        String username = "guest";
-                        if (documentSnapshot.exists() && documentSnapshot.contains("username")) {
-                            String str = documentSnapshot.getString("username");
-                            if (str != null && !str.isEmpty()) {
-                                username = str;
+                    public void onSuccess(String str) {
+                        tvUsername.setText(str);
+                    }
+                };
+                if(isGuest(context)){
+                    ivProfile.setImageResource(R.drawable.logo);
+                    onSuccess.onSuccess("guest");
+                    return;
+                }
+
+                FirebaseUser user = getUserInstance();
+                Uri photoUrl = user.getPhotoUrl();
+                if (photoUrl == null) {
+                    StorageReference profileImageRef = FirebaseStorage.getInstance().getReference().child("profileImages/" + user.getUid() + ".jpg");
+                    profileImageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    Glide.with(context).load(uri).into(ivProfile);
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Toast.makeText(context, "Failed to fetch image: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                }
+                            });
+                } else
+                    Glide.with(context).load(photoUrl).into(ivProfile);
+
+                String uid = user.getUid();
+                db.collection("users").document(uid).get()
+                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                            @Override
+                            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                String username = "guest";
+                                if (documentSnapshot.exists() && documentSnapshot.contains("username")) {
+                                    String str = documentSnapshot.getString("username");
+                                    if (str != null && !str.isEmpty()) {
+                                        username = str;
+                                    }
+                                }
+                                onSuccess.onSuccess(username);
                             }
-                        }
-                        onSuccess.onSuccess(username);
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        onSuccess.onSuccess("guest");
-                        Toast.makeText(context, "couldnt load username: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                onSuccess.onSuccess("guest");
+                                Toast.makeText(context, "couldnt load username: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+        };
+        if(isGuest(context)){
+            return;
+        }
+        getUserInstance().reload().addOnCompleteListener(listener);
     }
 
     public void signOut(Context context) {

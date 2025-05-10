@@ -36,14 +36,13 @@ import com.google.android.gms.tasks.OnFailureListener;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
-import tomer.spivak.androidstudio2dgame.intermediate.IntermediateActivity;
 
 
 public class LoginFragment extends Fragment {
-    DatabaseRepository databaseRepository;
-    Button btnGuestLogin;
-    ActivityResultLauncher<Intent> googleSignInLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
+    private DatabaseRepository databaseRepository;
+    private Button btnGuestLogin;
+    private final ActivityResultLauncher<Intent> googleSignInLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
                 @Override
                 public void onActivityResult(ActivityResult result) {
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {

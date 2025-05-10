@@ -33,7 +33,7 @@
             android:foregroundServiceType="mediaPlayback" />
         <activity
 
-            android:name=".intermediate.IntermediateActivity"
+            android:name=".graphics.IntermediateActivity"
             android:exported="true" >
 
 
@@ -43,8 +43,8 @@
         <activity
             android:name=".graphics.GameActivity"
             android:exported="true"
+            android:screenOrientation="landscape"
             android:theme="@style/Base.Theme.AndroidStudio2DGame">
-
         </activity>
         <activity
 
