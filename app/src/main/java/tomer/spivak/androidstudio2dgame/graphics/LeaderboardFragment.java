@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.intermediate;
+package tomer.spivak.androidstudio2dgame.graphics;
 
 import android.os.Bundle;
 import android.text.Editable;
@@ -21,17 +21,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.logic.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 
 public class LeaderboardFragment extends Fragment {
     private LeaderboardAdapter adapter;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_leaderboard, container, false);
 
-        // 1) RecyclerView + adapter
         RecyclerView rv = view.findViewById(R.id.rvLeaderboard);
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new LeaderboardAdapter(new ArrayList<>());
@@ -50,12 +49,11 @@ public class LeaderboardFragment extends Fragment {
         });
 
         Spinner spinnerSort = view.findViewById(R.id.spinnerSort);
-        String[] options = getResources().getStringArray(R.array.leaderboard_sort_options);
+        String[] options = {"Max Round", "Games Played", "Enemies Defeated", "Victories"};
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(requireContext(), R.layout.spinner_item, android.R.id.text1, options);
         spinnerAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         spinnerSort.setAdapter(spinnerAdapter);
 
-        // default UI to "Victories" (last item in your array)
         int victoriesIndex = options.length - 1;
         spinnerSort.setSelection(victoriesIndex, false);
 
@@ -88,9 +86,7 @@ public class LeaderboardFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // every time we come back, re‐fetch + default‐sort‐by‐victories
-        DatabaseRepository
-                .getInstance(requireContext())
+        DatabaseRepository.getInstance(requireContext())
                 .fetchLeaderboardFromDatabase(
                         new OnSuccessListener<List<LeaderboardEntry>>() {
                             @Override

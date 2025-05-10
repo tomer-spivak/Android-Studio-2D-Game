@@ -27,7 +27,6 @@ import com.google.android.material.navigation.NavigationView;
 
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.intermediate.LeaderboardFragment;
 import tomer.spivak.androidstudio2dgame.intermediate.RulesFragment;
 import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;

@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.intermediate;
+package tomer.spivak.androidstudio2dgame.logic;
 
 public class LeaderboardEntry  {
     private final int maxRound;

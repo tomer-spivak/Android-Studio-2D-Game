@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.intermediate;
+package tomer.spivak.androidstudio2dgame.graphics;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import tomer.spivak.androidstudio2dgame.R;
+import tomer.spivak.androidstudio2dgame.logic.LeaderboardEntry;
 
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
 
