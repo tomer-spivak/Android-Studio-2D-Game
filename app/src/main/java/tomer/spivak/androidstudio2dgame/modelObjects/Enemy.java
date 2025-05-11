@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import tomer.spivak.androidstudio2dgame.model.AttackComponent;
 import tomer.spivak.androidstudio2dgame.model.Cell;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.Direction;
@@ -21,32 +20,38 @@ public class Enemy extends ModelObject implements IDamager{
     protected List<Position> path;
     protected int currentTargetIndex = 0;
     protected float timeSinceLastMove = 0;
-    private final AttackComponent attackComponent;
     private final int reward;
     private long attackAnimationElapsedTime;
     private boolean attackAnimationRunning = false;
     private Cell targetCell;
+    private float attackDamage;
+    private final float attackCooldown;
+    private float timeSinceLastAttack = 0;
 
     public Enemy(float health, float damage, float movementSpeed, Position pos, float attackCooldown, int reward) {
         super(health, pos);
         this.reward = reward;
-        attackComponent = new AttackComponent(damage, attackCooldown);
+        this.attackCooldown = attackCooldown;
         this.movementSpeed = movementSpeed;
         this.currentDirection = Direction.UPLEFT;
         this.state = EnemyState.IDLE;
         this.type = "monster";
-        attackComponent.setAttackDamage(damage/10);
+        setAttackDamage(damage/10);
+    }
+
+    private void setAttackDamage(float v) {
+        this.attackDamage = v;
     }
 
     public void accumulateAttackTime(long deltaTime) {
         if (state == EnemyState.ATTACKING1 || state == EnemyState.ATTACKING2 || state == EnemyState.ATTACKING3 ||
                 state == EnemyState.ATTACKING4)
             return;
-        attackComponent.accumulateAttackTime(deltaTime);
+        timeSinceLastAttack += deltaTime;
     }
 
     public boolean canAttack() {
-        return attackComponent.canAttack() && (state == EnemyState.IDLE);
+        return timeSinceLastAttack >= attackCooldown && (state == EnemyState.IDLE);
     }
 
     public void updateDirection(Position prevPos, Position nextPos) {
@@ -68,7 +73,10 @@ public class Enemy extends ModelObject implements IDamager{
 
     @Override
     public void dealDamage(IDamageable target) {
-        attackComponent.dealDamage(target);
+        if (target == null) {
+            return;
+        }
+        target.takeDamage(attackDamage);
     }
 
     public void attack(Cell targetCell) {
@@ -180,10 +188,10 @@ public class Enemy extends ModelObject implements IDamager{
 
 
     public void setTimeSinceLastAttack(float timeSinceLastAttack) {
-        attackComponent.setTimeSinceLastAttack(timeSinceLastAttack);
+        this.timeSinceLastAttack = timeSinceLastAttack;
     }
     public void resetAttackTimer() {
-        attackComponent.resetAttackTimer();
+        timeSinceLastAttack = 0;
     }
 
     public Direction getCurrentDirection() {
@@ -220,10 +228,8 @@ public class Enemy extends ModelObject implements IDamager{
         enemyData.put("currentDirection", currentDirection.name());
         enemyData.put("state",   state.name());
         enemyData.put("currentTargetIndex", currentTargetIndex);
-        enemyData.put("timeSinceLastAttack", attackComponent.getTimeSinceLastAttack());
+        enemyData.put("timeSinceLastAttack", timeSinceLastAttack);
         enemyData.put("timeSinceLastMove",   timeSinceLastMove);
-        enemyData.put("damage",              attackComponent.getAttackDamage());
-        enemyData.put("movementSpeed",       movementSpeed);
         enemyData.put("reward",              reward);
         enemyData.put("attackAnimationRunning", attackAnimationRunning);
         enemyData.put("attackAnimationElapsedTime", attackAnimationElapsedTime);

@@ -24,6 +24,7 @@ public class ModelGameManager {
     private SoundEffectManager soundEffects;
     private static final int NIGHT_THRESHOLD = 5000;
     private String selectedBuildingType;
+    private boolean sunrise = false;
 
     public ModelGameManager() {
 
@@ -173,6 +174,10 @@ public class ModelGameManager {
         state.addTime(deltaTime);
 
         if (state.isDayTime()) {
+            if (sunrise) {
+                resetCellAnimations();
+                sunrise = false;
+            }
             state.decreaseTimeToNextRound(deltaTime);
             if (state.getTimeToNextRound() <= 0) {
                 state.setDayTime(false);
@@ -180,7 +185,6 @@ public class ModelGameManager {
             }
             return;
         }
-
         // Night phase
         if (!containsMainBuilding(state.getGrid()) || getNumberOfBuildings() == 0) {
             initDefeat(state);
@@ -194,7 +198,27 @@ public class ModelGameManager {
 
         turretManager.updateTurrets(state, enemyManager.getEnemies(state), deltaTime);
         enemyManager.updateEnemies(state, deltaTime);
+        updateCellAnimation(deltaTime);
         clearDeadObjects(state);
+    }
+
+    private void resetCellAnimations() {
+        Cell[][] grid = state.getGrid();
+        for (Cell[] cells : grid) {
+            for (Cell cell : cells) {
+                cell.resetAnimation();
+
+            }
+        }
+    }
+
+    private void updateCellAnimation(long deltaTime) {
+        Cell[][] grid = state.getGrid();
+        for (Cell[] cells : grid) {
+            for (Cell cell : cells) {
+                cell.updateAnimation(deltaTime);
+            }
+        }
     }
 
     private void startNight(GameState state) {
@@ -280,6 +304,7 @@ public class ModelGameManager {
 
     private void continueToNextRound() {
         state.setDayTime(true);
+        sunrise = true;
         state.accumulateRound();
         state.startTimerForNextRound();
         state.addShnuzes(state.getCurrentRound() * 1000);

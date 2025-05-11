@@ -3,13 +3,14 @@ package tomer.spivak.androidstudio2dgame.modelObjects;
 
 import java.util.*;
 
-import tomer.spivak.androidstudio2dgame.model.AttackComponent;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.BuildingState;
 
 public class Turret extends Building implements IDamager {
-    protected final AttackComponent attackComponent;
+    private final float attackDamage;
+    private final float attackCooldown;
+    private float timeSinceLastAttack = 0;
     protected final float attackRange;
     private final List<Position> positionsToAttack = new ArrayList<>();
     private final List<Position> removedPositions = new ArrayList<>();
@@ -17,8 +18,8 @@ public class Turret extends Building implements IDamager {
     public Turret(float health, float attackDamage, float attackRange, Position pos, long attackCooldown, int price) {
         super(health, pos, price, "lightningtower");
         this.attackRange = attackRange;
-        this.attackComponent = new AttackComponent(attackDamage, attackCooldown);
-
+        this.attackDamage = attackDamage;
+        this.attackCooldown = attackCooldown;
         this.type = "lightningtower";
 
         initCellsToAttack();
@@ -35,7 +36,10 @@ public class Turret extends Building implements IDamager {
     }
 
     public void update(long elapsedTime) {
-        attackComponent.accumulateAttackTime(elapsedTime);
+        accumulateAttackTime(elapsedTime);
+    }
+    public void accumulateAttackTime(long elapsedTime) {
+        timeSinceLastAttack += elapsedTime;
     }
 
     public boolean shouldExecuteAttack(List<Enemy> enemies) {
@@ -49,7 +53,7 @@ public class Turret extends Building implements IDamager {
             for (Position pos : positionsToAttack){
                 if (pos.equals(enemy.getPosition())){
                     executeAttackSoundAndAnimation(enemy);
-                    attackComponent.resetAttackTimer();
+                    resetAttackTimer();
                     bool = true;
                 }
             }
@@ -108,7 +112,7 @@ public class Turret extends Building implements IDamager {
     }
 
     protected boolean canAttack() {
-        return attackComponent.canAttack() && state != BuildingState.ATTACKING &&
+        return timeSinceLastAttack >= attackCooldown && state != BuildingState.ATTACKING &&
                 state != BuildingState.HURT;
     }
 
@@ -126,20 +130,21 @@ public class Turret extends Building implements IDamager {
 
     @Override
     public void dealDamage(IDamageable target) {
-        attackComponent.dealDamage(target);
-    }
+        if (target == null) {
+            return;
+        }
+        target.takeDamage(attackDamage);    }
 
     @Override
     public Object toMap() {
         Map<String,Object> turretData = (Map<String,Object>) super.toMap();
         turretData.replace("type", "lightningtower");
-        turretData.put("timeSinceLastAttack", attackComponent.getTimeSinceLastAttack());
-        turretData.put("attackDamage", attackComponent.getAttackDamage());
+        turretData.put("timeSinceLastAttack", timeSinceLastAttack);
         turretData.put("attackRange", attackRange);
         return turretData;
     }
 
     public void resetAttackTimer() {
-        attackComponent.resetAttackTimer();
+        timeSinceLastAttack = 0;
     }
 }

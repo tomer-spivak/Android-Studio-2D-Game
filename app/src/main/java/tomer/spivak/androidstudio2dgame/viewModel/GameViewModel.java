@@ -188,16 +188,11 @@ public class GameViewModel extends ViewModel {
         setDayTime(dayTime);
     }
 
-    public Cell[][] createBoard(Map<String,Object> data,
-                                int boardSize,
-                                DifficultyLevel difficultyLevel) {
-        // 1) initialize every Cell once with its defaultState
+    public Cell[][] createBoard(Map<String,Object> data, int boardSize, DifficultyLevel difficultyLevel) {
         Cell[][] board = new Cell[boardSize][boardSize];
         for (int i = 0; i < boardSize; i++) {
             for (int j = 0; j < boardSize; j++) {
-                CellState defaultSt = (i==0||j==0||i==boardSize-1||j==boardSize-1)
-                        ? CellState.SPAWN
-                        : CellState.NORMAL;
+                CellState defaultSt = (i==0||j==0||i==boardSize-1||j==boardSize-1) ? CellState.SPAWN : CellState.NORMAL;
                 board[i][j] = new Cell(new Position(i, j), defaultSt);
             }
         }
@@ -206,7 +201,6 @@ public class GameViewModel extends ViewModel {
             return board;
         }
         List<Pair<Enemy, Position>> pendingTargets = new ArrayList<>();
-        // 2) overlay saved objects & states on the existing Cells
         for (Object rowObj : data.values()) {
             List<Map<String, Object>> rowList = (List<Map<String, Object>>) rowObj;
             for (Map<String, Object> col : rowList) {
@@ -217,13 +211,10 @@ public class GameViewModel extends ViewModel {
                 int y = ((Number) Objects.requireNonNull(posMap.get("y"))).intValue();
                 if (x<0||y<0||x>=boardSize||y>=boardSize) continue;
 
-                // pull out the saved CellState
                 CellState savedState = CellState.valueOf((String) col.get("state"));
 
-                // get your existing Cell (with its defaultState still intact)
                 Cell cell = board[x][y];
 
-                // overwrite its “current” state to your saved one
                 cell.setState(savedState);
 
                 @SuppressWarnings("unchecked")

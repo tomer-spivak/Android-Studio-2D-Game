@@ -4,16 +4,8 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
@@ -24,19 +16,13 @@ public class Cell {
     private final Position position;
     private ModelObject object;
     private CellState cellState;
-    private CellState defaultState;
+    private final CellState defaultState;
+    private long animationTime = 0;
 
     public Cell(Position position, CellState defaultState) {
-        this(position, null, defaultState);
-        Log.d("cell", "creating cell: " + cellState);
-        this.defaultState = defaultState;
-
-    }
-
-    public Cell(Position position, ModelObject object, CellState cellState) {
         this.position = position;
-        this.object = object;
-        this.cellState = cellState;
+        this.cellState = defaultState;
+        this.defaultState = defaultState;
     }
 
     public void placeBuilding(Building building) {
@@ -48,15 +34,32 @@ public class Cell {
         enemy.setPosition(position);
     }
 
-    public List<Cell> getNeighbors(GameState current) {
-        List<Cell> neighbors = new ArrayList<>();
-        for (Position neighborPos : position.getNeighbors()) {
-            try {
-                neighbors.add(current.getCellAt(neighborPos));
-            } catch (Exception ignored) {
+    public void updateAnimation(long deltaTime){
+        animationTime += deltaTime;
+        if(cellState == CellState.BURNT) {
+            if (animationTime > 500) {
+                setState(defaultState);
             }
         }
-        return neighbors;
+        if(cellState.name().contains("DEATH")) {
+            final CellState[] states = {CellState.ENEMYDEATH1, CellState.ENEMYDEATH2, CellState.ENEMYDEATH3};
+            final int cycles = 3;
+            final float frameDur = 300;
+            final int totalFrames = states.length * cycles;
+            final float totalTime = totalFrames * frameDur;
+            if (animationTime >= totalTime) {
+                setState(defaultState);
+            } else {
+                int step = (int)(animationTime / frameDur);
+                int frameIndex = step % states.length;
+                setState(states[frameIndex]);
+            }
+        }
+        if(cellState == CellState.EXPLODE){
+            if (animationTime > 800) {
+                setState(defaultState);
+            }
+        }
     }
 
     public Position getPosition() {
@@ -76,9 +79,31 @@ public class Cell {
     }
 
     public void setState(CellState cellState) {
-        Log.d("cell", position.toString());
-        Log.d("cell", "setting state: " + cellState);
         this.cellState = cellState;
+    }
+
+    public void removeObject() {
+        this.object = null;
+    }
+
+    public void executeBurntAnimation() {
+        setState(CellState.BURNT);
+        animationTime = 0;
+    }
+
+    public void executeEnemyDeathAnimation() {
+        setState(CellState.ENEMYDEATH1);
+        animationTime = 0L;
+    }
+
+    public void executeExplosion() {
+        setState(CellState.EXPLODE);
+        animationTime = 0;
+    }
+
+    public void resetAnimation() {
+        setState(defaultState);
+        animationTime = 0;
     }
 
     public Map<String, Object> toMap() {
@@ -86,6 +111,7 @@ public class Cell {
         cellData.put("position", position.toMap());
         cellData.put("occupied", object != null);
         cellData.put("object", object != null ? object.toMap() : null);
+        Log.d("state", cellState.name());
         cellData.put("state", cellState.name());
         return cellData;
     }
@@ -99,59 +125,4 @@ public class Cell {
             str += ", object=" + object;
         return str + '}';
     }
-
-    public void removeObject() {
-        this.object = null;
-    }
-
-    public void executeBurntAnimation() {
-        setState(CellState.BURNT);
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                setState(defaultState);
-            }
-        }, 500);
-    }
-
-    public void executeEnemyDeathAnimation() {
-        final CellState[] states = {
-                CellState.ENEMYDEATH1,
-                CellState.ENEMYDEATH2,
-                CellState.ENEMYDEATH3,
-        };
-
-        final int cyclesToRun = 3;
-        final int stepsPerCycle = states.length;
-        final int totalSteps = cyclesToRun * stepsPerCycle;
-        final AtomicInteger stepCounter = new AtomicInteger(0);
-
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                int step = stepCounter.getAndIncrement();
-                if (step < totalSteps) {
-                    int stateIndex = step % stepsPerCycle;
-                    setState(states[stateIndex]);
-                } else {
-                    setState(defaultState);
-                    scheduler.shutdown();
-                }
-            }
-        }, 0, 300, TimeUnit.MILLISECONDS);
-    }
-
-    public void executeExplosion() {
-        setState(CellState.EXPLODE);
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                setState(defaultState);
-            }
-        }, 800);
-    }
 }
-

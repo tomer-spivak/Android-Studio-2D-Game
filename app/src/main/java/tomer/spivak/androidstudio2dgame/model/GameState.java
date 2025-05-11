@@ -3,6 +3,9 @@ package tomer.spivak.androidstudio2dgame.model;
 
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 
@@ -29,6 +32,14 @@ public class GameState {
         initShnuzes();
         currentTimeOfGame = 0;
         gameStatus = GameStatus.PLAYING;
+    }
+    public List<Cell> getNeighbors(Cell c) {
+        List<Cell> out = new ArrayList<>();
+        for (Position p : c.getPosition().getNeighbors()) {
+            try { out.add(getCellAt(p)); }
+            catch (Exception ignored) {}
+        }
+        return out;
     }
 
     public void initShnuzes() {

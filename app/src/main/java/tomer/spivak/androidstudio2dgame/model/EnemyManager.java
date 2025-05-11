@@ -137,7 +137,7 @@ public class EnemyManager {
 
     private Cell pivotToAdjacentBuildings(Enemy enemy, GameState current) {
         Cell enemyCell = current.getCellAt(enemy.getPosition());
-        List<Cell> neighbors = enemyCell.getNeighbors(current);
+        List<Cell> neighbors = current.getNeighbors(enemyCell);
 
         Cell targetCell = null;
         float minHealth = Integer.MAX_VALUE;
