@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.GameObjectData;
-import tomer.spivak.androidstudio2dgame.model.Cell;
+import tomer.spivak.androidstudio2dgame.logic.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.BuildingState;

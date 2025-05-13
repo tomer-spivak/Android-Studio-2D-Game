@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import tomer.spivak.androidstudio2dgame.model.Cell;
+import tomer.spivak.androidstudio2dgame.logic.Cell;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.Direction;
 import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
@@ -66,7 +66,6 @@ public class Enemy extends ModelObject implements IDamager{
             } else
                 chosen = Direction.DOWNRIGHT;
         }
-        Log.d("chosen", "chosen:" + chosen.name());
         setCurrentDirection(chosen);
 
     }
@@ -185,7 +184,6 @@ public class Enemy extends ModelObject implements IDamager{
     public void setCurrentTargetIndex(int currentTargetIndex) {
         this.currentTargetIndex = currentTargetIndex;
     }
-
 
     public void setTimeSinceLastAttack(float timeSinceLastAttack) {
         this.timeSinceLastAttack = timeSinceLastAttack;

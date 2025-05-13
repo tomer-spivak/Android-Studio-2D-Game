@@ -3,6 +3,8 @@ package tomer.spivak.androidstudio2dgame.model;
 
 import android.util.Log;
 
+import tomer.spivak.androidstudio2dgame.logic.Cell;
+import tomer.spivak.androidstudio2dgame.logic.EnemyManager;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
@@ -196,6 +198,7 @@ public class ModelGameManager {
             return;
         }
 
+        //updateCells(state, deltaTime);
         turretManager.updateTurrets(state, enemyManager.getEnemies(state), deltaTime);
         enemyManager.updateEnemies(state, deltaTime);
         updateCellAnimation(deltaTime);
@@ -226,7 +229,7 @@ public class ModelGameManager {
         int amount = state.getRound();
         if (!enemiesExist())
             enemyManager.spawnEnemies(state, amount);
-
+        Log.d("amount", "enemy: " + enemiesExist());
     }
 
 

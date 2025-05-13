@@ -53,7 +53,7 @@ import java.util.Objects;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.graphics.IntermediateActivity;
 import tomer.spivak.androidstudio2dgame.logic.LeaderboardEntry;
-import tomer.spivak.androidstudio2dgame.model.Cell;
+import tomer.spivak.androidstudio2dgame.logic.Cell;
 import tomer.spivak.androidstudio2dgame.model.GameState;
 
 public class DatabaseRepository {
