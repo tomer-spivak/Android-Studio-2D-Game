@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
 
-import tomer.spivak.androidstudio2dgame.model.GameState;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
@@ -113,13 +112,17 @@ public class EnemyManager {
                 enemy.setPath(newPath);
                 enemy.setCurrentTargetIndex(0);
                 if (newPath.isEmpty()) {
-                    Cell enemyCell = gameState.getCellAt(enemy.getPosition());
-                    List<Cell> neighbors = gameState.getNeighbors(enemyCell);
-
+                    //Cell enemyCell = gameState.getCellAt(enemy.getPosition());
+                    //List<Cell> neighbors = gameState.getNeighbors(enemyCell);
+                    List<Cell> neighborsCells = new ArrayList<>();
+                    for (Position neighborsPos: enemy.getPosition().getNeighbors()){
+                        if(gameState.isValidPosition(neighborsPos))
+                            neighborsCells.add(gameState.getCellAt(neighborsPos));
+                    }
                     Cell targetCell = null;
                     float minHealth = Integer.MAX_VALUE;
 
-                    for (Cell neighborCell : neighbors) {
+                    for (Cell neighborCell : neighborsCells) {
                         if (neighborCell.getObject() instanceof Building) {
                             Building b = (Building) neighborCell.getObject();
                             if (b.getHealth() < minHealth) {

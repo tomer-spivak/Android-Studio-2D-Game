@@ -5,6 +5,7 @@ import android.util.Log;
 
 import tomer.spivak.androidstudio2dgame.logic.Cell;
 import tomer.spivak.androidstudio2dgame.logic.EnemyManager;
+import tomer.spivak.androidstudio2dgame.logic.GameState;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
@@ -24,7 +25,6 @@ public class ModelGameManager {
     private final EnemyManager enemyManager = new EnemyManager();
     private final TurretManager turretManager = new TurretManager();
     private SoundEffectManager soundEffects;
-    private static final int NIGHT_THRESHOLD = 5000;
     private String selectedBuildingType;
     private boolean sunrise = false;
 
@@ -33,7 +33,8 @@ public class ModelGameManager {
     }
 
     public void init(Cell[][] board, DifficultyLevel difficulty) {
-        state = new GameState(board, NIGHT_THRESHOLD, difficulty, 5 * (difficulty.ordinal() + 1));
+        state = new GameState(board, difficulty, 5 * (difficulty.ordinal() + 1));
+        state.initShnuzes();
         state.startTimerForNextRound();
         if(containsMainBuilding(board))
            return;
@@ -116,14 +117,14 @@ public class ModelGameManager {
             if (canPlaceBuilding(state, new Position(row, col))){
                 placeSelectedBuilding(row, col, state);
             }
-        } else if (!selectedCell.getObject().getType().equals("mainbuilding") && state.isDayTime() && getNumberOfBuildings() > 2) {
+        } else if (!selectedCell.getObject().getType().equals("mainbuilding") && state.getDayTime() && getNumberOfBuildings() > 2) {
             Log.d("type", selectedCell.getObject().getType());
             removeBuilding(selectedCell, state);
         }
     }
 
     private boolean canPlaceBuilding(GameState state, Position position) {
-        return selectedBuildingType != null && state.isDayTime() && state.getShnuzes() >=
+        return selectedBuildingType != null && state.getDayTime() && state.getShnuzes() >=
                 ModelObjectFactory.getPrice(selectedBuildingType) && !isOnFrame(state.getCellAt(position));
     }
 
@@ -175,7 +176,7 @@ public class ModelGameManager {
 
         state.addTime(deltaTime);
 
-        if (state.isDayTime()) {
+        if (state.getDayTime()) {
             if (sunrise) {
                 resetCellAnimations();
                 sunrise = false;
@@ -226,7 +227,7 @@ public class ModelGameManager {
 
     private void startNight(GameState state) {
         state.setDayTime(false);
-        int amount = state.getRound();
+        int amount = state.getCurrentRound();
         if (!enemiesExist())
             enemyManager.spawnEnemies(state, amount);
         Log.d("amount", "enemy: " + enemiesExist());
@@ -256,7 +257,7 @@ public class ModelGameManager {
             Enemy enemy = (Enemy) object;
             cell.executeEnemyDeathAnimation();
             state.addShnuzes(enemy.getReward());
-            state.incrimentEnemiesDefeated();
+            state.incrementEnemiesDefeated();
         }
         if (object.getType().equals("explodingtower")){
             Log.d("cell", object.getType());
@@ -308,7 +309,7 @@ public class ModelGameManager {
     private void continueToNextRound() {
         state.setDayTime(true);
         sunrise = true;
-        state.accumulateRound();
+        state.setCurrentRound(state.getCurrentRound());
         state.startTimerForNextRound();
         state.addShnuzes(state.getCurrentRound() * 1000);
     }
@@ -380,10 +381,6 @@ public class ModelGameManager {
 
     public void setShnuzes(int shnuzes) {
         state.setShnuzes(shnuzes);
-    }
-
-    public void initShnuzes() {
-        state.initShnuzes();
     }
 
     public void setDayTime(boolean dayTime) {

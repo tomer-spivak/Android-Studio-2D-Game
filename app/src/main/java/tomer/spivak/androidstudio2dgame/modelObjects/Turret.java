@@ -3,7 +3,7 @@ package tomer.spivak.androidstudio2dgame.modelObjects;
 
 import java.util.*;
 
-import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.logic.GameState;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.BuildingState;
 

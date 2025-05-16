@@ -54,7 +54,7 @@ import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.graphics.IntermediateActivity;
 import tomer.spivak.androidstudio2dgame.logic.LeaderboardEntry;
 import tomer.spivak.androidstudio2dgame.logic.Cell;
-import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.logic.GameState;
 
 public class DatabaseRepository {
     private final FirebaseFirestore db;

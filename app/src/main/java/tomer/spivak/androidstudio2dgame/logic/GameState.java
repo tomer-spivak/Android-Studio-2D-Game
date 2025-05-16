@@ -1,19 +1,13 @@
-package tomer.spivak.androidstudio2dgame.model;
+package tomer.spivak.androidstudio2dgame.logic;
 
 
-import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import tomer.spivak.androidstudio2dgame.logic.Cell;
+import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 
 public class GameState {
     private final Cell[][] grid;
-    private final int nightThreshold;
-    private boolean isDayTime;
+    private boolean dayTime;
     private long timeToNextRound;
     private GameStatus gameStatus;
     private int currentRound;
@@ -21,26 +15,16 @@ public class GameState {
     private long currentTimeOfGame;
     private int shnuzes;
     private int enemiesDefeated = 0;
-    private final int NumberOfRounds;
+    private final int numberOfRounds;
 
-    public GameState(Cell[][] grid, int nightThreshold, DifficultyLevel difficulty, int numberOfRounds) {
+    public GameState(Cell[][] grid, DifficultyLevel difficulty, int numberOfRounds) {
         this.grid = grid;
-        NumberOfRounds = numberOfRounds;
-        this.isDayTime = true;
+        this.numberOfRounds = numberOfRounds;
+        this.dayTime = true;
         this.currentRound = 1;
-        this.nightThreshold = nightThreshold;
         this.difficulty = difficulty;
-        initShnuzes();
         currentTimeOfGame = 0;
         gameStatus = GameStatus.PLAYING;
-    }
-    public List<Cell> getNeighbors(Cell c) {
-        List<Cell> out = new ArrayList<>();
-        for (Position p : c.getPosition().getNeighbors()) {
-            try { out.add(getCellAt(p)); }
-            catch (Exception ignored) {}
-        }
-        return out;
     }
 
     public void initShnuzes() {
@@ -49,8 +33,7 @@ public class GameState {
     }
 
     public boolean isValidPosition(Position pos) {
-        return pos.getX() >= 0 && pos.getX() < grid.length &&
-                pos.getY() >= 0 && pos.getY() < grid[0].length;
+        return pos.getX() >= 0 && pos.getX() < grid.length && pos.getY() >= 0 && pos.getY() < grid[0].length;
     }
 
     public Cell getCellAt(Position pos) {
@@ -65,8 +48,8 @@ public class GameState {
         return shnuzes;
     }
 
-    public void setDayTime(boolean b) {
-        this.isDayTime = b;
+    public void setDayTime(boolean dayTime) {
+        this.dayTime = dayTime;
     }
 
     public GameStatus getGameStatus() {
@@ -85,17 +68,9 @@ public class GameState {
         this.timeToNextRound -= delta;
     }
 
-    public void accumulateRound() {
-        currentRound++;
-    }
-
     public void startTimerForNextRound() {
         currentTimeOfGame = 0;
-        this.timeToNextRound = (long) nightThreshold * currentRound;
-    }
-
-    public int getRound() {
-        return currentRound;
+        this.timeToNextRound = (long) 5000 * currentRound;
     }
 
     public DifficultyLevel getDifficulty() {
@@ -107,7 +82,6 @@ public class GameState {
     }
 
     public long getCurrentTimeOfGame() {
-        Log.d("time", String.valueOf(currentTimeOfGame));
         return currentTimeOfGame;
     }
 
@@ -128,17 +102,13 @@ public class GameState {
 
     public void setShnuzes(int shnuzes) {
         this.shnuzes = shnuzes;
-
-    }
-
-    public boolean isDayTime() {
-        return isDayTime;
     }
 
     public boolean getDayTime() {
-        return isDayTime;
+        return dayTime;
     }
-    public void incrimentEnemiesDefeated(){
+
+    public void incrementEnemiesDefeated(){
         enemiesDefeated++;
     }
 
@@ -147,6 +117,6 @@ public class GameState {
     }
 
     public int getNumberOfRounds() {
-        return NumberOfRounds;
+        return numberOfRounds;
     }
 }

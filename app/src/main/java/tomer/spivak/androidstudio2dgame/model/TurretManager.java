@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import tomer.spivak.androidstudio2dgame.logic.Cell;
+import tomer.spivak.androidstudio2dgame.logic.GameState;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.Turret;

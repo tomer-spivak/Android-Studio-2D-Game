@@ -13,7 +13,7 @@ import java.util.Objects;
 
 import tomer.spivak.androidstudio2dgame.GameObjectData;
 import tomer.spivak.androidstudio2dgame.logic.Cell;
-import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.logic.GameState;
 import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.BuildingState;
 import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
@@ -179,9 +179,7 @@ public class GameViewModel extends ViewModel {
         gameManager.init(board, difficultyLevel);
         viewModelGameState.setValue(gameManager.getState());
         gameManager.setCurrentRound(currentRound);
-        if (shnuzes < 0)
-            gameManager.initShnuzes();
-        else
+        if (shnuzes > 0)
             gameManager.setShnuzes(shnuzes);
         setSoundEffects(soundEffectsManager);
         tick(timeSinceGameStart);

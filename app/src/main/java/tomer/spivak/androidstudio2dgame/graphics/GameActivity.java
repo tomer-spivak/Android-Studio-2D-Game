@@ -55,7 +55,7 @@ import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.music.MusicService;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
-import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.logic.GameState;
 
 public class GameActivity extends AppCompatActivity implements GameEventListener {
     private Context context;
@@ -182,7 +182,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
             @Override
             public void onChanged(GameState gameState) {
                 //update UI
-                if (gameState.isDayTime()) {
+                if (gameState.getDayTime()) {
                     btnOpenMenu.setVisibility(View.VISIBLE);
                     //we need to check if the start game button appears.
                     // if it does the game hasn't started yet, and so we cant skip to the next round.

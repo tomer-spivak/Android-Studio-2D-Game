@@ -25,7 +25,7 @@ import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.music.MusicService;
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.model.GameState;
+import tomer.spivak.androidstudio2dgame.logic.GameState;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 import tomer.spivak.androidstudio2dgame.projectManagement.GameLoop;
 
@@ -286,7 +286,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         gameLoop.startLoop();
     }
     public void updateFromGameState(GameState gameState) {
-        if (gameState.isDayTime()) {
+        if (gameState.getDayTime()) {
             backgroundBitmap = morningBackground;
             timeTillNextRound = gameState.getTimeToNextRound();
         } else {
@@ -294,8 +294,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
             timeTillNextRound = 0;
         }
         int currentRound = gameState.getCurrentRound();
-        roundsLeft    = gameState.getNumberOfRounds() - currentRound + 1;
-        shnuzes       = gameState.getShnuzes();
+        roundsLeft = gameState.getNumberOfRounds() - currentRound + 1;
+        shnuzes = gameState.getShnuzes();
 
         Cell[][] boardCells = gameState.getGrid();
         int R = boardCells.length, C = boardCells[0].length;
