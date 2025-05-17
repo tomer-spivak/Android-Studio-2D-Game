@@ -9,7 +9,6 @@ import java.util.Queue;
 import java.util.Random;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.EnemyState;
-import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 
@@ -133,9 +132,7 @@ public class EnemyManager {
                     if (targetCell != null) {
                         enemy.updateDirection(enemy.getPosition(), targetCell.getPosition());
                         enemy.accumulateAttackTime(deltaTime);
-                        if (enemy.canAttack()) {
-                            enemy.attack(targetCell);
-                        }
+                        enemy.attemptAttack(targetCell);
                     }
                     continue;
                 }
@@ -145,10 +142,10 @@ public class EnemyManager {
 
             Position nextPos = currentPath.get(targetIndex);
             enemy.updateDirection(enemy.getPosition(), nextPos);
-            enemy.accumulateTime(deltaTime);
+            enemy.setTimeSinceLastMove(enemy.getTimeSinceLastMove() + deltaTime);
 
             float timePerStep = 1000f / enemy.getMovementSpeed();
-            if (enemy.getAccumulatedTime() >= timePerStep && targetIndex < currentPath.size()) {
+            if (enemy.getTimeSinceLastMove() >= timePerStep && targetIndex < currentPath.size()) {
                 Cell currentCell = gameState.getCellAt(enemy.getPosition());
                 Cell nextCell = gameState.getCellAt(currentPath.get(targetIndex));
 
@@ -158,10 +155,10 @@ public class EnemyManager {
                     currentCell.removeObject();
                     nextCell.spawnEnemy(enemy);
                     enemy.updateDirection(prevPos, nextPos);
-                    enemy.incrementTargetIndex();
+                    enemy.setCurrentTargetIndex(enemy.getCurrentTargetIndex() + 1);
                     do {
-                        enemy.decreaseAccumulatedTime(timePerStep);
-                    } while (enemy.getAccumulatedTime() >= timePerStep);
+                        enemy.setTimeSinceLastMove(enemy.getTimeSinceLastMove() - timePerStep);
+                    } while (enemy.getTimeSinceLastMove() >= timePerStep);
                 }
             }
         }

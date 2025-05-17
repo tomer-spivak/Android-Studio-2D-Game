@@ -3,7 +3,6 @@ package tomer.spivak.androidstudio2dgame.logic;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
-import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ExplodingBuilding;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
@@ -27,7 +26,7 @@ public class ModelGameManager {
         if(containsMainBuilding(board))
            return;
 
-        int newBoardSize = state.getGrid().length;
+        int newBoardSize = state.getGrid().length - 4;
 
         Cell[][] smallerBoard = new Cell[newBoardSize][newBoardSize];
 
@@ -39,14 +38,12 @@ public class ModelGameManager {
 
         Random rand = new Random();
         List<Cell> mainCells = new ArrayList<>(4);
-        if (smallerBoard.length >= 2) {
-            int startRow = rand.nextInt(smallerBoard.length - 1);
-            int startCol = rand.nextInt(smallerBoard.length - 1);
-            mainCells.add(smallerBoard[startRow][startCol]);
-            mainCells.add(smallerBoard[startRow][startCol + 1]);
-            mainCells.add(smallerBoard[startRow + 1][startCol]);
-            mainCells.add(smallerBoard[startRow + 1][startCol + 1]);
-        }
+        int startRow = rand.nextInt(smallerBoard.length - 1);
+        int startCol = rand.nextInt(smallerBoard.length - 1);
+        mainCells.add(smallerBoard[startRow][startCol]);
+        mainCells.add(smallerBoard[startRow][startCol + 1]);
+        mainCells.add(smallerBoard[startRow + 1][startCol]);
+        mainCells.add(smallerBoard[startRow + 1][startCol + 1]);
         Building mainBuilding = (Building)ModelObjectFactory.create("mainbuilding", mainCells.get(0).getPosition(), state.getDifficulty());
         for (Cell cell : mainCells) {
             cell.placeBuilding(mainBuilding);

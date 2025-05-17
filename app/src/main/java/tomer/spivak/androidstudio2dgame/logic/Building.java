@@ -7,8 +7,8 @@ import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 
 public class Building extends ModelObject {
     protected BuildingState state;
-    protected long animationTime = 0;
-    protected boolean inAnimation = false;
+    private long timeSinceTookDamage = 0;
+    private boolean inAnimation = false;
 
     public Building(float health, Position pos, String type) {
         super(health, pos);
@@ -26,10 +26,10 @@ public class Building extends ModelObject {
 
     public void update(long deltaTime){
         if(inAnimation)
-            animationTime += deltaTime;
-        if(animationTime >= 200){
+            timeSinceTookDamage += deltaTime;
+        if(timeSinceTookDamage >= 200){
             inAnimation = false;
-            animationTime = 0;
+            timeSinceTookDamage = 0;
             setState(BuildingState.IDLE);
         }
     }
@@ -38,16 +38,25 @@ public class Building extends ModelObject {
     public void takeDamage(float damage) {
         super.takeDamage(damage);
         inAnimation = true;
-        animationTime = 0;
+        timeSinceTookDamage = 0;
         setState(BuildingState.HURT);
+    }
+
+    public void setAnimationTime(long animationTime) {
+        this.timeSinceTookDamage = animationTime;
+    }
+
+    public void setInAnimation(boolean inAnimation) {
+        this.inAnimation = inAnimation;
     }
 
     @Override
     public Object toMap() {
         Map buildingData = (Map) super.toMap();
-        buildingData.put("health", health);
         buildingData.put("type", type);
         buildingData.put("state", state.name());
+        buildingData.put("timeSinceTookDamage", timeSinceTookDamage);
+        buildingData.put("inAnimation", inAnimation);
         return buildingData;
     }
 }

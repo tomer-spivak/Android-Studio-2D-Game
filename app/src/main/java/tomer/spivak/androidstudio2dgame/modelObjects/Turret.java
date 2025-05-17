@@ -4,11 +4,12 @@ package tomer.spivak.androidstudio2dgame.modelObjects;
 import java.util.*;
 
 import tomer.spivak.androidstudio2dgame.logic.Building;
+import tomer.spivak.androidstudio2dgame.logic.Enemy;
 import tomer.spivak.androidstudio2dgame.logic.GameState;
 import tomer.spivak.androidstudio2dgame.logic.Position;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.BuildingState;
 
-public class Turret extends Building implements IDamager {
+public class Turret extends Building {
     private final float attackDamage;
     private final float attackCooldown;
     private float timeSinceLastAttack = 0;
@@ -130,8 +131,7 @@ public class Turret extends Building implements IDamager {
         }, 200);
     }
 
-    @Override
-    public void dealDamage(IDamageable target) {
+    public void dealDamage(ModelObject target) {
         if (target == null) {
             return;
         }

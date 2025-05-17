@@ -7,7 +7,7 @@ import java.util.Map;
 import tomer.spivak.androidstudio2dgame.logic.Position;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 
-public abstract class ModelObject implements IDamageable {
+public abstract class ModelObject {
     protected Position pos;
     protected float health;
     protected float maxHealth;
@@ -33,7 +33,6 @@ public abstract class ModelObject implements IDamageable {
         this.pos = position;
     }
 
-    @Override
     public void takeDamage(float damage) {
         health -= damage;
         if (health <= 0) {

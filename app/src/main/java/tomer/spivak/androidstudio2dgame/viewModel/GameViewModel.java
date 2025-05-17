@@ -22,7 +22,7 @@ import tomer.spivak.androidstudio2dgame.logic.ModelGameManager;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.Direction;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.EnemyState;
 import tomer.spivak.androidstudio2dgame.logic.Building;
-import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
+import tomer.spivak.androidstudio2dgame.logic.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
@@ -235,14 +235,19 @@ public class GameViewModel extends ViewModel {
                                     ((Number) Objects.requireNonNull(tposMap.get("y"))).intValue());
                             pendingTargets.add(Pair.create(e, targetPos));
                         }
-                        e.setTimeSinceLastAttack((float)((double) objectMap.get("timeSinceLastAttack")));
-                        e.setTimeSinceLastMove((float)((double) objectMap.get("timeSinceLastMove")));
+                        e.setTimeSinceLastAttack((long) objectMap.get("timeSinceLastAttack"));
+                        e.setTimeSinceLastMove((float) (double) objectMap.get("timeSinceLastMove"));
+                        e.setInTookDamageAnimation((Boolean) objectMap.get("inTookDamageAnimation"));
+                        e.setTimeSinceTookDamage((Long) objectMap.get("timeSinceTookDamage"));
+                        e.setStateBeforeHurt(EnemyState.valueOf((String) objectMap.get("stateBeforeHurt")));
                         cell.spawnEnemy(e);
 
                     } else {
                         // any non‐enemy building/turret
                         Building building = (Building) obj;
                         building.setState(BuildingState.valueOf((String) objectMap.get("state")));
+                        building.setAnimationTime((Long) objectMap.get("timeSinceTookDamage"));
+                        building.setInAnimation((Boolean) objectMap.get("inAnimation"));
 
                         // …populate obj’s health / state…
 
