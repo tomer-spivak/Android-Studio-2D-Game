@@ -1,7 +1,6 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
-import tomer.spivak.androidstudio2dgame.modelObjects.Turret;
 
 public class ModelObjectFactory {
     public static ModelObject create(String type, Position position, DifficultyLevel difficulty) {
@@ -9,7 +8,7 @@ public class ModelObjectFactory {
             case "mainbuilding":
                 return new Building(getBuildingValueForDifficulty(500, difficulty), position, "mainbuilding");
             case "lightningtower":
-                return new Turret(getBuildingValueForDifficulty(100, difficulty), getBuildingValueForDifficulty(10, difficulty), position, 1500);
+                return new Turret(getBuildingValueForDifficulty(100, difficulty), getBuildingValueForDifficulty(12, difficulty), position, 1500);
             case "monster":
                 return new Enemy(getEnemyValueForDifficulty(80, difficulty), getEnemyValueForDifficulty(30, difficulty), 2.5f, position,
                         500, getRewardByDifficulty(difficulty));
