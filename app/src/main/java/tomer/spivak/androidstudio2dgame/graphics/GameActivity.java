@@ -52,7 +52,7 @@ import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.logic.Position;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
-import tomer.spivak.androidstudio2dgame.music.MusicService;
+import tomer.spivak.androidstudio2dgame.projectManagement.MusicService;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 import tomer.spivak.androidstudio2dgame.logic.GameState;
@@ -67,6 +67,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
     private SoundEffectManager soundEffectsManager;
 
     private  Button btnOpenMenu, btnStartGame, btnSkipRound;
+
     private  CardView cvSelectBuildingMenu;
 
     private DatabaseRepository databaseRepository;
@@ -303,6 +304,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                                 dialog.dismiss();
                                 gameIsOnGoing = oldGameIsOnGoing;
                                 gameView.resumeGameLoop(musicVolumeSeekBar.getProgress());
+                                musicService.setVolumeLevel(musicVolumeSeekBar.getProgress());
                                 soundEffectsManager.setVolume(soundEffectsVolumeSeekBar.getProgress() / 100f);
                             }
                         })
@@ -527,24 +529,34 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
         super.onResume();
         if (gameView != null) {
             SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
-            float volume = prefs.getFloat("volume", 0.07f) ;
+            float volume = prefs.getFloat("volume", 0.07f) * 100;
             soundEffectsManager.resumeSoundEffects();
-            gameView.resumeGameLoop(volume * 100);
+            gameView.resumeGameLoop(volume);
+        }
+        if (musicService != null) {
+            musicService.resumeMusic();
         }
     }
 
     @Override
     protected void onPause() {
+        super.onPause();
         if (gameView != null) {
             soundEffectsManager.pauseSoundEffects();
             gameView.pauseGameLoop();
         }
-        super.onPause();
+        if (musicService != null) {
+            musicService.pauseMusic();
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        if(musicService != null){
+            unbindService(serviceConnection);
+            musicService = null;
+        }
     }
 
     @Override
@@ -569,6 +581,16 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
             soundEffectsManager.onDestroy();
         }
 
+
+        if (musicService != null) {
+            unbindService(serviceConnection);
+            musicService = null;
+        }
+
+        // now ask the Service to stop itself
+        stopService(musicIntent);
+
+
         super.onDestroy();
     }
 
@@ -588,6 +610,23 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
 
     public MusicService getMusicService() {
         return musicService;
+    }
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (!hasFocus) {
+            gameView.pauseGameLoop();
+            if (musicService != null) {
+                musicService.pauseMusic();
+            }
+        } else {
+            SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+            float volume = prefs.getFloat("volume", 0.07f) * 100;
+            gameView.resumeGameLoop(volume);
+            if (musicService != null) {
+                musicService.resumeMusic();
+            }
+        }
     }
 
     public SoundEffectManager getSoundEffectsManager() {

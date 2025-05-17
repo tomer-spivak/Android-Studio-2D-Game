@@ -28,7 +28,7 @@
             android:name=".projectManagement.NotificationReceiver"
             android:exported="false" />
         <service
-            android:name=".music.MusicService"
+            android:name=".projectManagement.MusicService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
         <activity

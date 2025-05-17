@@ -23,7 +23,7 @@ import tomer.spivak.androidstudio2dgame.projectManagement.GameEventListener;
 import tomer.spivak.androidstudio2dgame.logic.Cell;
 import tomer.spivak.androidstudio2dgame.logic.Position;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.CellState;
-import tomer.spivak.androidstudio2dgame.music.MusicService;
+import tomer.spivak.androidstudio2dgame.projectManagement.MusicService;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.logic.GameState;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;

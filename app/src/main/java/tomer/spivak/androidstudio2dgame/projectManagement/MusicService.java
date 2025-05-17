@@ -1,4 +1,4 @@
-package tomer.spivak.androidstudio2dgame.music;
+package tomer.spivak.androidstudio2dgame.projectManagement;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
+import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
@@ -18,26 +19,23 @@ import tomer.spivak.androidstudio2dgame.R;
 
 public class MusicService extends Service {
     private MediaPlayer mediaPlayer;
-    private final int[] music = {R.raw.candyland, R.raw.fade, R.raw.infectious,
-            R.raw.invincible, R.raw.sky_high, R.raw.spectre};
+    private final int[] music = {R.raw.candyland, R.raw.fade, R.raw.infectious, R.raw.invincible, R.raw.sky_high, R.raw.spectre};
     private final Random random = new Random();
     private int lastSongIndex = -1;
     float volume;
     public static final String CHANNEL_ID = "music_service_channel";
-
     private final IBinder binder = new LocalBinder();
-
     public int getCurrentVolumeLevel() {
         return (int) (volume * 100);
     }
 
     public void setVolumeLevel(float progress) {
+        volume = progress / 100f;
         if (mediaPlayer != null) {
-            volume = progress / 100;
             mediaPlayer.setVolume(volume, volume);
-
-
         }
+        SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        prefs.edit().putFloat("volume", volume).apply();
     }
 
     public class LocalBinder extends Binder {
@@ -51,16 +49,8 @@ public class MusicService extends Service {
         super.onCreate();
         SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         volume = prefs.getFloat("volume", 0.07f) ;
-        NotificationChannel chan = new NotificationChannel(
-                CHANNEL_ID,
-                "Music Playback",
-                NotificationManager.IMPORTANCE_LOW
-        );
-        NotificationManager mgr = getSystemService(NotificationManager.class);
-        mgr.createNotificationChannel(chan);
+        getSystemService(NotificationManager.class).createNotificationChannel(new NotificationChannel(CHANNEL_ID, "Music Playback", NotificationManager.IMPORTANCE_LOW));
     }
-
-
 
     private void playRandomSong() {
         if (mediaPlayer != null) {
@@ -74,15 +64,16 @@ public class MusicService extends Service {
         lastSongIndex = newSongIndex;
 
         mediaPlayer = MediaPlayer.create(this, music[newSongIndex]);
-
-        mediaPlayer.setVolume(volume, volume);
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                playRandomSong();
-            }
-        });
-        mediaPlayer.start();
+        if (mediaPlayer != null) {
+            mediaPlayer.setVolume(volume, volume);
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    playRandomSong();
+                }
+            });
+            mediaPlayer.start();
+        }
     }
 
     @Override
@@ -90,21 +81,15 @@ public class MusicService extends Service {
         if (mediaPlayer == null) {
             playRandomSong();
         }
-        Notification notif = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Game Music")
-                .setContentText("Playing background music")
-                .setSmallIcon(R.drawable.logo)   // your app’s music icon
-                .setOngoing(true)
-                .build();
-
-        // Enter foreground mode:
-        startForeground(1, notif);
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID).setContentTitle("Game Music").setContentText("Playing background music")
+                .setSmallIcon(R.drawable.logo).setOngoing(true).build();
+        startForeground(1, notification);
         return START_STICKY;
     }
 
-
     @Override
     public void onDestroy() {
+        stopForeground(true);
         super.onDestroy();
         if (mediaPlayer != null) {
             mediaPlayer.stop();
@@ -131,9 +116,12 @@ public class MusicService extends Service {
                     mediaPlayer.start();
                     mediaPlayer.setVolume(volume, volume);
                 }
-            } catch (IllegalStateException ignored) {
+            } catch (IllegalStateException e){
+                Toast.makeText(this, "couldnt play music: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                playRandomSong();
             }
-        }
+        } else
+            playRandomSong();
     }
 
     public void stopMusic() {
@@ -143,11 +131,13 @@ public class MusicService extends Service {
                     mediaPlayer.stop();
                 }
             } catch (IllegalStateException ignored) {
+                mediaPlayer.reset();
             } finally {
                 mediaPlayer.release();
                 mediaPlayer = null;
             }
         }
+        stopForeground(true);
+        stopSelf();
     }
-
 }
