@@ -24,7 +24,7 @@ import tomer.spivak.androidstudio2dgame.logic.modelEnums.EnemyState;
 import tomer.spivak.androidstudio2dgame.logic.Building;
 import tomer.spivak.androidstudio2dgame.logic.Enemy;
 import tomer.spivak.androidstudio2dgame.logic.ModelObject;
-import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
+import tomer.spivak.androidstudio2dgame.logic.ModelObjectFactory;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 
 public class GameViewModel extends ViewModel {

@@ -9,7 +9,6 @@ import java.util.Queue;
 import java.util.Random;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.EnemyState;
-import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
 
 public class EnemyManager {

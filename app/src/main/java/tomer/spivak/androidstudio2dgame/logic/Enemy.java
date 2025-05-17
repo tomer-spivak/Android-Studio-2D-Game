@@ -92,7 +92,7 @@ public class Enemy extends ModelObject {
         }
         if(inTookDamageAnimation){
             timeSinceTookDamage += deltaTime;
-            if(timeSinceTookDamage > 1000){
+            if(timeSinceTookDamage > 700){
                 setState(stateBeforeHurt);
                 inTookDamageAnimation = false;
                 soundEffects.resumeSoundEffect(soundStreamId);

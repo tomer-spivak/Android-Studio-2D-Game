@@ -14,13 +14,11 @@ public class Turret extends Building {
     private final float attackDamage;
     private final float attackCooldown;
     private float timeSinceLastAttack = 0;
-    protected final float attackRange;
     private final ArrayList<Position> positionsToAttack = new ArrayList<>();
     private final ArrayList<Position> removedPositions = new ArrayList<>();
 
-    public Turret(float health, float attackDamage, float attackRange, Position pos, long attackCooldown) {
+    public Turret(float health, float attackDamage, Position pos, long attackCooldown) {
         super(health, pos, "lightningtower");
-        this.attackRange = attackRange;
         this.attackDamage = attackDamage;
         this.attackCooldown = attackCooldown;
         this.type = "lightningtower";
@@ -30,7 +28,7 @@ public class Turret extends Building {
     }
 
     private void initCellsToAttack() {
-        for (int i = 0; i < attackRange; i++) {
+        for (int i = 0; i < 3; i++) {
             positionsToAttack.add(new Position(pos.getX() + i + 1, pos.getY()));
             positionsToAttack.add(new Position(pos.getX() - i - 1, pos.getY()));
             positionsToAttack.add(new Position(pos.getX(), pos.getY() + i + 1));
@@ -143,7 +141,6 @@ public class Turret extends Building {
         Map<String,Object> turretData = (Map<String,Object>) super.toMap();
         turretData.replace("type", "lightningtower");
         turretData.put("timeSinceLastAttack", timeSinceLastAttack);
-        turretData.put("attackRange", attackRange);
         return turretData;
     }
 
