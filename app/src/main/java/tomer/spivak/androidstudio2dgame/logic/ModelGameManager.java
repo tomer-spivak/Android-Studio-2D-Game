@@ -3,7 +3,6 @@ package tomer.spivak.androidstudio2dgame.logic;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
-import tomer.spivak.androidstudio2dgame.modelObjects.ExplodingBuilding;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObjectFactory;
 import tomer.spivak.androidstudio2dgame.modelObjects.Turret;
