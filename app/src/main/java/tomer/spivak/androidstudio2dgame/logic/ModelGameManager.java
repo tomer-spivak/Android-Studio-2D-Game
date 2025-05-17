@@ -1,6 +1,7 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
 
+import tomer.spivak.androidstudio2dgame.logic.modelEnums.BuildingState;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager;
@@ -96,6 +97,8 @@ public class ModelGameManager {
                 for (Cell[] cells : state.getGrid()) {
                     for (Cell cell : cells) {
                         cell.resetAnimation();
+                        if(cell.getObject() instanceof Building)
+                            ((Building) cell.getObject()).setState(BuildingState.IDLE);
                     }
                 }
                 sunrise = false;

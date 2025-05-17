@@ -88,7 +88,7 @@ public class Turret extends Building {
     }
 
     private boolean shouldAttackPosition(Position position, GameState current) {
-        return current.isValidPosition(position) && current.getCellAt(position).getObject() instanceof Enemy;
+        return current.isValidPosition(position) && !(current.getCellAt(position).getObject() instanceof Building);
     }
 
     @Override

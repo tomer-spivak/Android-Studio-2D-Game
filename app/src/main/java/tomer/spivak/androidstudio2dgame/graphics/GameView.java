@@ -206,40 +206,65 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         canvas.drawText(shunzesText, x, y, hudPaint);
     }
 
-    public void applyDelta(List<GameObjectData> changed, List<Position> removed) {
-        Point[][] centers = board.getCenterCells();
-
+    public void applyRemoved(List<Position> positionsToRemove) {
         synchronized (gameObjectListDrawOrder) {
-            for (Position positionToRemove : removed) {
+            for (Position pos : positionsToRemove) {
                 for (int i = 0; i < gameObjectListDrawOrder.size(); i++) {
-                    if (gameObjectListDrawOrder.get(i).getPos().equals(positionToRemove)) {
+                    if (gameObjectListDrawOrder.get(i).getPos().equals(pos)) {
                         gameObjectListDrawOrder.remove(i);
                         break;
                     }
                 }
             }
+        }
+    }
 
-            for (GameObjectData gameObjectData : changed) {
-                Position objectPos = new Position(gameObjectData.getX(), gameObjectData.getY());
+    /** Updates existing sprites or inserts new ones (in Y‐sorted order) */
+    public void applyChanged(List<GameObjectData> changed) {
+        Point[][] centers = board.getCenterCells();
+        float scale = board.getScale();
+
+        synchronized (gameObjectListDrawOrder) {
+            for (GameObjectData data : changed) {
+                Position objectPos = new Position(data.getX(), data.getY());
                 GameObject found = null;
-                for (GameObject gameObject : gameObjectListDrawOrder) {
-                    if (gameObject.getPos().equals(objectPos)) {
-                        found = gameObject;
+
+                // 1) try to find an existing GameObject at that position
+                for (GameObject go : gameObjectListDrawOrder) {
+                    if (go.getPos().equals(objectPos)) {
+                        found = go;
                         break;
                     }
                 }
 
                 if (found != null) {
-                    found.updateState(gameObjectData.getState(), gameObjectData.getDirection(), gameObjectData.getHealthPercentage());
+                    // 2a) if found, just update its state
+                    found.updateState(
+                            data.getState(),
+                            data.getDirection(),
+                            data.getHealthPercentage()
+                    );
                 } else {
-                    Point center = centers[gameObjectData.getX()][gameObjectData.getY()];
-                    GameObject gameObject = new GameObject(context, center, board.getScale(), objectPos, gameObjectData.getType(),
-                            gameObjectData.getState(), gameObjectData.getDirection(), gameObjectData.getHealthPercentage());
-                    int i = 0;
-                    while (i < gameObjectListDrawOrder.size() && gameObjectListDrawOrder.get(i).getImagePoint().y < gameObject.getImagePoint().y) {
-                        i++;
+                    // 2b) if not found, create & insert it in draw‐order
+                    Point center = centers[data.getX()][data.getY()];
+                    GameObject go = new GameObject(
+                            context,
+                            center,
+                            scale,
+                            objectPos,
+                            data.getType(),
+                            data.getState(),
+                            data.getDirection(),
+                            data.getHealthPercentage()
+                    );
+
+                    int insertAt = 0;
+                    while (insertAt < gameObjectListDrawOrder.size() &&
+                            gameObjectListDrawOrder.get(insertAt).getImagePoint().y
+                                    < go.getImagePoint().y) {
+                        insertAt++;
                     }
-                    gameObjectListDrawOrder.add(i, gameObject);
+                    gameObjectListDrawOrder.add(insertAt, go);
                 }
             }
         }
@@ -308,4 +333,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         board.setCellsState(states);
 
     }
+
+
 }

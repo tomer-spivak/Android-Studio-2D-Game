@@ -14,7 +14,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -54,7 +53,7 @@ import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.projectManagement.MusicService;
 import tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager;
-import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
+import tomer.spivak.androidstudio2dgame.projectManagement.GameViewModel;
 import tomer.spivak.androidstudio2dgame.logic.GameState;
 
 public class GameActivity extends AppCompatActivity implements GameEventListener {
@@ -205,16 +204,21 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
             }
         });
 
-        viewModel.getDelta().observe(this, new Observer<Pair<List<GameObjectData>, List<Position>>>() {
+        viewModel.getChangedDelta().observe(this, new Observer<List<GameObjectData>>() {
             @Override
-            public void onChanged(Pair<List<GameObjectData>, List<Position>> deltaPair) {
+            public void onChanged(List<GameObjectData> gameObjectData) {
                 //list of changed and new gameObjects (gets them in the class of GameObjectData,
                 // which translates the model data types to something the view can use)
-                List<GameObjectData> changedGameObjects = deltaPair.first;
+                gameView.applyChanged(gameObjectData);
+            }
+        });
+
+        viewModel.getRemovedDelta().observe(this, new Observer<List<Position>>() {
+            @Override
+            public void onChanged(List<Position> positions) {
                 //list of positions where the view needs to remove the gameObject
-                List<Position> positionsRemoved = deltaPair.second;
                 //make the actual change
-                gameView.applyDelta(changedGameObjects, positionsRemoved);
+                gameView.applyRemoved(positions);
             }
         });
 

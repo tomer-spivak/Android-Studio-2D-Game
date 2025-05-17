@@ -1,5 +1,7 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
+import android.util.Log;
+
 import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.BuildingState;
@@ -26,6 +28,9 @@ public class Building extends ModelObject {
     public void update(long deltaTime){
         if(inAnimation)
             timeSinceTookDamage += deltaTime;
+        Log.d("drug", String.valueOf(inAnimation));
+        Log.d("drug", String.valueOf(timeSinceTookDamage));
+        Log.d("drug", pos.toString());
         if(timeSinceTookDamage >= 200){
             inAnimation = false;
             timeSinceTookDamage = 0;
