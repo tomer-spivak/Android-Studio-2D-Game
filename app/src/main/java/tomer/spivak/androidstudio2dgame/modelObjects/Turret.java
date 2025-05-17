@@ -5,7 +5,7 @@ import java.util.*;
 
 import tomer.spivak.androidstudio2dgame.logic.GameState;
 import tomer.spivak.androidstudio2dgame.logic.Position;
-import tomer.spivak.androidstudio2dgame.modelEnums.BuildingState;
+import tomer.spivak.androidstudio2dgame.logic.modelEnums.BuildingState;
 
 public class Turret extends Building implements IDamager {
     private final float attackDamage;

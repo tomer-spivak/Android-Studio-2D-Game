@@ -1,8 +1,8 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
 
-import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
-import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
+import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
+import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
 
 public class GameState {
     private final Cell[][] grid;

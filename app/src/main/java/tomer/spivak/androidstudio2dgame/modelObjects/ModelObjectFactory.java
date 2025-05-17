@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.logic.Position;
-import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
+import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 
 public class ModelObjectFactory {
     private static final Map<String, ModelObjectCreator> typeMap = new HashMap<>();

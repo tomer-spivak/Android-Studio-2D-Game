@@ -17,7 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import tomer.spivak.androidstudio2dgame.R;
-import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
+import tomer.spivak.androidstudio2dgame.logic.modelEnums.CellState;
 
 public class GraphicalBoard {
     private final PointF offset = new PointF(0,0);

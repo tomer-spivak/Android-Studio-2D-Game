@@ -10,8 +10,8 @@ import java.util.TimerTask;
 
 import tomer.spivak.androidstudio2dgame.logic.Cell;
 import tomer.spivak.androidstudio2dgame.logic.Position;
-import tomer.spivak.androidstudio2dgame.modelEnums.Direction;
-import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
+import tomer.spivak.androidstudio2dgame.logic.modelEnums.Direction;
+import tomer.spivak.androidstudio2dgame.logic.modelEnums.EnemyState;
 
 public class Enemy extends ModelObject implements IDamager{
     protected final float movementSpeed;

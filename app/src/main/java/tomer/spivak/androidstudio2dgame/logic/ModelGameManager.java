@@ -1,8 +1,8 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
 
-import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
-import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
+import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
+import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ExplodingBuilding;
