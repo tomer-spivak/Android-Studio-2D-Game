@@ -18,7 +18,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import tomer.spivak.androidstudio2dgame.GameObjectData;
+import tomer.spivak.androidstudio2dgame.projectManagement.GameObjectData;
 import tomer.spivak.androidstudio2dgame.projectManagement.GameEventListener;
 import tomer.spivak.androidstudio2dgame.logic.Cell;
 import tomer.spivak.androidstudio2dgame.logic.Position;

@@ -1,11 +1,10 @@
-package tomer.spivak.androidstudio2dgame;
+package tomer.spivak.androidstudio2dgame.projectManagement;
 
 public class GameObjectData {
     private final String type;
     private final int x, y;
     private final String state, direction;
     private final float healthPercentage;
-
 
     public GameObjectData(String type, int x, int y, String state, String direction, float healthPercentage) {
         this.type = type;

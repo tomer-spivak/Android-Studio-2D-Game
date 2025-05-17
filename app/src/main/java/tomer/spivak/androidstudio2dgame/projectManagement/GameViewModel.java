@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import tomer.spivak.androidstudio2dgame.GameObjectData;
 import tomer.spivak.androidstudio2dgame.logic.Cell;
 import tomer.spivak.androidstudio2dgame.logic.GameState;
 import tomer.spivak.androidstudio2dgame.logic.Position;

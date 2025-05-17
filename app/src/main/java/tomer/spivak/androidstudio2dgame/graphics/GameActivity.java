@@ -44,7 +44,7 @@ import com.google.android.gms.tasks.Task;
 import java.util.List;
 import java.util.Map;
 
-import tomer.spivak.androidstudio2dgame.GameObjectData;
+import tomer.spivak.androidstudio2dgame.projectManagement.GameObjectData;
 import tomer.spivak.androidstudio2dgame.projectManagement.GameEventListener;
 import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.R;
