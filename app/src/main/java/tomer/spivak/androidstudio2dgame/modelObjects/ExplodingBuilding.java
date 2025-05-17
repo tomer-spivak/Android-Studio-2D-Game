@@ -3,20 +3,16 @@ package tomer.spivak.androidstudio2dgame.modelObjects;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import tomer.spivak.androidstudio2dgame.logic.Building;
 import tomer.spivak.androidstudio2dgame.logic.Position;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.BuildingState;
 
-public class ExplodingBuilding extends Building{
+public class ExplodingBuilding extends Building {
     private final float damage;
 
-    public ExplodingBuilding(float health, Position pos, int price, float damage) {
-        super(health, pos, price, "explodingtower");
+    public ExplodingBuilding(float health, Position pos, float damage) {
+        super(health, pos, "explodingtower");
         this.damage = damage;
-    }
-
-    @Override
-    void onDeath() {
-        super.onDeath();
     }
 
     public float getDamage() {

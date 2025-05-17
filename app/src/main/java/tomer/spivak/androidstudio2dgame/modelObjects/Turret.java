@@ -3,6 +3,7 @@ package tomer.spivak.androidstudio2dgame.modelObjects;
 
 import java.util.*;
 
+import tomer.spivak.androidstudio2dgame.logic.Building;
 import tomer.spivak.androidstudio2dgame.logic.GameState;
 import tomer.spivak.androidstudio2dgame.logic.Position;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.BuildingState;
@@ -15,8 +16,8 @@ public class Turret extends Building implements IDamager {
     private final ArrayList<Position> positionsToAttack = new ArrayList<>();
     private final ArrayList<Position> removedPositions = new ArrayList<>();
 
-    public Turret(float health, float attackDamage, float attackRange, Position pos, long attackCooldown, int price) {
-        super(health, pos, price, "lightningtower");
+    public Turret(float health, float attackDamage, float attackRange, Position pos, long attackCooldown) {
+        super(health, pos, "lightningtower");
         this.attackRange = attackRange;
         this.attackDamage = attackDamage;
         this.attackCooldown = attackCooldown;

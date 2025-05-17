@@ -3,6 +3,7 @@ package tomer.spivak.androidstudio2dgame.modelObjects;
 import java.util.HashMap;
 import java.util.Map;
 
+import tomer.spivak.androidstudio2dgame.logic.Building;
 import tomer.spivak.androidstudio2dgame.logic.Position;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 
@@ -13,14 +14,14 @@ public class ModelObjectFactory {
         typeMap.put("obelisk", new ModelObjectCreator() {
             @Override
             public ModelObject create(Position position, DifficultyLevel difficulty) {
-                return new Building(getBuildingHealthByDifficulty(200, difficulty), position, 1000, "obelisk");
+                return new Building(getBuildingHealthByDifficulty(200, difficulty), position, "obelisk");
             }
         });
 
         typeMap.put("mainbuilding", new ModelObjectCreator() {
             @Override
             public ModelObject create(Position position, DifficultyLevel difficulty) {
-                return new Building(getBuildingHealthByDifficulty(500, difficulty), position, -1, "mainbuilding");
+                return new Building(getBuildingHealthByDifficulty(500, difficulty), position, "mainbuilding");
             }
         });
 
@@ -28,7 +29,7 @@ public class ModelObjectFactory {
             @Override
             public ModelObject create(Position position, DifficultyLevel difficulty) {
                 return new Turret(getBuildingHealthByDifficulty(100, difficulty), getBuildingDamageByDifficulty(20, difficulty),
-                        4, position, 1500, 3000);
+                        4, position, 1500);
             }
         });
 
@@ -43,7 +44,7 @@ public class ModelObjectFactory {
 
             @Override
             public ModelObject create(Position position, DifficultyLevel difficulty) {
-                return new ExplodingBuilding(getBuildingHealthByDifficulty(10, difficulty), position, 2000,
+                return new ExplodingBuilding(getBuildingHealthByDifficulty(10, difficulty), position,
                         getBuildingDamageByDifficulty(100, difficulty));
             }
         });

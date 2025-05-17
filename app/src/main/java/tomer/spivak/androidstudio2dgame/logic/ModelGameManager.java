@@ -3,7 +3,6 @@ package tomer.spivak.androidstudio2dgame.logic;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
-import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;
 import tomer.spivak.androidstudio2dgame.modelObjects.ExplodingBuilding;
 import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
@@ -84,13 +83,13 @@ public class ModelGameManager {
                 building.setSoundEffects(soundEffects);
                 cellClicked.placeBuilding(building);
                 building.setPosition(position);
-                state.removeShnuzes(building.getPrice());
+                state.removeShnuzes(ModelObjectFactory.getPrice(building.getType()));
             }
         } else if (!selectedCell.getObject().getType().equals("mainbuilding") && state.getDayTime() && getNumberOfBuildings() > 2) {
             Building building = (Building) selectedCell.getObject();
             building.stopSound();
             building.setSoundEffects(null);
-            state.addShnuzes((int) ((building.getPrice() * building.getHealth())/building.getMaxHealth()));
+            state.addShnuzes((int) ((ModelObjectFactory.getPrice(building.getType()) * building.getHealth())/building.getMaxHealth()));
             selectedCell.removeObject();
         }
     }
@@ -136,27 +135,22 @@ public class ModelGameManager {
                 return;
             }
             List<Enemy> enemies = enemyManager.getEnemies(state);
-            List<Turret> turrets = new ArrayList<>();
-            for (Cell[] row : state.getGrid()) {
-                for (Cell cell : row) {
-                    ModelObject obj = cell.getObject();
-                    if (obj instanceof Turret) {
-                        turrets.add((Turret) obj);
-                    }
-                }
-            }
-            for (Turret turret : turrets) {
-                turret.update(state, deltaTime);
-                if (turret.executeAttack(enemies)){
-                    ArrayList<Position> positionsToAttack = turret.getCellsToAttack();
-                    for (Position pos : positionsToAttack){
-                        state.getCellAt(pos).executeBurntAnimation();
-                    }
-                }
-            }
             for (Cell[] cells : state.getGrid()) {
                 for (Cell cell : cells) {
                     cell.updateAnimation(deltaTime);
+                    if(cell.getObject() instanceof Building){
+                        ((Building) cell.getObject()).update(deltaTime);
+                        if(cell.getObject() instanceof Turret){
+                            Turret turret = (Turret) cell.getObject();
+                            turret.update(state, deltaTime);
+                            if (turret.executeAttack(enemies)){
+                                ArrayList<Position> positionsToAttack = turret.getCellsToAttack();
+                                for (Position pos : positionsToAttack){
+                                    state.getCellAt(pos).executeBurntAnimation();
+                                }
+                            }
+                        }
+                    }
                 }
             }
             enemyManager.updateEnemies(state, deltaTime);

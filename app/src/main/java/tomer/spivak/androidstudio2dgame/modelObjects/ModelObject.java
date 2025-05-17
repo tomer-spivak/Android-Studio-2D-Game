@@ -35,7 +35,6 @@ public abstract class ModelObject implements IDamageable {
 
     @Override
     public void takeDamage(float damage) {
-
         health -= damage;
         if (health <= 0) {
             onDeath();
