@@ -3,7 +3,6 @@ package tomer.spivak.androidstudio2dgame.logic;
 import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.BuildingState;
-import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 
 public class Building extends ModelObject {
     protected BuildingState state;

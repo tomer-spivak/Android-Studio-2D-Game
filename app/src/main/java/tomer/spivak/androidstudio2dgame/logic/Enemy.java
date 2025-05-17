@@ -8,7 +8,6 @@ import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.Direction;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.EnemyState;
-import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 
 public class Enemy extends ModelObject {
     private final float movementSpeed;

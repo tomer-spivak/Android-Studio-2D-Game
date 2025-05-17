@@ -6,6 +6,7 @@ import java.util.*;
 import tomer.spivak.androidstudio2dgame.logic.Building;
 import tomer.spivak.androidstudio2dgame.logic.Enemy;
 import tomer.spivak.androidstudio2dgame.logic.GameState;
+import tomer.spivak.androidstudio2dgame.logic.ModelObject;
 import tomer.spivak.androidstudio2dgame.logic.Position;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.BuildingState;
 

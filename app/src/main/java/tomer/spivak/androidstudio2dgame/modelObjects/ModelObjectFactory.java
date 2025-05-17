@@ -6,6 +6,7 @@ import java.util.Map;
 import tomer.spivak.androidstudio2dgame.logic.Building;
 import tomer.spivak.androidstudio2dgame.logic.Enemy;
 import tomer.spivak.androidstudio2dgame.logic.ExplodingBuilding;
+import tomer.spivak.androidstudio2dgame.logic.ModelObject;
 import tomer.spivak.androidstudio2dgame.logic.Position;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 

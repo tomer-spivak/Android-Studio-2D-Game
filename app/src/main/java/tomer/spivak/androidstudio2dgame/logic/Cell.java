@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.CellState;
-import tomer.spivak.androidstudio2dgame.modelObjects.ModelObject;
 
 public class Cell {
     private final Position position;
