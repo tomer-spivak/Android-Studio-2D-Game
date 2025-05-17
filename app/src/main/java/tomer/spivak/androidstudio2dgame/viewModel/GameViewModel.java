@@ -25,7 +25,7 @@ import tomer.spivak.androidstudio2dgame.logic.Building;
 import tomer.spivak.androidstudio2dgame.logic.Enemy;
 import tomer.spivak.androidstudio2dgame.logic.ModelObject;
 import tomer.spivak.androidstudio2dgame.logic.ModelObjectFactory;
-import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
+import tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager;
 
 public class GameViewModel extends ViewModel {
     private final MutableLiveData<GameState> viewModelGameState = new MutableLiveData<>();

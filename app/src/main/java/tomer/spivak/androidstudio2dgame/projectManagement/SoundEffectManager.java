@@ -1,11 +1,10 @@
-package tomer.spivak.androidstudio2dgame.music;
+package tomer.spivak.androidstudio2dgame.projectManagement;
 
 import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import tomer.spivak.androidstudio2dgame.R;
 
@@ -13,18 +12,12 @@ public class SoundEffectManager {
     private SoundPool soundPool;
     private final int enemyAttackSound;
     private final int turretAttackSound;
-    private final List<Integer> soundIds = new ArrayList<>();
+    private final ArrayList<Integer> soundIds = new ArrayList<>();
     private float volume;
 
-
     public SoundEffectManager(Context context) {
-        AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_GAME)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build();
-
-        soundPool = new SoundPool.Builder().setMaxStreams(50).setAudioAttributes(audioAttributes)
-                .build();
-
+        AudioAttributes audioAttributes = new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_GAME).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build();
+        soundPool = new SoundPool.Builder().setMaxStreams(50).setAudioAttributes(audioAttributes).build();
         volume = 0.5f;
         enemyAttackSound = soundPool.load(context, R.raw.monsterattack, 1);
         turretAttackSound = soundPool.load(context, R.raw.lightningtowerattack, 1);
@@ -39,10 +32,9 @@ public class SoundEffectManager {
     }
 
     public int playTurretAttackSound() {
-            int streamId = soundPool.play(turretAttackSound, volume, volume, 1,
-                    0, 1.0f);
-            soundIds.add(streamId);
-            return streamId;
+        int streamId = soundPool.play(turretAttackSound, volume, volume, 1, 0, 1.0f);
+        soundIds.add(streamId);
+        return streamId;
     }
 
     public void stopSound(int streamId) {
@@ -62,16 +54,16 @@ public class SoundEffectManager {
     }
 
     public void onDestroy() {
-            soundPool.release();
-            soundPool = null;
-        }
+        soundPool.release();
+        soundPool = null;
+    }
 
     public void pauseSoundEffects() {
-            soundPool.autoPause();
+        soundPool.autoPause();
     }
 
     public void resumeSoundEffects(){
-            soundPool.autoResume();
+        soundPool.autoResume();
     }
 
     public void stopAllSoundEffects() {
@@ -83,7 +75,6 @@ public class SoundEffectManager {
 
     public void pauseSoundEffect(int soundStreamId) {
         soundPool.pause(soundStreamId);
-
     }
 
     public void resumeSoundEffect(int soundStreamId) {

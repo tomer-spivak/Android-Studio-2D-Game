@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 import java.util.HashMap;
 import java.util.Map;
 
-import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
+import tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager;
 
 public abstract class ModelObject {
     protected Position pos;

@@ -3,7 +3,7 @@ package tomer.spivak.androidstudio2dgame.logic;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
-import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
+import tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager;
 
 import java.util.ArrayList;
 import java.util.List;

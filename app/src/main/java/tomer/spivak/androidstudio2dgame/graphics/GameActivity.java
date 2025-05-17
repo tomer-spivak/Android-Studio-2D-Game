@@ -53,7 +53,7 @@ import tomer.spivak.androidstudio2dgame.logic.Position;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.projectManagement.MusicService;
-import tomer.spivak.androidstudio2dgame.music.SoundEffectManager;
+import tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager;
 import tomer.spivak.androidstudio2dgame.viewModel.GameViewModel;
 import tomer.spivak.androidstudio2dgame.logic.GameState;
 
