@@ -12,8 +12,8 @@ public class Turret extends Building implements IDamager {
     private final float attackCooldown;
     private float timeSinceLastAttack = 0;
     protected final float attackRange;
-    private final List<Position> positionsToAttack = new ArrayList<>();
-    private final List<Position> removedPositions = new ArrayList<>();
+    private final ArrayList<Position> positionsToAttack = new ArrayList<>();
+    private final ArrayList<Position> removedPositions = new ArrayList<>();
 
     public Turret(float health, float attackDamage, float attackRange, Position pos, long attackCooldown, int price) {
         super(health, pos, price, "lightningtower");
@@ -35,40 +35,9 @@ public class Turret extends Building implements IDamager {
         }
     }
 
-    public void update(long elapsedTime) {
+    public void update(GameState state, long elapsedTime) {
         accumulateAttackTime(elapsedTime);
-    }
-    public void accumulateAttackTime(long elapsedTime) {
-        timeSinceLastAttack += elapsedTime;
-    }
-
-    public boolean shouldExecuteAttack(List<Enemy> enemies) {
-        boolean bool = false;
-        if (!canAttack()){
-            return false;
-        }
-
-
-        for (Enemy enemy : enemies){
-            for (Position pos : positionsToAttack){
-                if (pos.equals(enemy.getPosition())){
-                    executeAttackSoundAndAnimation(enemy);
-                    resetAttackTimer();
-                    bool = true;
-                }
-            }
-        }
-        return bool;
-    }
-
-
-    public List<Position> getCellsToAttack() {
-        return positionsToAttack;
-    }
-
-    private boolean shouldAttackPosition(Position position, GameState current) {
-        return current.isValidPosition(position) &&
-                !(current.getCellAt(position).getObject() instanceof Building);
+        updateCellsToAttack(state);
     }
 
     public void updateCellsToAttack(GameState current) {
@@ -91,6 +60,38 @@ public class Turret extends Building implements IDamager {
                 removedIterator.remove();
             }
         }
+    }
+
+    public void accumulateAttackTime(long elapsedTime) {
+        timeSinceLastAttack += elapsedTime;
+    }
+
+    public boolean executeAttack(List<Enemy> enemies) {
+        boolean bool = false;
+        if (!canAttack()){
+            return false;
+        }
+
+
+        for (Enemy enemy : enemies){
+            for (Position pos : positionsToAttack){
+                if (pos.equals(enemy.getPosition())){
+                    executeAttackSoundAndAnimation(enemy);
+                    resetAttackTimer();
+                    bool = true;
+                }
+            }
+        }
+        return bool;
+    }
+
+    public ArrayList<Position> getCellsToAttack() {
+        return positionsToAttack;
+    }
+
+    private boolean shouldAttackPosition(Position position, GameState current) {
+        return current.isValidPosition(position) &&
+                !(current.getCellAt(position).getObject() instanceof Building);
     }
 
     public void executeAttackSoundAndAnimation(Enemy target) {

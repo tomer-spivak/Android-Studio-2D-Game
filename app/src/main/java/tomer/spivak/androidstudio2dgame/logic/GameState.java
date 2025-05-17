@@ -25,11 +25,8 @@ public class GameState {
         this.difficulty = difficulty;
         currentTimeOfGame = 0;
         gameStatus = GameStatus.PLAYING;
-    }
-
-    public void initShnuzes() {
-        int difficulty = 4 - (this.difficulty.ordinal() + 1);
-        this.shnuzes = difficulty * 5000;
+        this.shnuzes = (4 - (this.difficulty.ordinal() + 1)) * 5000;
+        startTimerForNextRound();
     }
 
     public boolean isValidPosition(Position pos) {

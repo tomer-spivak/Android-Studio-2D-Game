@@ -65,6 +65,7 @@ public class ModelObjectFactory {
         switch (selectedBuildingType) {
             case "obelisk": return 1000;
             case "lightningtower": return 3000;
+            case "explodingtower": return 2000;
         }
         return 0;
     }

@@ -18,7 +18,7 @@ import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.BuildingState;
 import tomer.spivak.androidstudio2dgame.modelEnums.CellState;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
-import tomer.spivak.androidstudio2dgame.model.ModelGameManager;
+import tomer.spivak.androidstudio2dgame.logic.ModelGameManager;
 import tomer.spivak.androidstudio2dgame.modelEnums.Direction;
 import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
@@ -100,13 +100,14 @@ public class GameViewModel extends ViewModel {
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
                 Cell cell = grid[i][j];
-                if (!cell.isOccupied()) continue;
+                if (!cell.isOccupied())
+                    continue;
 
-                ModelObject obj = cell.getObject();
-                String type = obj.getType().toLowerCase();
+                ModelObject modelObject = cell.getObject();
+                String type = modelObject.getType();
 
                 if ("mainbuilding".equals(type)) {
-                    Position origin = obj.getPosition();
+                    Position origin = modelObject.getPosition();
                     if (origin.getX() != i || origin.getY() != j) {
                         // skip the other three tiles of the main building
                         continue;
@@ -115,16 +116,16 @@ public class GameViewModel extends ViewModel {
                 String state = "";
                 String direction = "";
 
-                if (obj instanceof Enemy) {
-                    Enemy e = (Enemy) obj;
+                if (modelObject instanceof Enemy) {
+                    Enemy e = (Enemy) modelObject;
                     state = e.getEnemyState().name().toLowerCase();
                     direction = e.getCurrentDirection().name().toLowerCase();
                 }
-                else if (obj instanceof Building) {
-                    state = ((Building) obj).getState().name().toLowerCase();
+                else if (modelObject instanceof Building) {
+                    state = ((Building) modelObject).getState().name().toLowerCase();
                 }
 
-                list.add(new GameObjectData(type, i, j, state, direction, obj.getHealth()/ obj.getMaxHealth()));
+                list.add(new GameObjectData(type, i, j, state, direction, modelObject.getHealth()/ modelObject.getMaxHealth()));
             }
         }
 

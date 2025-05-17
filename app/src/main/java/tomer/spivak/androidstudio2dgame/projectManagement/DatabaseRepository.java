@@ -89,7 +89,7 @@ public class DatabaseRepository {
             List<Map<String, Object>> rowData = new ArrayList<>();
             for (int j = 0; j < board[i].length; j++) {
                 Cell cell = board[i][j];
-                if (cell.getObject() != null && !cell.getPosition().equals(cell.getObject().getPosition()))
+                if (cell.isOccupied() && !cell.getPosition().equals(cell.getObject().getPosition()))
                     cell.removeObject();
                 rowData.add(cell.toMap());
             }
