@@ -12,7 +12,7 @@ import android.util.Log;
 import android.widget.ImageView;
 
 
-import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.logic.Position;
 
 
 public class GameObject {

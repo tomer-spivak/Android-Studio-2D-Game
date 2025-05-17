@@ -3,7 +3,7 @@ package tomer.spivak.androidstudio2dgame.modelObjects;
 import java.util.HashMap;
 import java.util.Map;
 
-import tomer.spivak.androidstudio2dgame.model.Position;
+import tomer.spivak.androidstudio2dgame.logic.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 
 public class ModelObjectFactory {

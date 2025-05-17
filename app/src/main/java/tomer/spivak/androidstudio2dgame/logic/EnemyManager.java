@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
 
-import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.EnemyState;
 import tomer.spivak.androidstudio2dgame.modelObjects.Building;
 import tomer.spivak.androidstudio2dgame.modelObjects.Enemy;

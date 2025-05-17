@@ -1,7 +1,6 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
 
-import tomer.spivak.androidstudio2dgame.model.Position;
 import tomer.spivak.androidstudio2dgame.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.modelEnums.GameStatus;
 

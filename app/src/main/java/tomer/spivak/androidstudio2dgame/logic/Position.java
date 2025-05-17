@@ -1,6 +1,4 @@
-package tomer.spivak.androidstudio2dgame.model;
-
-
+package tomer.spivak.androidstudio2dgame.logic;
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
@@ -17,14 +15,6 @@ public class Position {
         this.y = y;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof Position)) return false;
-        Position other = (Position) obj;
-        return this.x == other.x && this.y == other.y;
-    }
-
     public List<Position> getNeighbors() {
         List<Position> neighbors = new ArrayList<>();
 
@@ -37,17 +27,6 @@ public class Position {
         return neighbors;
     }
 
-    @Override
-    public int hashCode() {
-        return 31 * x + y;
-    }
-    public Map<String, Object> toMap() {
-        Map<String, Object> positionData = new HashMap<>();
-        positionData.put("x", x);
-        positionData.put("y", y);
-        return positionData;
-    }
-
     public int getX() {
         return x;
     }
@@ -56,6 +35,25 @@ public class Position {
         return y;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Position))
+            return false;
+        Position other = (Position) obj;
+        return this.x == other.x && this.y == other.y;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * x + y;
+    }
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> positionData = new HashMap<>();
+        positionData.put("x", x);
+        positionData.put("y", y);
+        return positionData;
+    }
 
     @NonNull
     @Override
