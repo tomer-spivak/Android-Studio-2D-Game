@@ -17,20 +17,9 @@ public class Building extends ModelObject {
         this.type = type;
     }
 
-    public BuildingState getState() {
-        return state;
-    }
-
-    public void setState(BuildingState state) {
-        this.state = state;
-    }
-
     public void update(long deltaTime){
         if(inAnimation)
             timeSinceTookDamage += deltaTime;
-        Log.d("drug", String.valueOf(inAnimation));
-        Log.d("drug", String.valueOf(timeSinceTookDamage));
-        Log.d("drug", pos.toString());
         if(timeSinceTookDamage >= 200){
             inAnimation = false;
             timeSinceTookDamage = 0;
@@ -46,14 +35,6 @@ public class Building extends ModelObject {
         setState(BuildingState.HURT);
     }
 
-    public void setAnimationTime(long animationTime) {
-        this.timeSinceTookDamage = animationTime;
-    }
-
-    public void setInAnimation(boolean inAnimation) {
-        this.inAnimation = inAnimation;
-    }
-
     @Override
     public Object toMap() {
         Map buildingData = (Map) super.toMap();
@@ -62,5 +43,21 @@ public class Building extends ModelObject {
         buildingData.put("timeSinceTookDamage", timeSinceTookDamage);
         buildingData.put("inAnimation", inAnimation);
         return buildingData;
+    }
+
+    public BuildingState getState() {
+        return state;
+    }
+
+    public void setState(BuildingState state) {
+        this.state = state;
+    }
+
+    public void setAnimationTime(long animationTime) {
+        this.timeSinceTookDamage = animationTime;
+    }
+
+    public void setInAnimation(boolean inAnimation) {
+        this.inAnimation = inAnimation;
     }
 }

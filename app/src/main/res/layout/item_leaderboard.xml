@@ -2,27 +2,28 @@
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     android:foreground="?attr/selectableItemBackground"
     card_view:cardCornerRadius="12dp"
-    card_view:cardElevation="8dp"
-    card_view:cardBackgroundColor="#33000000">
+    card_view:cardElevation="4dp"
+    card_view:cardBackgroundColor="#FFFFFF">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:background="#7209b7">
+        android:padding="12dp"
+        android:background="#F0F0F0"
+        android:gravity="start">
 
-        <!-- rank & username row -->
         <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_marginBottom="8dp"
+            android:gravity="start">
 
             <TextView
                 android:id="@+id/tvRank"
@@ -31,78 +32,73 @@
                 android:text="1."
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:layout_marginEnd="8dp"
-                android:fontFamily="@font/nikea"
-                android:textColor="#3a0ca3"/>
+                android:textColor="#000000"
+                android:layout_marginEnd="8dp"/>
 
             <TextView
                 android:id="@+id/usernameTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/nikea"
                 android:text="Username"
-                android:textColor="#3a0ca3"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:textColor="#000000"/>
         </LinearLayout>
 
-        <!-- stats grid -->
-        <androidx.gridlayout.widget.GridLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            app:useDefaultMargins="true"
-            app:alignmentMode="alignMargins"
-            app:columnOrderPreserved="false"
-            card_view:columnCount="2"
-            card_view:rowCount="2">
+            android:orientation="horizontal"
+            android:layout_marginBottom="4dp"
+            android:gravity="start">
 
-            <!-- each cell uses margin rather than unsupported gap attrs -->
             <TextView
-                style="@style/TextAppearance.Material3.BodySmall"
                 android:id="@+id/tvMaxRound"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:layout_columnWeight="1"
-                android:gravity="center"
-                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:gravity="start"
                 android:text="🏆 Max: 0"
-                android:textColor="@color/leaderboard_text"/>
+                android:textSize="14sp"
+                android:textColor="#333333"/>
 
             <TextView
-                style="@style/TextAppearance.Material3.BodySmall"
                 android:id="@+id/tvGamesPlayed"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:layout_columnWeight="1"
-                android:gravity="center"
-                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:gravity="start"
                 android:text="🎮 Plays: 0"
-                android:textColor="@color/leaderboard_text"/>
+                android:textSize="14sp"
+                android:textColor="#333333"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="start">
 
             <TextView
-                style="@style/TextAppearance.Material3.BodySmall"
                 android:id="@+id/tvEnemiesDefeated"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:layout_columnWeight="1"
-                android:gravity="center"
-                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:gravity="start"
                 android:text="💀 Defeat: 0"
-                android:textColor="@color/leaderboard_text"/>
+                android:textSize="14sp"
+                android:textColor="#333333"/>
 
             <TextView
-                style="@style/TextAppearance.Material3.BodySmall"
                 android:id="@+id/tvVictories"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:layout_columnWeight="1"
-                android:gravity="center"
-                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:gravity="start"
                 android:text="🏅 Wins: 0"
-                android:textColor="@color/leaderboard_text"/>
-
-        </androidx.gridlayout.widget.GridLayout>
+                android:textSize="14sp"
+                android:textColor="#333333"/>
+        </LinearLayout>
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

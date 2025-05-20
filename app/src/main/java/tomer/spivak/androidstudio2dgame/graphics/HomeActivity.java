@@ -38,7 +38,7 @@ public class HomeActivity extends AppCompatActivity{
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
-        DatabaseRepository.getInstance(this).signOut(this);
+        new DatabaseRepository(this).signOut(this);
 
         //init activity with home fragment
         replaceFragment(new HomeFragment(), false);
@@ -83,11 +83,10 @@ public class HomeActivity extends AppCompatActivity{
 
     }
 
-
     private void scheduleNotification(Context context, int hour) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, NotificationReceiver.class);
-        intent.putExtra(NotificationReceiver.EXTRA_HOUR, hour);
+        intent.putExtra("extra_hour", hour);
         int requestCode = hour * 100;
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);

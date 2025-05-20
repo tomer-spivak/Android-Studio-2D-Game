@@ -35,13 +35,15 @@ import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 public class SignUpFragment extends Fragment {
     private DatabaseRepository repository;
     private ActivityResultLauncher<Intent> pickImageLauncher;
-    private String email, password, username;
+    private String email;
+    private String password;
+    private String username;
     private ProgressBar progressBar;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
-        repository = DatabaseRepository.getInstance(requireContext());
+        repository = new DatabaseRepository(requireContext());
         pickImageLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult>() {
@@ -69,13 +71,13 @@ public class SignUpFragment extends Fragment {
                     }
                 }
         );
-        EditText etEmail    = view.findViewById(R.id.etEmail);
+        EditText etEmail = view.findViewById(R.id.etEmail);
         EditText etPassword = view.findViewById(R.id.etPassword);
         EditText etUsername = view.findViewById(R.id.etUsername);
         TextView tvEmailErr = view.findViewById(R.id.tvEmailError);
-        TextView tvPassErr  = view.findViewById(R.id.tvPasswordError);
-        TextView tvNameErr  = view.findViewById(R.id.tvUsernameError);
-        Button   btnSignUp  = view.findViewById(R.id.btnSignUp);
+        TextView tvPassErr = view.findViewById(R.id.tvPasswordError);
+        TextView tvNameErr = view.findViewById(R.id.tvUsernameError);
+        Button btnSignUp = view.findViewById(R.id.btnSignUp);
         progressBar = view.findViewById(R.id.progressBar);
 
         TextWatcher combinedWatcher = new TextWatcher() {
@@ -110,10 +112,10 @@ public class SignUpFragment extends Fragment {
             public void afterTextChanged(Editable s) {
             }
         };
-
         etEmail.addTextChangedListener(combinedWatcher);
         etPassword.addTextChangedListener(combinedWatcher);
         etUsername.addTextChangedListener(combinedWatcher);
+
         btnSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -129,7 +131,6 @@ public class SignUpFragment extends Fragment {
                                     intent = new Intent(Intent.ACTION_GET_CONTENT)
                                             .setType("image/*");
                                 }
-
                                 pickImageLauncher.launch(intent);
                             }
                         }).setCancelable(true).show();

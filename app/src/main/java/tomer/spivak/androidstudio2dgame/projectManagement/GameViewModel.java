@@ -41,19 +41,6 @@ public class GameViewModel extends ViewModel {
         this.gameManager = new ModelGameManager();
     }
 
-    public LiveData<GameState> getGameState() {
-        return viewModelGameState;
-    }
-
-    public MutableLiveData<List<GameObjectData>> getChangedDelta() {
-        return changedDelta;
-    }
-
-    public MutableLiveData<List<Position>> getRemovedDelta() {
-        return removedDelta;
-    }
-
-
     private void publishGameState() {
         GameState gameState = gameManager.getState();
 
@@ -131,10 +118,6 @@ public class GameViewModel extends ViewModel {
             enemiesDefeatedDelta.postValue(gameState.getEnemiesDefeated() - lastEnemiesDefeated);
             lastEnemiesDefeated = gameState.getEnemiesDefeated();
         }
-    }
-
-    public void selectBuilding(String type) {
-        gameManager.setSelectedBuildingType(type);
     }
 
     public void onCellClicked(int row, int col) {
@@ -241,6 +224,22 @@ public class GameViewModel extends ViewModel {
         setSoundEffects(soundEffectsManager);
         tick(timeSinceGameStart);
         setDayTime(dayTime);
+    }
+
+    public void selectBuilding(String type) {
+        gameManager.setSelectedBuildingType(type);
+    }
+
+    public LiveData<GameState> getGameState() {
+        return viewModelGameState;
+    }
+
+    public MutableLiveData<List<GameObjectData>> getChangedDelta() {
+        return changedDelta;
+    }
+
+    public MutableLiveData<List<Position>> getRemovedDelta() {
+        return removedDelta;
     }
 
     public void setSoundEffects(SoundEffectManager effects) {

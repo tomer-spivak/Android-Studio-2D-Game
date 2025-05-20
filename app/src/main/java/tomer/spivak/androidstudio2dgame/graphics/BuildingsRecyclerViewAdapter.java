@@ -22,12 +22,12 @@ public class BuildingsRecyclerViewAdapter extends
     private final Context context;
     private final int[] buildingImagesRes;
     private View selectedBuilding;
-    private final GameActivity gameActivity;
+    private final OnBuildingClickListener listener;
 
-    public BuildingsRecyclerViewAdapter(Context context, int[] buildingImagesRes, GameActivity activity) {
+    public BuildingsRecyclerViewAdapter(Context context, int[] buildingImagesRes, OnBuildingClickListener listener) {
         this.context = context;
         this.buildingImagesRes = buildingImagesRes;
-        this.gameActivity = activity;
+        this.listener = listener;
     }
 
     @NonNull
@@ -94,9 +94,13 @@ public class BuildingsRecyclerViewAdapter extends
             int position = getBindingAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
                 String buildingImageURL = context.getResources().getResourceEntryName(buildingImagesRes[position]).replace("_","");
-                gameActivity.onBuildingSelected(buildingImageURL);
-                gameActivity.closeBuildingMenu();
+                listener.onBuildingSelected(buildingImageURL);
+                listener.onCloseBuildingMenu();
             }
         }
+    }
+    public interface OnBuildingClickListener {
+        void onBuildingSelected(String buildingType);
+        void onCloseBuildingMenu();
     }
 }

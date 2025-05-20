@@ -45,7 +45,6 @@ public class GameLoop implements Runnable {
         gameThread.start();
     }
 
-    //the implementation of runnable (which actually runs the game loop and uses threads)
     @Override
     public void run() {
         long previousTime = System.currentTimeMillis();
@@ -66,14 +65,12 @@ public class GameLoop implements Runnable {
                     //draws on the canvas
                     gameView.draw(canvas);
                 }
-            } catch (IllegalArgumentException e) {
-                Log.e("GameLoop", "game loop error: " + e.getMessage());
+            } catch (IllegalArgumentException ignored) {
             } finally {
                 if (canvas != null) {
                     try {
                         surfaceHolder.unlockCanvasAndPost(canvas);
-                    } catch (Exception e) {
-                        Log.e("GameLoop", "canvas is null: " + e.getMessage());
+                    } catch (Exception ignored) {
                     }
                 }
             }
@@ -84,7 +81,6 @@ public class GameLoop implements Runnable {
             //if the sleep time is positive it means the the time the frame took was less then the minimum time, hence we need to sleep
             if (sleepTime > 0) {
                 try {
-                    //try to avoid wasting the CPU on the thread in the sleep time
                     Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);

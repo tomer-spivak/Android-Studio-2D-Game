@@ -1,5 +1,6 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
+import android.telephony.CellIdentityCdma;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -32,10 +33,12 @@ public class Cell {
     }
 
     public void updateAnimation(long deltaTime){
-        animationTime += deltaTime;
+        if(cellState == CellState.BURNT || cellState == CellState.ENEMYDEATH1 || cellState == CellState.ENEMYDEATH2 || cellState == CellState.ENEMYDEATH3 || cellState == CellState.EXPLODE)
+            animationTime += deltaTime;
         if(cellState == CellState.BURNT) {
             if (animationTime > 500) {
                 setState(defaultState);
+                animationTime = 0;
             }
         }
         if(cellState.name().contains("DEATH")) {
@@ -46,6 +49,7 @@ public class Cell {
             final float totalTime = totalFrames * frameDur;
             if (animationTime >= totalTime) {
                 setState(defaultState);
+                animationTime = 0;
             } else {
                 int step = (int)(animationTime / frameDur);
                 int frameIndex = step % states.length;
@@ -54,6 +58,7 @@ public class Cell {
         }
         if(cellState == CellState.EXPLODE){
             if (animationTime > 800) {
+                animationTime = 0;
                 setState(defaultState);
             }
         }
@@ -76,6 +81,8 @@ public class Cell {
     }
 
     public void setState(CellState cellState) {
+        if(cellState == defaultState)
+            animationTime = 0;
         this.cellState = cellState;
     }
 
@@ -90,7 +97,7 @@ public class Cell {
 
     public void executeEnemyDeathAnimation() {
         setState(CellState.ENEMYDEATH1);
-        animationTime = 0L;
+        animationTime = 0;
     }
 
     public void executeExplosion() {
@@ -100,15 +107,17 @@ public class Cell {
 
     public void resetAnimation() {
         setState(defaultState);
-        animationTime = 0;
     }
 
     public Map<String, Object> toMap() {
         Map<String, Object> cellData = new HashMap<>();
         cellData.put("position", position.toMap());
         cellData.put("occupied", object != null);
-        cellData.put("object", object != null ? object.toMap() : null);
-        Log.d("state", cellState.name());
+        if (object != null) {
+            cellData.put("object", object.toMap());
+        } else {
+            cellData.put("object", null);
+        }
         cellData.put("state", cellState.name());
         return cellData;
     }

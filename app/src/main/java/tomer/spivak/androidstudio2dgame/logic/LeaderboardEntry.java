@@ -30,6 +30,5 @@ public class LeaderboardEntry  {
     public int getVictories() {
         return victories;
     }
-
 }
 

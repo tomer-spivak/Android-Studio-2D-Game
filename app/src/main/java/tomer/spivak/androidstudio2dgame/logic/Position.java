@@ -17,7 +17,6 @@ public class Position {
 
     public List<Position> getNeighbors() {
         List<Position> neighbors = new ArrayList<>();
-
         neighbors.add(new Position(x + 1, y));
         if (x - 1 >= 0)
             neighbors.add(new Position(x - 1, y));
@@ -25,14 +24,6 @@ public class Position {
         if (y - 1 >= 0)
             neighbors.add(new Position(x, y - 1));
         return neighbors;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
     }
 
     @Override
@@ -53,6 +44,14 @@ public class Position {
         positionData.put("x", x);
         positionData.put("y", y);
         return positionData;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 
     @NonNull

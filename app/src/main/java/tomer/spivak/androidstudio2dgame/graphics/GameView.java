@@ -50,11 +50,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     private final Context context;
 
     //the order in which to draw the game objects on the screen (we dont anything to hide eachother that it shouldnt
-    private final List<GameObject> gameObjectListDrawOrder = new ArrayList<>();
+    private final ArrayList<GameObject> gameObjectListDrawOrder = new ArrayList<>();
 
     //listener for events like clicking on a cell and game loop updating
     private final GameEventListener listener;
-
 
     //draw on the screen the health bar, the time to next round, and the background image
     private final Paint healthBarPaint = new Paint();
@@ -111,7 +110,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
     //override the default touch event with my touch manager.
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        performClick();
         return touchManager.onTouchEvent(event) || super.onTouchEvent(event);
+    }
+
+    @Override
+    public boolean performClick() {
+        return super.performClick();
     }
 
     //everytime we scale we need to update everything
@@ -143,7 +148,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
             return;
         listener.onCellClicked(cellCenterPoint.x, cellCenterPoint.y);
     }
-
 
     @Override
     public void draw(Canvas canvas) {
@@ -177,7 +181,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
             int y = (int)(imagePoint.y - offset * gameObject.getScale());
             canvas.drawRect(x, y, x + healthBarWidth, y + healthBarHeight, healthBarBackgroundPaint);
             int fill = (int)(healthPer * healthBarWidth);
-            Log.d("health", gameObject.getType() + ", " + healthPer);
             canvas.drawRect(x, y, x + fill, y + healthBarHeight, healthBarPaint);
         }
 
@@ -219,7 +222,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         }
     }
 
-    /** Updates existing sprites or inserts new ones (in Y‐sorted order) */
     public void applyChanged(List<GameObjectData> changed) {
         Point[][] centers = board.getCenterCells();
         float scale = board.getScale();
@@ -229,7 +231,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
                 Position objectPos = new Position(data.getX(), data.getY());
                 GameObject found = null;
 
-                // 1) try to find an existing GameObject at that position
                 for (GameObject go : gameObjectListDrawOrder) {
                     if (go.getPos().equals(objectPos)) {
                         found = go;
@@ -238,25 +239,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
                 }
 
                 if (found != null) {
-                    // 2a) if found, just update its state
-                    found.updateState(
-                            data.getState(),
-                            data.getDirection(),
-                            data.getHealthPercentage()
-                    );
+                    found.updateState(data.getState(), data.getDirection(), data.getHealthPercentage());
                 } else {
-                    // 2b) if not found, create & insert it in draw‐order
                     Point center = centers[data.getX()][data.getY()];
-                    GameObject go = new GameObject(
-                            context,
-                            center,
-                            scale,
-                            objectPos,
-                            data.getType(),
-                            data.getState(),
-                            data.getDirection(),
-                            data.getHealthPercentage()
-                    );
+                    GameObject go = new GameObject(context, center, scale, objectPos, data.getType(), data.getState(), data.getDirection(), data.getHealthPercentage());
 
                     int insertAt = 0;
                     while (insertAt < gameObjectListDrawOrder.size() &&
@@ -280,7 +266,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         gameLoop.stopLoop();
     }
 
-
     public void stopGameLoop() {
         MusicService musicService = ((GameActivity)context).getMusicService();
         SoundEffectManager soundEffectsManager = ((GameActivity)context).getSoundEffectsManager();
@@ -298,7 +283,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         SoundEffectManager soundEffectsManager = ((GameActivity)context).getSoundEffectsManager();
         Point[][] centerCells = board.getCenterCells();
         soundEffectsManager.resumeSoundEffects();
-        //setting the game object's image point in the new updated board
         synchronized (gameObjectListDrawOrder){
             for(GameObject gameObject : gameObjectListDrawOrder){
                 gameObject.setImagePoint(centerCells[gameObject.getPos().getX()][gameObject.getPos().getY()]);
@@ -310,6 +294,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         }
         gameLoop.startLoop();
     }
+
     public void updateFromGameState(GameState gameState) {
         if (gameState.getDayTime()) {
             backgroundBitmap = morningBackground;
@@ -323,16 +308,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Tou
         shnuzes = gameState.getShnuzes();
 
         Cell[][] boardCells = gameState.getGrid();
-        int R = boardCells.length, C = boardCells[0].length;
-        CellState[][] states = new CellState[R][C];
-        for (int i = 0; i < R; i++) {
-            for (int j = 0; j < C; j++) {
+        CellState[][] states = new CellState[boardCells.length][boardCells.length];
+        for (int i = 0; i < boardCells.length; i++) {
+            for (int j = 0; j < boardCells.length; j++) {
                 states[i][j] = boardCells[i][j].getCellState();
             }
         }
         board.setCellsState(states);
-
     }
-
-
 }

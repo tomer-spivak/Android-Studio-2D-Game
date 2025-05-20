@@ -22,12 +22,7 @@ public class MusicService extends Service {
     private final int[] music = {R.raw.candyland, R.raw.fade, R.raw.infectious, R.raw.invincible, R.raw.sky_high, R.raw.spectre};
     private final Random random = new Random();
     private int lastSongIndex = -1;
-    float volume;
-    public static final String CHANNEL_ID = "music_service_channel";
-    private final IBinder binder = new LocalBinder();
-    public int getCurrentVolumeLevel() {
-        return (int) (volume * 100);
-    }
+    private float volume;
 
     public void setVolumeLevel(float progress) {
         volume = progress / 100f;
@@ -38,18 +33,23 @@ public class MusicService extends Service {
         prefs.edit().putFloat("volume", volume).apply();
     }
 
-    public class LocalBinder extends Binder {
-        public MusicService getService() {
-            return MusicService.this;
-        }
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
         SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         volume = prefs.getFloat("volume", 0.07f) ;
-        getSystemService(NotificationManager.class).createNotificationChannel(new NotificationChannel(CHANNEL_ID, "Music Playback", NotificationManager.IMPORTANCE_LOW));
+        getSystemService(NotificationManager.class).createNotificationChannel(new NotificationChannel("music_service_channel", "Music Playback", NotificationManager.IMPORTANCE_LOW));
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (mediaPlayer == null) {
+            playRandomSong();
+        }
+        Notification notification = new NotificationCompat.Builder(this, "music_service_channel").setContentTitle("Game Music").setContentText("Playing background music")
+                .setSmallIcon(R.drawable.logo).setOngoing(true).build();
+        startForeground(1, notification);
+        return START_STICKY;
     }
 
     private void playRandomSong() {
@@ -77,17 +77,6 @@ public class MusicService extends Service {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (mediaPlayer == null) {
-            playRandomSong();
-        }
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID).setContentTitle("Game Music").setContentText("Playing background music")
-                .setSmallIcon(R.drawable.logo).setOngoing(true).build();
-        startForeground(1, notification);
-        return START_STICKY;
-    }
-
-    @Override
     public void onDestroy() {
         stopForeground(true);
         super.onDestroy();
@@ -98,9 +87,15 @@ public class MusicService extends Service {
         }
     }
 
+    public class LocalBinder extends Binder {
+        public MusicService getService() {
+            return MusicService.this;
+        }
+    }
+
     @Override
     public IBinder onBind(Intent intent) {
-        return binder;
+        return new LocalBinder();
     }
 
     public void pauseMusic() {
@@ -139,5 +134,9 @@ public class MusicService extends Service {
         }
         stopForeground(true);
         stopSelf();
+    }
+
+    public int getCurrentVolumeLevel() {
+        return (int) (volume * 100);
     }
 }

@@ -108,8 +108,6 @@ public class EnemyManager {
                 enemy.setPath(newPath);
                 enemy.setCurrentTargetIndex(0);
                 if (newPath.isEmpty()) {
-                    //Cell enemyCell = gameState.getCellAt(enemy.getPosition());
-                    //List<Cell> neighbors = gameState.getNeighbors(enemyCell);
                     List<Cell> neighborsCells = new ArrayList<>();
                     for (Position neighborsPos: enemy.getPosition().getNeighbors()){
                         if(gameState.isValidPosition(neighborsPos))

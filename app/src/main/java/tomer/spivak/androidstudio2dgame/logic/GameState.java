@@ -1,6 +1,8 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
 
+import android.util.Log;
+
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
 
@@ -30,6 +32,11 @@ public class GameState {
 
     public boolean isValidPosition(Position pos) {
         return pos.getX() >= 0 && pos.getX() < grid.length && pos.getY() >= 0 && pos.getY() < grid[0].length;
+    }
+
+    public void startTimerForNextRound() {
+        currentTimeOfGame = 0;
+        this.timeToNextRound = (long) 5000 * currentRound;
     }
 
     public Cell getCellAt(Position pos) {
@@ -64,11 +71,6 @@ public class GameState {
         this.timeToNextRound -= delta;
     }
 
-    public void startTimerForNextRound() {
-        currentTimeOfGame = 0;
-        this.timeToNextRound = (long) 5000 * currentRound;
-    }
-
     public DifficultyLevel getDifficulty() {
         return difficulty;
     }
@@ -92,6 +94,7 @@ public class GameState {
     public void removeShnuzes(int shnuzes) {
         this.shnuzes -= shnuzes;
     }
+
     public void setCurrentRound(int currentRound) {
         this.currentRound = currentRound;
     }
@@ -114,5 +117,9 @@ public class GameState {
 
     public int getNumberOfRounds() {
         return numberOfRounds;
+    }
+
+    public void resetTimer() {
+        timeToNextRound = 1;
     }
 }

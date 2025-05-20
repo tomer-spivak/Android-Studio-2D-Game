@@ -16,12 +16,15 @@ import tomer.spivak.androidstudio2dgame.logic.LeaderboardEntry;
 
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
 
-    private enum SortBy { VICTORIES, GAMES_PLAYED, MAX_ROUND, ENEMIES_DEFEATED }
+    private static final int SORT_BY_VICTORIES = 0;
+    private static final int SORT_BY_GAMES_PLAYED = 1;
+    private static final int SORT_BY_MAX_ROUND = 2;
+    private static final int SORT_BY_ENEMIES_DEFEATED = 3;
 
-    private final List<LeaderboardEntry> fullList     = new ArrayList<>();
+    private final List<LeaderboardEntry> fullList = new ArrayList<>();
     private final List<LeaderboardEntry> filteredList = new ArrayList<>();
     private String lastQuery = "";
-    private SortBy currentSort = SortBy.VICTORIES;
+    private int currentSortField = SORT_BY_VICTORIES;
 
     public LeaderboardAdapter(List<LeaderboardEntry> data) {
         updateData(data);
@@ -34,68 +37,60 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     }
 
     public void sortByVictories() {
-        sort(SortBy.VICTORIES);
+        currentSortField = SORT_BY_VICTORIES;
+        applySortAndFilter();
     }
+
     public void sortByGamesPlayed() {
-        sort(SortBy.GAMES_PLAYED);
+        currentSortField = SORT_BY_GAMES_PLAYED;
+        applySortAndFilter();
     }
+
     public void sortByMaxRound() {
-        sort(SortBy.MAX_ROUND);
+        currentSortField = SORT_BY_MAX_ROUND;
+        applySortAndFilter();
     }
+
     public void sortByEnemiesDefeated() {
-        sort(SortBy.ENEMIES_DEFEATED);
-    }
-
-    private void sort(SortBy field) {
-        currentSort = field;
-        for (int i = 0; i < fullList.size(); i++) {
-            for (int j = 0; j < fullList.size() - 1; j++) {
-                LeaderboardEntry a = fullList.get(j);
-                LeaderboardEntry b = fullList.get(j + 1);
-                if (shouldSwap(a, b)) {
-                    fullList.set(j, b);
-                    fullList.set(j + 1, a);
-                }
-            }
-        }
-        applyFilter();
-    }
-
-    private boolean shouldSwap(LeaderboardEntry a, LeaderboardEntry b) {
-        switch (currentSort) {
-            case GAMES_PLAYED:
-                return a.getGamesPlayed() < b.getGamesPlayed();
-            case MAX_ROUND:
-                return a.getMaxRound() < b.getMaxRound();
-            case ENEMIES_DEFEATED:
-                return a.getEnemiesDefeated() < b.getEnemiesDefeated();
-            case VICTORIES:
-            default:
-                return a.getVictories() < b.getVictories();
-        }
+        currentSortField = SORT_BY_ENEMIES_DEFEATED;
+        applySortAndFilter();
     }
 
     public void filter(String query) {
-        if (query == null) {
-            lastQuery = "";
-        } else {
-            lastQuery = query.trim().toLowerCase();
-        }
-        applyFilter();
+        lastQuery = (query == null) ? "" : query.trim().toLowerCase();
+        applySortAndFilter();
     }
 
-    private void applyFilter() {
+    private void applySortAndFilter() {
         filteredList.clear();
-        if (lastQuery.isEmpty()) {
-            filteredList.addAll(fullList);
-        } else {
-            for (LeaderboardEntry e : fullList) {
-                if (e.getDisplayName().toLowerCase().contains(lastQuery)) {
-                    filteredList.add(e);
-                }
+        for (LeaderboardEntry e : fullList) {
+            if (lastQuery.isEmpty() || e.getDisplayName().toLowerCase().contains(lastQuery)) {
+                insertSorted(e);
             }
         }
         notifyDataSetChanged();
+    }
+
+    private void insertSorted(LeaderboardEntry entry) {
+        int position = 0;
+        while (position < filteredList.size() && !shouldInsertBefore(entry, filteredList.get(position))) {
+            position++;
+        }
+        filteredList.add(position, entry);
+    }
+
+    private boolean shouldInsertBefore(LeaderboardEntry a, LeaderboardEntry b) {
+        switch (currentSortField) {
+            case SORT_BY_GAMES_PLAYED:
+                return a.getGamesPlayed() > b.getGamesPlayed();
+            case SORT_BY_MAX_ROUND:
+                return a.getMaxRound() > b.getMaxRound();
+            case SORT_BY_ENEMIES_DEFEATED:
+                return a.getEnemiesDefeated() > b.getEnemiesDefeated();
+            case SORT_BY_VICTORIES:
+            default:
+                return a.getVictories() > b.getVictories();
+        }
     }
 
     @NonNull
@@ -109,12 +104,12 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder h, int pos) {
         LeaderboardEntry e = filteredList.get(pos);
-        h.rank .setText((pos + 1) + ".");
-        h.user .setText(e.getDisplayName());
-        h.max  .setText("🏆 Max Round: "    + e.getMaxRound());
-        h.games.setText("🎮 Games: "        + e.getGamesPlayed());
-        h.kills.setText("💀 Defeated: "     + e.getEnemiesDefeated());
-        h.wins .setText("🏅 Victories: "    + e.getVictories());
+        h.rank.setText((pos + 1) + ".");
+        h.user.setText(e.getDisplayName());
+        h.max.setText("🏆 Max Round: " + e.getMaxRound());
+        h.games.setText("🎮 Games: " + e.getGamesPlayed());
+        h.kills.setText("💀 Defeated: " + e.getEnemiesDefeated());
+        h.wins.setText("🏅 Victories: " + e.getVictories());
     }
 
     @Override
@@ -124,14 +119,15 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView rank, user, games, kills, max, wins;
+
         ViewHolder(View v) {
             super(v);
-            rank  = v.findViewById(R.id.tvRank);
-            user  = v.findViewById(R.id.usernameTextView);
+            rank = v.findViewById(R.id.tvRank);
+            user = v.findViewById(R.id.usernameTextView);
             games = v.findViewById(R.id.tvGamesPlayed);
             kills = v.findViewById(R.id.tvEnemiesDefeated);
-            max   = v.findViewById(R.id.tvMaxRound);
-            wins  = v.findViewById(R.id.tvVictories);
+            max = v.findViewById(R.id.tvMaxRound);
+            wins = v.findViewById(R.id.tvVictories);
         }
     }
 }

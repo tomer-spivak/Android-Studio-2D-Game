@@ -11,7 +11,7 @@ public class Turret extends Building {
     private float timeSinceLastAttack = 0;
     private final ArrayList<Position> positionsToAttack = new ArrayList<>();
     private final ArrayList<Position> removedPositions = new ArrayList<>();
-    private Enemy target;
+    private final ArrayList<Enemy> targets = new ArrayList<>();
     private long chargeTime = 0;
     private boolean isCharging = false;
 
@@ -57,7 +57,8 @@ public class Turret extends Building {
 
         if (chargeTime > 200){
             setState(BuildingState.IDLE);
-            target.takeDamage(attackDamage);
+            for (Enemy enemy : targets)
+                enemy.takeDamage(attackDamage);
             timeSinceLastAttack = 0;
             chargeTime = 0;
             isCharging = false;
@@ -66,13 +67,13 @@ public class Turret extends Building {
 
     public boolean executeAttack(List<Enemy> enemies) {
         boolean bool = false;
-        if (timeSinceLastAttack >= attackCooldown && state != BuildingState.ATTACKING && state != BuildingState.HURT){
+        if (timeSinceLastAttack >= attackCooldown && state != BuildingState.ATTACKING){
             for (Enemy enemy : enemies){
                 for (Position pos : positionsToAttack){
                     if (pos.equals(enemy.getPosition())){
                         setSoundStreamId(soundEffects.playTurretAttackSound());
                         setState(BuildingState.ATTACKING);
-                        this.target = enemy;
+                        this.targets.add(enemy);
                         timeSinceLastAttack = 0;
                         bool = true;
                         isCharging = true;
@@ -81,10 +82,6 @@ public class Turret extends Building {
             }
         }
         return bool;
-    }
-
-    public ArrayList<Position> getCellsToAttack() {
-        return positionsToAttack;
     }
 
     private boolean shouldAttackPosition(Position position, GameState current) {
@@ -97,5 +94,9 @@ public class Turret extends Building {
         turretData.replace("type", "lightningtower");
         turretData.put("timeSinceLastAttack", timeSinceLastAttack);
         return turretData;
+    }
+
+    public ArrayList<Position> getCellsToAttack() {
+        return positionsToAttack;
     }
 }

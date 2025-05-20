@@ -1,11 +1,9 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
-
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.BuildingState;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
 import tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -91,6 +89,7 @@ public class ModelGameManager {
     public void update(long deltaTime) {
         if (state == null)
             return;
+        deltaTime = Math.min(100, deltaTime);
         state.addTime(deltaTime);
         if (state.getDayTime()) {
             if (sunrise) {
@@ -110,9 +109,10 @@ public class ModelGameManager {
                 if (enemyManager.getEnemies(state).isEmpty())
                     enemyManager.spawnEnemies(state, amount);
             }
-        } else {
+        }
+        else {
             // Night phase
-            if (!containsMainBuilding(state.getGrid()) || getNumberOfBuildings() == 0) {
+            if (!containsMainBuilding(state.getGrid())) {
                 state.setGameStatus(GameStatus.LOST);
                 return;
             }
@@ -130,6 +130,7 @@ public class ModelGameManager {
                 }
                 return;
             }
+
             List<Enemy> enemies = enemyManager.getEnemies(state);
             for (Cell[] cells : state.getGrid()) {
                 for (Cell cell : cells) {
@@ -149,6 +150,7 @@ public class ModelGameManager {
                     }
                 }
             }
+
             enemyManager.updateEnemies(state, deltaTime);
             for (Cell[] cells : state.getGrid()){
                 for (Cell cell: cells){
@@ -203,8 +205,7 @@ public class ModelGameManager {
     }
 
     public void skipToNextRound() {
-        state.startTimerForNextRound();
-        state.decreaseTimeToNextRound(state.getTimeToNextRound() - 1);
+        state.resetTimer();
     }
 
     public void setSoundEffects(SoundEffectManager effects) {

@@ -35,7 +35,7 @@ public class GraphicalBoard {
 
     private CellState[][] cellStates;
     private final int[] screenSize = new int[2];
-    private Region[][] cellRegions;
+    private final Region[][] cellRegions;
 
     public GraphicalBoard(Context context, int boardSize) {
         this.context = context;
@@ -44,10 +44,9 @@ public class GraphicalBoard {
         cellPaths = new Path[boardSize][boardSize];
         cellCenters = new Point[boardSize][boardSize];
 
-        int n = CellState.values().length;
-        originalDrawables = new Drawable[n];
-        originalsBitmaps = new Bitmap[n];
-        scaledBitmaps = new Bitmap[n];
+        originalDrawables = new Drawable[CellState.values().length];
+        originalsBitmaps = new Bitmap[CellState.values().length];
+        scaledBitmaps = new Bitmap[CellState.values().length];
 
         //init grass images
         originalDrawables[0] = ContextCompat.getDrawable(context, R.drawable.grass_default);
@@ -58,13 +57,13 @@ public class GraphicalBoard {
         originalDrawables[5] = ContextCompat.getDrawable(context, R.drawable.grass_explode);
         originalDrawables[6] = ContextCompat.getDrawable(context, R.drawable.grass_enemy_spawn_location);
 
-        for (int i = 0; i < n; i++) {
-            Bitmap bmp = Bitmap.createBitmap(originalDrawables[i].getIntrinsicWidth(), originalDrawables[i].getIntrinsicHeight(), Config.ARGB_8888);
-            Canvas c = new Canvas(bmp);
-            originalDrawables[i].setBounds(0, 0, c.getWidth(), c.getHeight());
-            originalDrawables[i].draw(c);
+        for (int i = 0; i < CellState.values().length; i++) {
+            Bitmap bitmap = Bitmap.createBitmap(originalDrawables[i].getIntrinsicWidth(), originalDrawables[i].getIntrinsicHeight(), Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            originalDrawables[i].setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+            originalDrawables[i].draw(canvas);
 
-            originalsBitmaps[i] = bmp;
+            originalsBitmaps[i] = bitmap;
         }
 
         // init cell states
@@ -78,11 +77,12 @@ public class GraphicalBoard {
         screenSize[0] = context.getResources().getDisplayMetrics().widthPixels;
         screenSize[1] = context.getResources().getDisplayMetrics().heightPixels;
 
-        calculateCellPaths();
-        buildCellRegions();
+        cellRegions = new Region[boardSize][boardSize];
+        rebuildCellPathsAndRegions();
     }
 
-    private void calculateCellPaths() {
+    private void rebuildCellPathsAndRegions() {
+        Region clip = new Region(0, 0, screenSize[0], screenSize[1]);
         for (int i = 0; i < boardSize; i++) {
             for (int j = 0; j < boardSize; j++) {
                 Path path = cellPaths[i][j];
@@ -95,15 +95,13 @@ public class GraphicalBoard {
 
                 float shapeStartX = (i - j) * getCellWidth() / 2f;
                 float shapeStartY = (i + j) * getCellHeight() / 2f;
+                float halfW = getCellWidth()  / 2f;
+                float fullH = getCellHeight();
 
-                float[] pts = new float[]{offset.x + shapeStartX, offset.y + shapeStartY, offset.x + shapeStartX + getCellWidth() / 2f,
-                        offset.y + shapeStartY + getCellHeight() / 2f, offset.x + shapeStartX, offset.y + shapeStartY + getCellHeight(),
-                        offset.x + shapeStartX - getCellWidth() / 2f, offset.y + shapeStartY + getCellHeight() / 2f};
-
-                path.moveTo(pts[0], pts[1]);
-                path.lineTo(pts[2], pts[3]);
-                path.lineTo(pts[4], pts[5]);
-                path.lineTo(pts[6], pts[7]);
+                path.moveTo(offset.x + shapeStartX, offset.y + shapeStartY);
+                path.lineTo(offset.x + shapeStartX + halfW, offset.y + shapeStartY + fullH/2f);
+                path.lineTo(offset.x + shapeStartX, offset.y + shapeStartY + fullH);
+                path.lineTo(offset.x + shapeStartX - halfW, offset.y + shapeStartY + fullH/2f);
                 path.close();
 
                 Point center = cellCenters[i][j];
@@ -111,7 +109,14 @@ public class GraphicalBoard {
                     center = new Point();
                     cellCenters[i][j] = center;
                 }
-                center.set((int)(offset.x + shapeStartX), (int)(offset.y + shapeStartY + getCellHeight() / 2f));
+                center.set((int)(offset.x + shapeStartX), (int)(offset.y + shapeStartY + fullH/2f));
+
+                Region region = cellRegions[i][j];
+                if (region == null) {
+                    region = new Region();
+                    cellRegions[i][j] = region;
+                }
+                region.setPath(path, clip);
             }
         }
     }
@@ -133,8 +138,7 @@ public class GraphicalBoard {
 
         if (Math.abs(deltaX) < 100 && Math.abs(deltaY) < 100) {
             offset.x += deltaX;offset.y += deltaY;
-            calculateCellPaths();
-            buildCellRegions();
+            rebuildCellPathsAndRegions();
         }
     }
 
@@ -147,21 +151,8 @@ public class GraphicalBoard {
         offset.x += (focusX - offset.x) * (1 - scaleFactor);
         offset.y += (focusY - offset.y) * (1 - scaleFactor);
         scale = newScale;
-        calculateCellPaths();
-        buildCellRegions();
+        rebuildCellPathsAndRegions();
         return newScale;
-    }
-
-    private void buildCellRegions() {
-        Region clip = new Region(0, 0, screenSize[0], screenSize[1]);
-        cellRegions = new Region[boardSize][boardSize];
-        for (int i = 0; i < boardSize; i++) {
-            for (int j = 0; j < boardSize; j++) {
-                Region region = new Region();
-                region.setPath(cellPaths[i][j], clip);
-                cellRegions[i][j] = region;
-            }
-        }
     }
 
     public void draw(@NonNull Canvas canvas) {
@@ -170,8 +161,8 @@ public class GraphicalBoard {
             for (int i = 0; i < originalsBitmaps.length; i++) {
                 Drawable drawable = originalDrawables[i];
                 Bitmap bitmap = originalsBitmaps[i];
-                int drawableWidth = (int)(pxToDp(drawable.getIntrinsicWidth()) * 1.125f * scale);
-                int drawableHeight = (int)(pxToDp(drawable.getIntrinsicHeight()) * scale);
+                int drawableWidth = (int)(drawable.getIntrinsicWidth() / context.getResources().getDisplayMetrics().density * 1.125f * scale);
+                int drawableHeight = (int)(drawable.getIntrinsicHeight() / context.getResources().getDisplayMetrics().density * scale);
                 scaledBitmaps[i] = Bitmap.createScaledBitmap(bitmap, drawableWidth, drawableHeight, true);
             }
         }
@@ -195,12 +186,7 @@ public class GraphicalBoard {
         }
     }
 
-    private float pxToDp(int px) {
-        return px / context.getResources().getDisplayMetrics().density;
-    }
-
     public Point getSelectedCell(float clickX, float clickY) {
-        Log.d("click", String.valueOf(clickX));
         if (cellRegions == null)
             return null;
         for (int i = 0; i < boardSize; i++) {
@@ -220,6 +206,7 @@ public class GraphicalBoard {
     public Point[][] getCenterCells() {
         return cellCenters;
     }
+
     public int getCellWidth() {
         return (int)(300 * scale / Math.tan((float)(PI * 0.18)));
     }

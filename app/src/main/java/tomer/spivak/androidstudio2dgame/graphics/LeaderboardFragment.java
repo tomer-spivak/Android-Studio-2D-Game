@@ -86,15 +86,12 @@ public class LeaderboardFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        DatabaseRepository.getInstance(requireContext())
-                .fetchLeaderboardFromDatabase(
+        new DatabaseRepository(requireContext()).fetchLeaderboardFromDatabase(
                         new OnSuccessListener<List<LeaderboardEntry>>() {
                             @Override
                             public void onSuccess(List<LeaderboardEntry> entries) {
                                 adapter.updateData(entries);
                             }
-                        },
-                        requireContext()
-                );
+                        }, requireContext());
     }
 }

@@ -41,16 +41,11 @@ public class SoundEffectManager {
         soundPool.stop(streamId);
     }
 
-    public float getVolume() {
-       return volume;
-    }
-
-    public int getVolumeLevel(){
-        return (int) (getVolume() * 100);
-    }
-
-    public void setVolume(float volume) {
-        this.volume = Math.max(0f, Math.min(1f, volume));
+    public void stopAllSoundEffects() {
+        for (int soundId : soundIds) {
+            soundPool.stop(soundId);
+        }
+        soundIds.clear();
     }
 
     public void onDestroy() {
@@ -66,18 +61,23 @@ public class SoundEffectManager {
         soundPool.autoResume();
     }
 
-    public void stopAllSoundEffects() {
-        for (int soundId : soundIds) {
-            soundPool.stop(soundId);
-        }
-        soundIds.clear();
-    }
-
     public void pauseSoundEffect(int soundStreamId) {
         soundPool.pause(soundStreamId);
     }
 
     public void resumeSoundEffect(int soundStreamId) {
         soundPool.resume(soundStreamId);
+    }
+
+    public float getVolume() {
+        return volume;
+    }
+
+    public int getVolumeLevel(){
+        return (int) (getVolume() * 100);
+    }
+
+    public void setVolume(float volume) {
+        this.volume = Math.max(0f, Math.min(1f, volume));
     }
 }

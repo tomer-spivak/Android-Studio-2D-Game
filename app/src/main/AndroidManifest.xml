@@ -19,7 +19,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/logo"
         android:roundIcon="@drawable/logo"
-        android:label="@string/app_name"
+        android:label="Towerlands"
 
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidStudio2DGame"
@@ -31,33 +31,33 @@
             android:name=".projectManagement.MusicService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
+
+
+
+
         <activity
-
             android:name=".graphics.IntermediateActivity"
-            android:exported="true" >
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Base.Theme.AndroidStudio2DGame" />
 
-
-
-
+        <activity
+            android:name=".graphics.HomeActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Base.Theme.AndroidStudio2DGame">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
+
         <activity
             android:name=".graphics.GameActivity"
             android:exported="true"
             android:screenOrientation="landscape"
-            android:theme="@style/Base.Theme.AndroidStudio2DGame">
-        </activity>
-        <activity
+            android:theme="@style/Base.Theme.AndroidStudio2DGame" />
 
-            android:name=".graphics.HomeActivity"
-            android:exported="true"
-            android:theme="@style/Base.Theme.AndroidStudio2DGame">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
-        </activity>
     </application>
 
 </manifest>

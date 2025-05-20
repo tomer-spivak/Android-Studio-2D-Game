@@ -37,7 +37,6 @@ public class TouchManager {
             return true;
         }
 
-
         @Override
         public boolean onScroll(MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
             listener.onScroll(-distanceX, -distanceY);

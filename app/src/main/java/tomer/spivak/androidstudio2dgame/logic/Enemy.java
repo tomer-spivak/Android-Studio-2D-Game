@@ -106,24 +106,43 @@ public class Enemy extends ModelObject {
         super.takeDamage(damage);
         if(health > 0){
             inTookDamageAnimation = true;
-            stateBeforeHurt = getEnemyState();
+            if (getEnemyState() != EnemyState.HURT)
+                stateBeforeHurt = getEnemyState();
             state = EnemyState.HURT;
             attackAnimationRunning = false;
             soundEffects.pauseSoundEffect(soundStreamId);
         }
     }
 
-    public int getReward() {
-        return reward;
-    }
-
-    public List<Position> getPath() {
-        return path;
+    @Override
+    public Object toMap() {
+        Map enemyData = (Map) super.toMap();
+        enemyData.put("type", "monster");
+        enemyData.put("currentDirection", currentDirection.name());
+        enemyData.put("state",   state.name());
+        enemyData.put("currentTargetIndex", currentTargetIndex);
+        enemyData.put("timeSinceLastAttack", timeSinceLastAttack);
+        enemyData.put("timeSinceLastMove",   timeSinceLastMove);
+        enemyData.put("attackAnimationRunning", attackAnimationRunning);
+        enemyData.put("attackAnimationElapsedTime", attackAnimationElapsedTime);
+        enemyData.put("timeSinceTookDamage", timeSinceTookDamage);
+        enemyData.put("inTookDamageAnimation", inTookDamageAnimation);
+        enemyData.put("stateBeforeHurt", stateBeforeHurt.name());
+        Log.d("targetcell", String.valueOf(targetCell==null));
+        if(targetCell!=null)
+            enemyData.put("targetCellPos", targetCell.getPosition().toMap());
+        return enemyData;
     }
 
     public void setPath(List<Position> path) {
         this.path = path;
         this.currentTargetIndex = 0;
+    }
+
+    public void setState(EnemyState enemyState) {
+        this.state = enemyState;
+        if(enemyState == EnemyState.ATTACKING1 || enemyState == EnemyState.ATTACKING2 || enemyState == EnemyState.ATTACKING3 || enemyState == EnemyState.ATTACKING4)
+            attackAnimationRunning = true;
     }
 
     public float getTimeSinceLastMove() {
@@ -149,6 +168,7 @@ public class Enemy extends ModelObject {
     public Direction getCurrentDirection() {
         return currentDirection;
     }
+
     public void setCurrentDirection(Direction currentDirection) {
         this.currentDirection = currentDirection;
     }
@@ -159,13 +179,6 @@ public class Enemy extends ModelObject {
 
     public EnemyState getEnemyState() {
         return state;
-    }
-
-    public void setState(EnemyState enemyState) {
-        this.state = enemyState;
-        if(enemyState == EnemyState.ATTACKING1 || enemyState == EnemyState.ATTACKING2 || enemyState == EnemyState.ATTACKING3 ||
-                enemyState == EnemyState.ATTACKING4)
-            attackAnimationRunning = true;
     }
 
     public void setAttackAnimationElapsedTime(long attackAnimationElapsedTime) {
@@ -192,23 +205,11 @@ public class Enemy extends ModelObject {
         this.targetCell = cell;
     }
 
-    @Override
-    public Object toMap() {
-        Map enemyData = (Map) super.toMap();
-        enemyData.put("type", "monster");
-        enemyData.put("currentDirection", currentDirection.name());
-        enemyData.put("state",   state.name());
-        enemyData.put("currentTargetIndex", currentTargetIndex);
-        enemyData.put("timeSinceLastAttack", timeSinceLastAttack);
-        enemyData.put("timeSinceLastMove",   timeSinceLastMove);
-        enemyData.put("attackAnimationRunning", attackAnimationRunning);
-        enemyData.put("attackAnimationElapsedTime", attackAnimationElapsedTime);
-        enemyData.put("timeSinceTookDamage", timeSinceTookDamage);
-        enemyData.put("inTookDamageAnimation", inTookDamageAnimation);
-        enemyData.put("stateBeforeHurt", stateBeforeHurt.name());
-        Log.d("targetcell", String.valueOf(targetCell==null));
-        if(targetCell!=null)
-            enemyData.put("targetCellPos", targetCell.getPosition().toMap());
-        return enemyData;
+    public int getReward() {
+        return reward;
+    }
+
+    public List<Position> getPath() {
+        return path;
     }
 }

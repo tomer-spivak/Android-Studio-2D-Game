@@ -44,7 +44,7 @@ public class IntermediateActivity extends AppCompatActivity {
         setContentView(R.layout.activity_intermediate);
 
         context = this;
-        databaseRepository = DatabaseRepository.getInstance(context);
+        databaseRepository = new DatabaseRepository(context);
         navigationView = findViewById(R.id.navigation_view);
         drawerLayout = findViewById(R.id.drawer_layout);
         MaterialToolbar tbMain = findViewById(R.id.tbMain);
@@ -69,8 +69,7 @@ public class IntermediateActivity extends AppCompatActivity {
         TextView tvUsername = navigationView.getHeaderView(0).findViewById(R.id.header_username);
         ImageView ivProfile = navigationView.getHeaderView(0).findViewById(R.id.header_image);
 
-        databaseRepository.reloadUser(tvUsername, ivProfile, context);
-
+        databaseRepository.setProfileImage(tvUsername, ivProfile, context);
 
         replaceFragment(new RulesFragment(), false);
 

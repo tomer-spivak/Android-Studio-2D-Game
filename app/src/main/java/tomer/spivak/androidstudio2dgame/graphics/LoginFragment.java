@@ -41,27 +41,27 @@ import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 public class LoginFragment extends Fragment {
     private DatabaseRepository databaseRepository;
     private Button btnGuestLogin;
-    private final ActivityResultLauncher<Intent> googleSignInLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                        databaseRepository.handleGoogleSignInResult(result.getData(), new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                btnGuestLogin.setVisibility(View.VISIBLE);
-                            }
-                        }, getContext());
-                    }
-                }
-            });
-
+    private  ActivityResultLauncher<Intent> googleSignInLauncher;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
 
-        databaseRepository = DatabaseRepository.getInstance(getContext());
+        googleSignInLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    databaseRepository.handleGoogleSignInResult(result.getData(), new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            btnGuestLogin.setVisibility(View.VISIBLE);
+                        }
+                    }, getContext());
+                }
+            }
+        });
+
+        databaseRepository = new DatabaseRepository(getContext());
 
         Button btnLogin = view.findViewById(R.id.btnLogin);
         Button btnGoogleLogin = view.findViewById(R.id.btnGoogleLogin);
@@ -78,8 +78,8 @@ public class LoginFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String email = ((EditText)view.findViewById(R.id.etUsername)).getText().toString().trim();
-                String pass = ((EditText)(view.findViewById(R.id.etPassword))).getText().toString().trim();
+                String email = etEmail.getText().toString().trim();
+                String pass = etPassword.getText().toString().trim();
                 boolean isValid = validateEmail(email, tvEmailError) && validatePassword(pass, tvPasswordError);
                 btnLogin.setEnabled(isValid);
             }
@@ -168,8 +168,7 @@ public class LoginFragment extends Fragment {
                     btnGuestLogin.setVisibility(View.VISIBLE);
                     return;
                 }
-                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken(requireContext()
-                                .getString(R.string.default_web_client_id)).requestEmail().build();
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken(requireContext().getString(R.string.default_web_client_id)).requestEmail().build();
                 GoogleSignInClient client = GoogleSignIn.getClient(requireContext(), gso);
                 client.signOut();
                 Intent signInIntent = client.getSignInIntent();

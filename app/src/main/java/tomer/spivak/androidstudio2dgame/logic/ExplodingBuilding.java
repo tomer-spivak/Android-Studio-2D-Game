@@ -11,5 +11,4 @@ public class ExplodingBuilding extends Building {
     public float getDamage() {
         return damage;
     }
-
 }

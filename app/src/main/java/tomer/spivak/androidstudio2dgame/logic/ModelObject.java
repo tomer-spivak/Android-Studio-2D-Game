@@ -31,6 +31,13 @@ public abstract class ModelObject {
         soundEffects.stopSound(soundStreamId);
     }
 
+    public Object toMap(){
+        Map<String, Object> modelObjectData = new HashMap<>();
+        modelObjectData.put("type", "modelObject");
+        modelObjectData.put("health", health);
+        return modelObjectData;
+    }
+
     public void setSoundStreamId(int soundStreamId) {
         this.soundStreamId = soundStreamId;
     }
@@ -63,12 +70,7 @@ public abstract class ModelObject {
         return type;
     }
 
-    public Object toMap(){
-        Map<String, Object> modelObjectData = new HashMap<>();
-        modelObjectData.put("type", "modelObject");
-        modelObjectData.put("health", health);
-        return modelObjectData;
-    }
+
 
     @NonNull
     @Override

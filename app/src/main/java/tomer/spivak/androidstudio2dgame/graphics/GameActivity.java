@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -56,7 +55,7 @@ import tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager;
 import tomer.spivak.androidstudio2dgame.projectManagement.GameViewModel;
 import tomer.spivak.androidstudio2dgame.logic.GameState;
 
-public class GameActivity extends AppCompatActivity implements GameEventListener {
+public class GameActivity extends AppCompatActivity implements GameEventListener, BuildingsRecyclerViewAdapter.OnBuildingClickListener {
     private Context context;
 
     private GameView gameView;
@@ -65,9 +64,11 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
 
     private SoundEffectManager soundEffectsManager;
 
-    private  Button btnOpenMenu, btnStartGame, btnSkipRound;
+    private Button btnOpenMenu;
+    private Button btnStartGame;
+    private Button btnSkipRound;
 
-    private  CardView cvSelectBuildingMenu;
+    private CardView cvSelectBuildingMenu;
 
     private DatabaseRepository databaseRepository;
 
@@ -80,7 +81,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
 
     private Intent musicIntent;
     private ServiceConnection serviceConnection;
-    private MusicService musicService;      // get from the connection
+    private MusicService musicService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,7 +111,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
         gameView = new GameView(context, boardSize, this);
         gameLayout.addView(gameView);
 
-        databaseRepository = DatabaseRepository.getInstance(context);
+        databaseRepository = new DatabaseRepository(context);
 
         //init card view
         int[] buildingImagesRes = { R.drawable.obelisk, R.drawable.lightning_tower, R.drawable.exploding_tower};
@@ -146,7 +147,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                     if (shnuzesObj != null)
                         shnuzes = shnuzesObj.intValue();
                     boolean dayTime = Boolean.TRUE.equals(data.get("Is Day Time"));
-                    Log.d("fuck", "shit: " + difficulty);
                     //init the board in the model
                     viewModel.initModelBoardWithDataFromDataBase(soundEffectsManager, boardData, boardSize, difficulty, currentRound, shnuzes, timeSinceStart, dayTime);
                     //loading finish
@@ -160,7 +160,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                             1, -1, 0L, true);
                     Toast.makeText(context, "Failed to load game: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     //loading finish
-                    Log.d("fuck", "shit: " + " med");
                     dialogLoadingBoard.dismiss();
                 }
             });
@@ -173,9 +172,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                     1, -1, 0L, true);
             //loading finish
             dialogLoadingBoard.dismiss();
-            Log.d("fuck", "shit: " + difficultyLevel);
         }
-        Log.d("fuck", "shit: ");
 
         //start observing changes in model
         viewModel.getGameState().observe(this, new Observer<GameState>() {
@@ -195,11 +192,69 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                 }
                 //update the game view (things related to the current state of the game - not the board)
                 gameView.updateFromGameState(gameState);
-                Log.d("health", "diff: " + gameState.getDifficulty());
 
                 //check for game end
                 if(gameState.getGameStatus() != GameStatus.PLAYING){
-                    triggerGameEnd(gameState.getGameStatus() == GameStatus.WON);
+                    boolean userWon = gameState.getGameStatus() == GameStatus.WON;
+                    soundEffectsManager.stopAllSoundEffects();
+                    gameView.stopGameLoop();
+                    skipAutoSave = true;
+                    //if not online, dont try to save at all
+                    if (isOnline(context)) {
+                        int layout;
+                        if (userWon)
+                            layout = R.layout.alert_dialog_won;
+                        else
+                            layout = R.layout.alert_dialog_defeat;
+
+                        View view = LayoutInflater.from(context).inflate(layout, null);
+
+                        view.findViewById(R.id.tvMessage).setVisibility(View.GONE);
+                        view.findViewById(R.id.btnMenu).setVisibility(View.GONE);
+                        view.findViewById(R.id.btnExit).setVisibility(View.GONE);
+
+                        AlertDialog alertDialog = new AlertDialog.Builder(context).setView(view).setCancelable(false).create();
+                        alertDialog.show();
+
+                        databaseRepository.logMaxRound(viewModel.getRound(), context);
+                        if (userWon) {
+                            databaseRepository.incrementVictories(context);
+                        }
+
+                        Handler handler = new Handler(Looper.getMainLooper());
+                        Runnable fallback = new Runnable() {
+                            @Override
+                            public void run() {
+                                if (alertDialog.isShowing()) {
+                                    if (!isFinishing() && !isDestroyed() && alertDialog.isShowing()) {
+                                        alertDialog.dismiss();
+                                        showEndGameDialog(userWon);
+                                        databaseRepository.removeBoard(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+
+                                            }
+                                        }, context);
+                                    }
+                                }
+                            }
+                        };
+                        handler.postDelayed(fallback, 5_000);
+
+                        databaseRepository.removeBoard(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                handler.removeCallbacks(fallback);
+                                if (alertDialog.isShowing()) {
+                                    alertDialog.dismiss();
+                                    showEndGameDialog(userWon);
+                                }
+                            }
+                        }, context);
+
+                    } else {
+                        showEndGameDialog(userWon);
+                    }
                 }
             }
         });
@@ -261,6 +316,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                 }
             }
         });
+
         btnOpenMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -360,7 +416,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                 Button btnDiscardSave = dialogView.findViewById(R.id.dialog_exit_without_saving);
                 Button btnSave = dialogView.findViewById(R.id.dialog_exit_with_saving);
 
-
                 btnCancel.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -395,8 +450,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                         alertDialog.dismiss();
                         GameState gameState = viewModel.getGameState().getValue();
                         if (gameState != null) {
-                            databaseRepository.saveBoard(
-                                    gameState,
+                            databaseRepository.saveBoard(gameState,
                                     new OnCompleteListener<Void>() {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
@@ -420,71 +474,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
             }
         };
 
-        //assigns the callback
         getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
-    }
-
-    private void triggerGameEnd(boolean userWon) {
-        soundEffectsManager.stopAllSoundEffects();
-        gameView.stopGameLoop();
-        skipAutoSave = true;
-
-        //if not online, dont try to save at all
-        if (!isOnline(context)) {
-            showEndGameDialog(userWon);
-            return;
-        }
-
-        int layout;
-        if (userWon)
-            layout = R.layout.alert_dialog_won;
-        else
-            layout = R.layout.alert_dialog_defeat;
-
-        View view = LayoutInflater.from(this).inflate(layout, null);
-
-        view.findViewById(R.id.tvMessage).setVisibility(View.GONE);
-        view.findViewById(R.id.btnMenu).setVisibility(View.GONE);
-        view.findViewById(R.id.btnExit).setVisibility(View.GONE);
-
-        AlertDialog alertDialog = new AlertDialog.Builder(this).setView(view).setCancelable(false).create();
-        alertDialog.show();
-
-        databaseRepository.logMaxRound(viewModel.getRound(), context);
-        if (userWon) {
-            databaseRepository.incrementVictories(context);
-        }
-
-        Handler handler = new Handler(Looper.getMainLooper());
-        Runnable fallback = new Runnable() {
-            @Override
-            public void run() {
-                if (alertDialog.isShowing()) {
-                    if (!isFinishing() && !isDestroyed() && alertDialog.isShowing()) {
-                        alertDialog.dismiss();
-                        showEndGameDialog(userWon);
-                        databaseRepository.removeBoard(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-
-                            }
-                        }, context);
-                    }
-                }
-            }
-        };
-        handler.postDelayed(fallback, 5_000);
-
-        databaseRepository.removeBoard(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                handler.removeCallbacks(fallback);
-                if (alertDialog.isShowing()) {
-                    alertDialog.dismiss();
-                    showEndGameDialog(userWon);
-                }
-            }
-        }, context);
     }
 
     private void showEndGameDialog(boolean userWon) {
@@ -515,10 +505,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
             }
         });
         alertDialog.show();
-    }
-
-    public void closeBuildingMenu() {
-        cvSelectBuildingMenu.setVisibility(View.GONE);
     }
 
     @Override
@@ -591,7 +577,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
             musicService = null;
         }
 
-        // now ask the Service to stop itself
         stopService(musicIntent);
 
 
@@ -612,9 +597,19 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
         viewModel.selectBuilding(buildingType);
     }
 
+    @Override
+    public void onCloseBuildingMenu() {
+        cvSelectBuildingMenu.setVisibility(View.GONE);
+    }
+
     public MusicService getMusicService() {
         return musicService;
     }
+
+    public SoundEffectManager getSoundEffectsManager() {
+        return soundEffectsManager;
+    }
+
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -631,9 +626,5 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                 musicService.resumeMusic();
             }
         }
-    }
-
-    public SoundEffectManager getSoundEffectsManager() {
-        return soundEffectsManager;
     }
 }

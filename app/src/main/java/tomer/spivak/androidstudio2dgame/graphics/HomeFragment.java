@@ -10,7 +10,6 @@ import android.view.ViewGroup;
 
 import tomer.spivak.androidstudio2dgame.R;
 
-
 public class HomeFragment extends Fragment {
 
     @Override

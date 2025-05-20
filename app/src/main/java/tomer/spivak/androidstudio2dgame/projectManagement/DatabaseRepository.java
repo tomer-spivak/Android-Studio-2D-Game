@@ -58,20 +58,12 @@ import tomer.spivak.androidstudio2dgame.logic.GameState;
 
 public class DatabaseRepository {
     private final FirebaseFirestore db;
-    private static DatabaseRepository instance;
     private final FirebaseAuth mAuth;
 
-    private DatabaseRepository(Context context){
+    public DatabaseRepository(Context context){
         FirebaseApp.initializeApp(context);
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
-    }
-
-    public static synchronized DatabaseRepository getInstance(Context context) {
-        if (instance == null) {
-            instance = new DatabaseRepository(context);
-        }
-        return instance;
     }
 
     public void saveBoard(GameState gameState, OnCompleteListener<Void> onCompleteListener, Context context) {
@@ -115,7 +107,7 @@ public class DatabaseRepository {
                         .addOnCompleteListener(onCompleteListener);
             }
         });
-}
+    }
 
     public void loadCurrentGame(OnSuccessListener<Map<String,Object>> onSuccess, OnFailureListener onFailure) {
         FirebaseUser user = getUserInstance();
@@ -139,7 +131,6 @@ public class DatabaseRepository {
                                         result.put("Current Round",        metaSnapshot.getLong("Current Round"));
                                         result.put("Shnuzes",              metaSnapshot.getLong("Shnuzes"));
                                         result.put("Is Day Time",          metaSnapshot.getBoolean("Is Day Time"));
-                                        Log.d("fuck", "mr matoz: " + result.get("Difficulty Level"));
                                         onSuccess.onSuccess(result);
                                     }
                                 }).addOnFailureListener(onFailure);
@@ -301,7 +292,7 @@ public class DatabaseRepository {
 
     public void signUpWithEmailPassword(String email, String password, String username, Context context, Uri uri, ProgressBar progressBar) {
         if(!isOnline(context)){
-            Toast.makeText(context, "You have no internet connection. Continue as guest.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "You have no internet connection. Continue as a guest.", Toast.LENGTH_LONG).show();
             return;
         }
         mAuth.createUserWithEmailAndPassword(email, password)
@@ -310,7 +301,7 @@ public class DatabaseRepository {
                     public void onSuccess(AuthResult authResult) {
                         FirebaseUser newUser = authResult.getUser();
                         if (newUser == null) {
-                            Toast.makeText(context, "Failed to sign up. Continue as guest.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "Failed to sign up. Continue as guest.", Toast.LENGTH_LONG).show();
                             return;
                         }
                         String uid = newUser.getUid();
@@ -466,7 +457,7 @@ public class DatabaseRepository {
         });
     }
 
-    public void reloadUser(TextView tvUsername, ImageView ivProfile, Context context) {
+    public void setProfileImage(TextView tvUsername, ImageView ivProfile, Context context) {
         OnCompleteListener listener = new OnCompleteListener() {
             @Override
             public void onComplete(@NonNull Task task) {
