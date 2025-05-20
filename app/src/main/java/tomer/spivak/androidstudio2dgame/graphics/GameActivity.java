@@ -60,6 +60,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
 
     private GameView gameView;
 
+
     private GameViewModel viewModel;
 
     private SoundEffectManager soundEffectsManager;
@@ -203,7 +204,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                     if (isOnline(context)) {
                         int layout;
                         if (userWon)
-                            layout = R.layout.alert_dialog_won;
+                            layout = R.layout.alert_dialog_victory;
                         else
                             layout = R.layout.alert_dialog_defeat;
 
@@ -480,7 +481,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
     private void showEndGameDialog(boolean userWon) {
         int layout;
         if(userWon)
-            layout = R.layout.alert_dialog_won;
+            layout = R.layout.alert_dialog_victory;
         else
             layout = R.layout.alert_dialog_defeat;
 

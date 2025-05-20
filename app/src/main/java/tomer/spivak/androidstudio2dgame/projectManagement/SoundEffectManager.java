@@ -7,7 +7,6 @@ import android.media.SoundPool;
 import java.util.ArrayList;
 
 import tomer.spivak.androidstudio2dgame.R;
-
 public class SoundEffectManager {
     private SoundPool soundPool;
     private final int enemyAttackSound;

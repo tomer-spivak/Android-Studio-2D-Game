@@ -1,6 +1,5 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
-
 import android.util.Log;
 
 import java.util.List;

@@ -10,7 +10,6 @@ import android.view.ScaleGestureDetector;
 
 import androidx.annotation.NonNull;
 
-
 public class TouchManager {
     private final GestureDetector gestureDetector;
     private final ScaleGestureDetector scaleGestureDetector;

@@ -26,7 +26,6 @@ import java.util.Calendar;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.projectManagement.NotificationReceiver;
 import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
-
 public class HomeActivity extends AppCompatActivity{
 
 

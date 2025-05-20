@@ -1,6 +1,5 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
-
 import java.util.*;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.BuildingState;

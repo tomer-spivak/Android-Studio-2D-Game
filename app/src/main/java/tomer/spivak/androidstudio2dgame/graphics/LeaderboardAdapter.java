@@ -13,7 +13,6 @@ import java.util.List;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.logic.LeaderboardEntry;
-
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
 
     private static final int SORT_BY_VICTORIES = 0;

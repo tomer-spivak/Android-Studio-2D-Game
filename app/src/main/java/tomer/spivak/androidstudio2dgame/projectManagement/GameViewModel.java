@@ -24,7 +24,6 @@ import tomer.spivak.androidstudio2dgame.logic.ModelObjectFactory;
 
 public class GameViewModel extends ViewModel {
     private final MutableLiveData<GameState> viewModelGameState = new MutableLiveData<>();
-
     private final MutableLiveData<List<GameObjectData>> changedDelta  = new MutableLiveData<>(new ArrayList<>());
 
     private final MutableLiveData<List<Position>> removedDelta  = new MutableLiveData<>(new ArrayList<>());

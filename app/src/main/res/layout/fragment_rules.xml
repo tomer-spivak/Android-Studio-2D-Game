@@ -11,14 +11,12 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Header -->
         <TextView
             style="@style/TitleText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="How to Play TowerLands"/>
 
-        <!-- Basics -->
         <TextView
             style="@style/SectionHeader"
             android:layout_width="match_parent"
@@ -29,9 +27,8 @@
             style="@style/BodyText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/tutorial_basics"/>
+            android:text="The game is based around designing a base that can withstand the waves of enemies which attack you"/>
 
-        <!-- Base Building -->
         <TextView
             style="@style/SectionHeader"
             android:layout_width="match_parent"
@@ -50,7 +47,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/tutorial_base_building_text" />
+                android:text="Welcome to the Base Building Tutorial! In this guide, you will learn the fundamental steps to construct and manage your base efficiently.
+        In order to start the game you need to press the button at the top left corner of the screen, and then click on the fourth icon." />
 
             <ImageView
                 android:src="@drawable/tutorial_image_one"
@@ -70,7 +68,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/tutorial_base_building_text2" />
+                android:text="after clicking, you will be greeted by an alert
+        dialog which will ask you what is the difficulty level you want to play at." />
 
             <ImageView
                 android:src="@drawable/tutorial_image_two"
@@ -89,7 +88,8 @@
                 style="@style/BodyText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/tutorial_base_building_text3" />
+                android:text="after selecting a difficulty level, you will be redirected to the game screen. In the game screen you will have to choose which buildings to build
+        (either the high durability but with no attacking power obelisk or the low durability but with high attacking power lightning tower)" />
 
             <ImageView
                 android:src="@drawable/tutorial_image_three"
@@ -107,7 +107,9 @@
                 style="@style/BodyText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/tutorial_base_building_text4" />
+                android:text="after selecting a building you need to choose where to put it on the board.
+        If you want to return to the building selection you need to press the button at the bottom right corner of the screen.
+        If you want to actually start the game, you need to press the button at top right of the screen, and then the timer will commence." />
 
             <ImageView
                 android:src="@drawable/tutorial_image_four"
@@ -126,7 +128,7 @@
                 style="@style/BodyText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/tutorial_base_building_text6" />
+                android:text="after that you will have the option of skipping to the next round. at any time if you want to pause the game you can press the button at the left top corner of the screen" />
 
             <ImageView
                 android:src="@drawable/tutorial_image_five"
@@ -144,7 +146,7 @@
                 style="@style/BodyText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/tutorial_base_building_text7" />
+                android:text="here you can change the sound settings" />
 
             <ImageView
                 android:src="@drawable/tutorial_image_six"
@@ -162,7 +164,7 @@
                 style="@style/BodyText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/tutorial_base_building_text8" />
+                android:text="when the timer hits zero, the monsters appear. If the base you built can\'t withstand the monsters, you lose." />
 
             <ImageView
                 android:src="@drawable/tutorial_image_seven"
@@ -173,7 +175,7 @@
 
         <TextView
             style="@style/BodyText"
-            android:text="@string/tutorial_base_building_text9"
+            android:text="The number of points you get is the number of round you survived. eventually, there is a stopping point, but its very hard to get there."
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="50dp" />

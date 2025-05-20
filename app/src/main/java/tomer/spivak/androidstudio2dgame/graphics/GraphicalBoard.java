@@ -11,14 +11,12 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Region;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.CellState;
-
 public class GraphicalBoard {
     private final PointF offset = new PointF(0,0);
     private float scale = 1f;

@@ -1,8 +1,6 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
 
-import android.util.Log;
-
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus;
 

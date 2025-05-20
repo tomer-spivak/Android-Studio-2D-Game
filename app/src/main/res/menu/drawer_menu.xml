@@ -2,7 +2,6 @@
     <menu xmlns:android="http://schemas.android.com/apk/res/android"
     >
     <group android:id="@+id/group_1">
-        <!-- First group of items -->
         <item
             android:id="@+id/nav_Rules"
             android:icon="@drawable/baseline_description_24"
@@ -24,7 +23,6 @@
             />
     </group>
     <group android:id="@+id/group_3">
-        <!-- Second group of items -->
         <item
             android:id="@+id/go_to_game"
             android:icon="@drawable/baseline_fort_24"

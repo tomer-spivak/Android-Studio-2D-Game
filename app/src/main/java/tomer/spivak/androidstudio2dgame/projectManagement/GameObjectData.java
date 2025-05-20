@@ -1,5 +1,4 @@
 package tomer.spivak.androidstudio2dgame.projectManagement;
-
 public class GameObjectData {
     private final String type;
     private final int x;

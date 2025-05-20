@@ -2,7 +2,6 @@ package tomer.spivak.androidstudio2dgame.projectManagement;
 
 
 import android.graphics.Canvas;
-import android.util.Log;
 import android.view.SurfaceHolder;
 
 import tomer.spivak.androidstudio2dgame.graphics.GameView;

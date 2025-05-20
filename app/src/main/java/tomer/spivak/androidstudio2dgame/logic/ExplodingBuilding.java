@@ -1,5 +1,4 @@
 package tomer.spivak.androidstudio2dgame.logic;
-
 public class ExplodingBuilding extends Building {
     private final float damage;
 

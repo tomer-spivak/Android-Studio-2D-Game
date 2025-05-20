@@ -8,7 +8,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -28,7 +27,6 @@ import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.logic.GameState;
 import tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager;
 import tomer.spivak.androidstudio2dgame.projectManagement.GameLoop;
-
 public class GameView extends SurfaceView implements SurfaceHolder.Callback, TouchManager.TouchListener {
     private final GameLoop gameLoop;
     //custom view class that handles the board

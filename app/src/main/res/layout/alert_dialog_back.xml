@@ -60,5 +60,4 @@
             android:backgroundTint="@android:color/holo_blue_bright"
             android:textColor="#FFFFFFFF" />
     </LinearLayout>
-
 </LinearLayout>

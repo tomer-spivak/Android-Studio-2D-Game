@@ -25,13 +25,13 @@
             android:textSize="25sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/disclaimer_about_signing_up"
+            android:text="Remember, you must sign up before you are able to login"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#FFFFFFFF"
 
             android:textSize="25sp"
             android:textColorHint="#FFFFFF"
@@ -42,7 +42,7 @@
             android:layout_marginStart="24dp"
             android:layout_marginTop="80dp"
             android:layout_marginEnd="24dp"
-            android:hint="@string/prompt_email"
+            android:hint="Email"
             android:inputType="textEmailAddress"
             android:selectAllOnFocus="true"
             app:layout_constraintEnd_toEndOf="parent"
@@ -50,7 +50,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:textColor="@color/white"
+            android:textColor="#FFFFFFFF"
             android:textSize="17sp"
             android:id="@+id/tvEmailError"
             android:layout_width="wrap_content"
@@ -60,7 +60,7 @@
             app:layout_constraintTop_toBottomOf="@+id/etUsername" />
 
         <EditText
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#FFFFFFFF"
 
             android:textSize="25sp"
             android:textColorHint="#FFFFFF"
@@ -70,9 +70,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginEnd="24dp"
-            android:autofillHints="@string/prompt_password"
-            android:hint="@string/prompt_password"
-            android:imeActionLabel="@string/action_sign_in_short"
+            android:autofillHints="Password"
+            android:hint="Password"
+            android:imeActionLabel="Sign in"
             android:imeOptions="actionDone"
             android:inputType="textPassword"
             android:selectAllOnFocus="true"
@@ -82,7 +82,7 @@
             app:layout_constraintTop_toBottomOf="@+id/tvEmailError" />
 
         <TextView
-            android:textColor="@color/white"
+            android:textColor="#FFFFFFFF"
             android:textSize="17sp"
             android:id="@+id/tvPasswordError"
             android:layout_width="wrap_content"
@@ -103,7 +103,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="48dp"
-            android:text="@string/Log_in"
+            android:text="Login"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/etPassword"

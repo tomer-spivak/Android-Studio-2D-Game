@@ -16,7 +16,6 @@ import androidx.core.app.NotificationCompat;
 import java.util.Random;
 
 import tomer.spivak.androidstudio2dgame.R;
-
 public class MusicService extends Service {
     private MediaPlayer mediaPlayer;
     private final int[] music = {R.raw.candyland, R.raw.fade, R.raw.infectious, R.raw.invincible, R.raw.sky_high, R.raw.spectre};

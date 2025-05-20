@@ -15,7 +15,6 @@ import java.util.Calendar;
 
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.graphics.HomeActivity;
-
 public class NotificationReceiver extends BroadcastReceiver {
 
     @Override

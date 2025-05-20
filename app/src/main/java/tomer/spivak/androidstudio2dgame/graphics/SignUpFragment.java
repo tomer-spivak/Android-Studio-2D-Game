@@ -31,7 +31,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
-
 public class SignUpFragment extends Fragment {
     private DatabaseRepository repository;
     private ActivityResultLauncher<Intent> pickImageLauncher;

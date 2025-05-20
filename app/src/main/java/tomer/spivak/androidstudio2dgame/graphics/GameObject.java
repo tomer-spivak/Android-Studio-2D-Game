@@ -8,12 +8,10 @@ import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.widget.ImageView;
 
 
 import tomer.spivak.androidstudio2dgame.logic.Position;
-
 
 public class GameObject {
     private Point imagePoint;

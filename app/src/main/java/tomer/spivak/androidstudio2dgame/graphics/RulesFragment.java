@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import tomer.spivak.androidstudio2dgame.R;
-
 public class RulesFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

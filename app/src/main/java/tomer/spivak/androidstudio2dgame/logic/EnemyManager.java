@@ -1,5 +1,4 @@
 package tomer.spivak.androidstudio2dgame.logic;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;

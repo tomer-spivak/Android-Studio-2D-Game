@@ -27,8 +27,6 @@
         </FrameLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-
-
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/navigation_view"
         android:layout_gravity="start"
@@ -40,9 +38,4 @@
         android:layout_height="match_parent"
         app:menu="@menu/drawer_menu"
         app:headerLayout="@layout/nav_header"/>
-
-
-
-
-
 </androidx.drawerlayout.widget.DrawerLayout>

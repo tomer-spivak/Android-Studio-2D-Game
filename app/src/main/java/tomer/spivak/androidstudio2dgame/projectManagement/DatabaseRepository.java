@@ -1,6 +1,5 @@
 package tomer.spivak.androidstudio2dgame.projectManagement;
 
-
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -9,7 +8,6 @@ import android.net.NetworkCapabilities;
 
 import android.net.Uri;
 
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;

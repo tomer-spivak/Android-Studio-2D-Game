@@ -26,7 +26,6 @@ import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 
 public class LeaderboardFragment extends Fragment {
     private LeaderboardAdapter adapter;
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_leaderboard, container, false);

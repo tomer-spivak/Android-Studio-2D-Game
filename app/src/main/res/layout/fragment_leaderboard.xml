@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="#4e79f0"
     android:padding="16dp">
-
     <TextView
         android:id="@+id/leaderboardTitle"
         android:layout_width="0dp"

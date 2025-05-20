@@ -29,7 +29,6 @@ import com.google.android.material.navigation.NavigationView;
 import tomer.spivak.androidstudio2dgame.R;
 import tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository;
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
-
 public class IntermediateActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;

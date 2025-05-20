@@ -116,7 +116,7 @@ public class LoginFragment extends Fragment {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 LayoutInflater inflater = LayoutInflater.from(getContext());
-                                View layout = inflater.inflate(R.layout.custom_toast, null);
+                                View layout = inflater.inflate(R.layout.custom_toast_login_failure, null);
                                 TextView toastText = layout.findViewById(R.id.toast_text);
                                 toastText.setText("Couldn't Log in: " + e.getMessage());
                                 Toast toast = new Toast(getContext());
@@ -205,5 +205,4 @@ public class LoginFragment extends Fragment {
         tvEmailError.setText("");
         return true;
     }
-
 }

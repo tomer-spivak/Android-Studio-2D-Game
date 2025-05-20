@@ -1,15 +1,11 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
-import android.telephony.CellIdentityCdma;
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.CellState;
-
 public class Cell {
     private final Position position;
     private ModelObject object;

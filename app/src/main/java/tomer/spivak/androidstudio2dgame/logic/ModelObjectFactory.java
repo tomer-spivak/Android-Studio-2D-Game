@@ -1,7 +1,6 @@
 package tomer.spivak.androidstudio2dgame.logic;
 
 import tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel;
-
 public class ModelObjectFactory {
     public static ModelObject create(String type, Position position, DifficultyLevel difficulty) {
         switch (type) {
