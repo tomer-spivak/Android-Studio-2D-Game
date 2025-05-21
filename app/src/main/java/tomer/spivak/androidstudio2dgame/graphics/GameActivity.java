@@ -353,7 +353,7 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
                 boolean oldGameIsOnGoing = gameIsOnGoing;
                 gameIsOnGoing = false;
                 LayoutInflater inflater = LayoutInflater.from(context);
-                View dialogView = inflater.inflate(R.layout.dialog_pause, null);
+                View dialogView = inflater.inflate(R.layout.alert_dialog_pause, null);
                 SeekBar musicVolumeSeekBar = dialogView.findViewById(R.id.volumeSeekBar);
                 musicVolumeSeekBar.setProgress(volumeLevel);
                 SeekBar soundEffectsVolumeSeekBar = dialogView.findViewById(R.id.soundEffectsSeekBar);
