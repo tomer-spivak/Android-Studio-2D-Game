@@ -1,0 +1,67 @@
+@startuml
+
+'=== Class Stubs ===
+class tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager
+class tomer.spivak.androidstudio2dgame.projectManagement.NotificationReceiver
+class tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository
+class tomer.spivak.androidstudio2dgame.graphics.BuildingsRecyclerViewAdapter
+class tomer.spivak.androidstudio2dgame.graphics.GameView
+class tomer.spivak.androidstudio2dgame.graphics.HomeActivity
+class tomer.spivak.androidstudio2dgame.graphics.GraphicalBoard
+class tomer.spivak.androidstudio2dgame.graphics.RulesFragment
+class tomer.spivak.androidstudio2dgame.graphics.LoginFragment
+class tomer.spivak.androidstudio2dgame.graphics.GameActivity
+class tomer.spivak.androidstudio2dgame.logic.Building
+class tomer.spivak.androidstudio2dgame.projectManagement.MusicService
+class tomer.spivak.androidstudio2dgame.projectManagement.GameViewModel
+class tomer.spivak.androidstudio2dgame.projectManagement.GameLoop
+class tomer.spivak.androidstudio2dgame.graphics.LeaderboardAdapter
+class tomer.spivak.androidstudio2dgame.graphics.SignUpFragment
+class tomer.spivak.androidstudio2dgame.graphics.HomeFragment
+class tomer.spivak.androidstudio2dgame.logic.EnemyManager
+class tomer.spivak.androidstudio2dgame.projectManagement.GameObjectData
+class tomer.spivak.androidstudio2dgame.logic.LeaderboardEntry
+class tomer.spivak.androidstudio2dgame.graphics.TouchManager
+class tomer.spivak.androidstudio2dgame.graphics.AboutFragment
+class tomer.spivak.androidstudio2dgame.logic.ModelGameManager
+class tomer.spivak.androidstudio2dgame.logic.Enemy
+class tomer.spivak.androidstudio2dgame.logic.ModelObject
+class tomer.spivak.androidstudio2dgame.logic.Position
+class tomer.spivak.androidstudio2dgame.logic.Cell
+class tomer.spivak.androidstudio2dgame.logic.Turret
+class tomer.spivak.androidstudio2dgame.logic.GameState
+class tomer.spivak.androidstudio2dgame.graphics.IntermediateActivity
+class tomer.spivak.androidstudio2dgame.graphics.LeaderboardFragment
+class tomer.spivak.androidstudio2dgame.graphics.GameObject
+class tomer.spivak.androidstudio2dgame.logic.ExplodingBuilding
+class tomer.spivak.androidstudio2dgame.logic.ModelObjectFactory
+
+'=== Relationships ===
+
+ tomer.spivak.androidstudio2dgame.logic.ModelObject <|-- tomer.spivak.androidstudio2dgame.logic.Building
+ tomer.spivak.androidstudio2dgame.graphics.GameView *-- tomer.spivak.androidstudio2dgame.projectManagement.GameLoop
+ tomer.spivak.androidstudio2dgame.graphics.GameView *-- tomer.spivak.androidstudio2dgame.graphics.GraphicalBoard
+ tomer.spivak.androidstudio2dgame.graphics.GameView *-- tomer.spivak.androidstudio2dgame.graphics.TouchManager
+ tomer.spivak.androidstudio2dgame.graphics.LoginFragment o-- tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository
+ tomer.spivak.androidstudio2dgame.graphics.GameActivity *-- tomer.spivak.androidstudio2dgame.graphics.GameView
+ tomer.spivak.androidstudio2dgame.graphics.GameActivity *-- tomer.spivak.androidstudio2dgame.projectManagement.GameViewModel
+ tomer.spivak.androidstudio2dgame.graphics.GameActivity *-- tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager
+ tomer.spivak.androidstudio2dgame.graphics.GameActivity *-- tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository
+ tomer.spivak.androidstudio2dgame.graphics.GameActivity *-- tomer.spivak.androidstudio2dgame.projectManagement.MusicService
+ tomer.spivak.androidstudio2dgame.projectManagement.GameLoop *-- tomer.spivak.androidstudio2dgame.graphics.GameView
+ tomer.spivak.androidstudio2dgame.graphics.SignUpFragment o-- tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository
+ tomer.spivak.androidstudio2dgame.logic.EnemyManager o-- tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager
+ tomer.spivak.androidstudio2dgame.logic.ModelGameManager o-- tomer.spivak.androidstudio2dgame.logic.GameState
+ tomer.spivak.androidstudio2dgame.logic.ModelGameManager o-- tomer.spivak.androidstudio2dgame.logic.EnemyManager
+ tomer.spivak.androidstudio2dgame.logic.ModelGameManager o-- tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager
+ tomer.spivak.androidstudio2dgame.logic.Cell *-- tomer.spivak.androidstudio2dgame.logic.Position
+ tomer.spivak.androidstudio2dgame.logic.Cell *-- tomer.spivak.androidstudio2dgame.logic.ModelObject
+ tomer.spivak.androidstudio2dgame.logic.Turret o-- tomer.spivak.androidstudio2dgame.logic.Position
+ tomer.spivak.androidstudio2dgame.logic.Turret o-- tomer.spivak.androidstudio2dgame.logic.Enemy
+ tomer.spivak.androidstudio2dgame.logic.Enemy o-- tomer.spivak.androidstudio2dgame.logic.Position
+ tomer.spivak.androidstudio2dgame.logic.Enemy o-- tomer.spivak.androidstudio2dgame.logic.Cell
+ tomer.spivak.androidstudio2dgame.logic.GameState *-- tomer.spivak.androidstudio2dgame.logic.Cell
+ tomer.spivak.androidstudio2dgame.graphics.IntermediateActivity o-- tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository
+ tomer.spivak.androidstudio2dgame.graphics.LeaderboardFragment *-- tomer.spivak.androidstudio2dgame.graphics.LeaderboardAdapter
+
+@enduml

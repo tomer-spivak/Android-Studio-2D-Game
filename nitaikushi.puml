@@ -1,0 +1,702 @@
+@startuml
+class tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager {
+- SoundPool soundPool
+- int enemyAttackSound
+- int turretAttackSound
+- ArrayList<Integer> soundIds
+- float volume
++ int playEnemyAttackSound()
++ int playTurretAttackSound()
++ void stopSound(int)
++ void stopAllSoundEffects()
++ void onDestroy()
++ void pauseSoundEffects()
++ void resumeSoundEffects()
++ void pauseSoundEffect(int)
++ void resumeSoundEffect(int)
++ float getVolume()
++ int getVolumeLevel()
++ void setVolume(float)
+}
+
+
+class tomer.spivak.androidstudio2dgame.projectManagement.NotificationReceiver {
++ void onReceive(Context,Intent)
++ {static} void createChannel(Context)
+}
+
+enum tomer.spivak.androidstudio2dgame.logic.modelEnums.EnemyState {
++  IDLE
++  HURT
++  ATTACKING1
++  ATTACKING2
++  ATTACKING3
++  ATTACKING4
+}
+
+enum tomer.spivak.androidstudio2dgame.logic.modelEnums.CellState {
++  NORMAL
++  BURNT
++  ENEMYDEATH1
++  ENEMYDEATH2
++  ENEMYDEATH3
++  EXPLODE
++  SPAWN
+}
+
+class tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository {
+- FirebaseFirestore db
+- FirebaseAuth mAuth
++ void saveBoard(GameState,OnCompleteListener<Void>,Context)
++ void loadCurrentGame(OnSuccessListener<Map<String,Object>>,OnFailureListener)
++ void checkIfTheresAGame(OnSuccessListener<Boolean>,Context)
++ void incrementVictories(Context)
++ void removeBoard(OnCompleteListener<Void>,Context)
++ void logMaxRound(int,Context)
++ void fetchLeaderboardFromDatabase(OnSuccessListener<List<LeaderboardEntry>>,Context)
++ void incrementEnemiesDefeated(int,Context)
++ FirebaseUser getUserInstance()
++ void incrementGamesPlayed(Context)
++ {static} boolean isOnline(Context)
++ boolean isGuest(Context)
++ void signUpWithEmailPassword(String,String,String,Context,Uri,ProgressBar)
++ void loginWithEmailAndPassword(String,String,OnFailureListener,Context)
++ void forgotPassword(String,Context)
++ void handleGoogleSignInResult(Intent,OnFailureListener,Context)
+- void initLeaderboard(String)
++ void setProfileImage(TextView,ImageView,Context)
++ void signOut(Context)
+}
+
+
+class tomer.spivak.androidstudio2dgame.graphics.BuildingsRecyclerViewAdapter {
+- Context context
+- int[] buildingImagesRes
+- View selectedBuilding
+- OnBuildingClickListener listener
++ int getItemCount()
+}
+
+
+class tomer.spivak.androidstudio2dgame.graphics.BuildingsRecyclerViewAdapter$BuildingViewHolder {
+~ ImageView imageView
+~ TextView tvName
+~ TextView tvPrice
++ void onClick(View)
+}
+
+
+interface tomer.spivak.androidstudio2dgame.graphics.BuildingsRecyclerViewAdapter$OnBuildingClickListener {
+~ void onBuildingSelected(String)
+~ void onCloseBuildingMenu()
+}
+
+enum tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel {
++  EASY
++  MEDIUM
++  HARD
+}
+
+class tomer.spivak.androidstudio2dgame.graphics.GameView {
+- GameLoop gameLoop
+- GraphicalBoard board
+- TouchManager touchManager
+- Bitmap morningBackground
+- Bitmap nightBackground
+- Bitmap backgroundBitmap
+- long timeTillNextRound
+- int shnuzes
+- int roundsLeft
+- Context context
+- ArrayList<GameObject> gameObjectListDrawOrder
+- GameEventListener listener
+- Paint healthBarPaint
+- Paint healthBarBackgroundPaint
+- Paint hudPaint
+- android.graphics.Rect hudBounds
+- Paint backgroundPaint
++ void surfaceCreated(SurfaceHolder)
++ void surfaceChanged(SurfaceHolder,int,int,int)
++ void surfaceDestroyed(SurfaceHolder)
++ boolean onTouchEvent(MotionEvent)
++ boolean performClick()
++ void onScale(float,float,float)
++ void onScroll(float,float)
++ void onBoxClick(float,float)
++ void draw(Canvas)
++ void applyRemoved(List<Position>)
++ void applyChanged(List<GameObjectData>)
++ void pauseGameLoop()
++ void stopGameLoop()
++ void resumeGameLoop(float)
++ void updateFromGameState(GameState)
+}
+
+
+interface tomer.spivak.androidstudio2dgame.projectManagement.GameEventListener {
+~ void onTick(long)
+~ void onCellClicked(int,int)
+}
+
+class tomer.spivak.androidstudio2dgame.graphics.HomeActivity {
+- void scheduleNotification(Context,int)
+- void replaceFragment(Fragment,boolean)
+}
+
+class tomer.spivak.androidstudio2dgame.graphics.GraphicalBoard {
+- PointF offset
+- float scale
+- int boardSize
+- Path[][] cellPaths
+- Point[][] cellCenters
+- Context context
+- Drawable[] originalDrawables
+- Bitmap[] originalsBitmaps
+- Bitmap[] scaledBitmaps
+- float lastScale
+- tomer.spivak.androidstudio2dgame.logic.modelEnums.CellState[][] cellStates
+- int[] screenSize
+- Region[][] cellRegions
+- void rebuildCellPathsAndRegions()
++ void updatePosition(float,float)
++ float updateScale(float,float,float)
++ void draw(Canvas)
++ Point getSelectedCell(float,float)
++ void setCellsState(tomer.spivak.androidstudio2dgame.logic.modelEnums.CellState[][])
++ Point[][] getCenterCells()
++ int getCellWidth()
++ int getCellHeight()
++ float getScale()
+}
+
+
+class tomer.spivak.androidstudio2dgame.graphics.RulesFragment {
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+}
+
+class tomer.spivak.androidstudio2dgame.graphics.LoginFragment {
+- DatabaseRepository databaseRepository
+- Button btnGuestLogin
+- ActivityResultLauncher<Intent> googleSignInLauncher
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+- boolean validatePassword(String,TextView)
+- boolean validateEmail(String,TextView)
+}
+
+
+class tomer.spivak.androidstudio2dgame.graphics.GameActivity {
+- Context context
+- GameView gameView
+- GameViewModel viewModel
+- SoundEffectManager soundEffectsManager
+- Button btnOpenMenu
+- Button btnStartGame
+- Button btnSkipRound
+- CardView cvSelectBuildingMenu
+- DatabaseRepository databaseRepository
+- boolean gameIsOnGoing
+- boolean continueGame
+- boolean skipAutoSave
+- Intent musicIntent
+- ServiceConnection serviceConnection
+- MusicService musicService
+# void onCreate(Bundle)
+- void showEndGameDialog(boolean)
+# void onStart()
+# void onResume()
+# void onPause()
+# void onStop()
+# void onDestroy()
++ void onTick(long)
++ void onCellClicked(int,int)
++ void onBuildingSelected(String)
++ void onCloseBuildingMenu()
++ MusicService getMusicService()
++ SoundEffectManager getSoundEffectsManager()
++ void onWindowFocusChanged(boolean)
+}
+
+
+class tomer.spivak.androidstudio2dgame.logic.Building {
+# BuildingState state
+- long timeSinceTookDamage
+- boolean inAnimation
++ void update(long)
++ void takeDamage(float)
++ Object toMap()
++ BuildingState getState()
++ void setState(BuildingState)
++ void setAnimationTime(long)
++ void setInAnimation(boolean)
+}
+
+
+class tomer.spivak.androidstudio2dgame.projectManagement.MusicService {
+- MediaPlayer mediaPlayer
+- int[] music
+- Random random
+- int lastSongIndex
+- float volume
++ void setVolumeLevel(float)
++ void onCreate()
++ int onStartCommand(Intent,int,int)
+- void playRandomSong()
++ void onDestroy()
++ IBinder onBind(Intent)
++ void pauseMusic()
++ void resumeMusic()
++ void stopMusic()
++ int getCurrentVolumeLevel()
+}
+
+
+class tomer.spivak.androidstudio2dgame.projectManagement.MusicService$LocalBinder {
++ MusicService getService()
+}
+
+class tomer.spivak.androidstudio2dgame.projectManagement.GameViewModel {
+- MutableLiveData<GameState> viewModelGameState
+- MutableLiveData<List<GameObjectData>> changedDelta
+- MutableLiveData<List<Position>> removedDelta
+- List<GameObjectData> lastList
+- ModelGameManager gameManager
+- MutableLiveData<Integer> enemiesDefeatedDelta
+- int lastEnemiesDefeated
+- void publishGameState()
++ void onCellClicked(int,int)
++ void tick(long)
++ void skipToNextRound()
++ boolean canStartGame()
++ void initModelBoardWithDataFromDataBase(SoundEffectManager,Map<String,Object>,int,DifficultyLevel,int,int,Long,boolean)
++ void selectBuilding(String)
++ LiveData<GameState> getGameState()
++ MutableLiveData<List<GameObjectData>> getChangedDelta()
++ MutableLiveData<List<Position>> getRemovedDelta()
++ void setSoundEffects(SoundEffectManager)
++ int getRound()
++ void setDayTime(boolean)
++ LiveData<Integer> getEnemiesDefeatedDelta()
+}
+
+
+class tomer.spivak.androidstudio2dgame.projectManagement.GameLoop {
+- {static} double MAX_UPS
+- {static} double UPS_PERIOD
+- boolean isRunning
+- SurfaceHolder surfaceHolder
+- GameView gameView
+- Thread gameThread
+- GameEventListener listener
++ void startLoop()
++ void run()
++ void stopLoop()
+}
+
+
+class tomer.spivak.androidstudio2dgame.graphics.LeaderboardAdapter {
+- {static} int SORT_BY_VICTORIES
+- {static} int SORT_BY_GAMES_PLAYED
+- {static} int SORT_BY_MAX_ROUND
+- {static} int SORT_BY_ENEMIES_DEFEATED
+- List<LeaderboardEntry> fullList
+- List<LeaderboardEntry> filteredList
+- String lastQuery
+- int currentSortField
++ void updateData(List<LeaderboardEntry>)
++ void sortByVictories()
++ void sortByGamesPlayed()
++ void sortByMaxRound()
++ void sortByEnemiesDefeated()
++ void filter(String)
+- void applySortAndFilter()
+- void insertSorted(LeaderboardEntry)
+- boolean shouldInsertBefore(LeaderboardEntry,LeaderboardEntry)
++ int getItemCount()
+}
+
+class tomer.spivak.androidstudio2dgame.graphics.SignUpFragment {
+- DatabaseRepository repository
+- ActivityResultLauncher<Intent> pickImageLauncher
+- String email
+- String password
+- String username
+- ProgressBar progressBar
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+}
+
+
+class tomer.spivak.androidstudio2dgame.graphics.HomeFragment {
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+}
+
+class tomer.spivak.androidstudio2dgame.logic.EnemyManager {
+- SoundEffectManager soundEffects
++ void spawnEnemies(GameState,int)
++ void updateEnemies(GameState,long)
++ List<Enemy> getEnemies(GameState)
++ void setSoundEffects(SoundEffectManager)
+- boolean hasAdjacentBuilding(GameState,Position)
+}
+
+
+class tomer.spivak.androidstudio2dgame.projectManagement.GameObjectData {
+- String type
+- int x
+- int y
+- String state
+- String direction
+- float healthPercentage
++ String getType()
++ int getY()
++ int getX()
++ String getDirection()
++ String getState()
++ float getHealthPercentage()
+}
+
+
+class tomer.spivak.androidstudio2dgame.logic.LeaderboardEntry {
+- int maxRound
+- String displayName
+- int gamesPlayed
+- int enemiesDefeated
+- int victories
++ int getMaxRound()
++ int getGamesPlayed()
++ int getEnemiesDefeated()
++ String getDisplayName()
++ int getVictories()
+}
+
+
+class tomer.spivak.androidstudio2dgame.graphics.TouchManager {
+- GestureDetector gestureDetector
+- ScaleGestureDetector scaleGestureDetector
+- TouchListener listener
++ boolean onTouchEvent(MotionEvent)
+}
+
+
+class tomer.spivak.androidstudio2dgame.graphics.TouchManager$GestureListener {
++ boolean onDown(MotionEvent)
++ boolean onScroll(MotionEvent,MotionEvent,float,float)
++ boolean onSingleTapUp(MotionEvent)
+}
+
+class tomer.spivak.androidstudio2dgame.graphics.TouchManager$ScaleListener {
++ boolean onScale(ScaleGestureDetector)
+}
+
+interface tomer.spivak.androidstudio2dgame.graphics.TouchManager$TouchListener {
+~ void onScale(float,float,float)
+~ void onScroll(float,float)
+~ void onBoxClick(float,float)
+}
+
+class tomer.spivak.androidstudio2dgame.graphics.AboutFragment {
+}
+
+class tomer.spivak.androidstudio2dgame.logic.ModelGameManager {
+- GameState state
+- EnemyManager enemyManager
+- SoundEffectManager soundEffects
+- String selectedBuildingType
+- boolean sunrise
++ void init(Cell[][],DifficultyLevel)
+- boolean containsMainBuilding(Cell[][])
++ void handleCellClick(int,int)
++ void update(long)
+- int getNumberOfBuildings()
++ void skipToNextRound()
++ void setSoundEffects(SoundEffectManager)
++ GameState getState()
++ void setSelectedBuildingType(String)
++ boolean canStartGame()
++ int getRound()
++ void setCurrentRound(int)
++ void setShnuzes(int)
++ void setDayTime(boolean)
+}
+
+
+enum tomer.spivak.androidstudio2dgame.logic.modelEnums.GameStatus {
++  PLAYING
++  WON
++  LOST
+}
+
+class tomer.spivak.androidstudio2dgame.logic.Enemy {
+- float movementSpeed
+- Direction currentDirection
+- EnemyState state
+- List<Position> path
+- int currentTargetIndex
+- float timeSinceLastMove
+- int reward
+- long attackAnimationElapsedTime
+- boolean attackAnimationRunning
+- Cell targetCell
+- float attackDamage
+- long attackCooldown
+- long timeSinceLastAttack
+- long timeSinceTookDamage
+- boolean inTookDamageAnimation
+- EnemyState stateBeforeHurt
++ void accumulateAttackTime(long)
++ void updateDirection(Position,Position)
++ void attemptAttack(Cell)
++ void update(long)
++ void takeDamage(float)
++ Object toMap()
++ void setPath(List<Position>)
++ void setState(EnemyState)
++ float getTimeSinceLastMove()
++ void setTimeSinceLastMove(float)
++ int getCurrentTargetIndex()
++ void setCurrentTargetIndex(int)
++ void setTimeSinceLastAttack(long)
++ Direction getCurrentDirection()
++ void setCurrentDirection(Direction)
++ float getMovementSpeed()
++ EnemyState getEnemyState()
++ void setAttackAnimationElapsedTime(long)
++ void setAttackAnimationRunning(boolean)
++ void setInTookDamageAnimation(boolean)
++ void setTimeSinceTookDamage(long)
++ void setStateBeforeHurt(EnemyState)
++ void setTargetCell(Cell)
++ int getReward()
++ List<Position> getPath()
+}
+
+
+class tomer.spivak.androidstudio2dgame.logic.Turret {
+- float attackDamage
+- float attackCooldown
+- float timeSinceLastAttack
+- ArrayList<Position> positionsToAttack
+- ArrayList<Position> removedPositions
+- ArrayList<Enemy> targets
+- long chargeTime
+- boolean isCharging
++ void update(GameState,long)
++ boolean executeAttack(List<Enemy>)
+- boolean shouldAttackPosition(Position,GameState)
++ Object toMap()
++ ArrayList<Position> getCellsToAttack()
+}
+
+
+class tomer.spivak.androidstudio2dgame.logic.GameState {
+- Cell[][] grid
+- boolean dayTime
+- long timeToNextRound
+- GameStatus gameStatus
+- int currentRound
+- DifficultyLevel difficulty
+- long currentTimeOfGame
+- int shnuzes
+- int enemiesDefeated
+- int numberOfRounds
++ boolean isValidPosition(Position)
++ void startTimerForNextRound()
++ Cell getCellAt(Position)
++ Cell[][] getGrid()
++ int getShnuzes()
++ void setDayTime(boolean)
++ GameStatus getGameStatus()
++ void setGameStatus(GameStatus)
++ long getTimeToNextRound()
++ void decreaseTimeToNextRound(long)
++ DifficultyLevel getDifficulty()
++ void addTime(long)
++ long getCurrentTimeOfGame()
++ int getCurrentRound()
++ void addShnuzes(int)
++ void removeShnuzes(int)
++ void setCurrentRound(int)
++ void setShnuzes(int)
++ boolean getDayTime()
++ void incrementEnemiesDefeated()
++ int getEnemiesDefeated()
++ int getNumberOfRounds()
++ void resetTimer()
+}
+
+
+enum tomer.spivak.androidstudio2dgame.logic.modelEnums.Direction {
++  DOWNLEFT
++  DOWNRIGHT
++  UPLEFT
++  UPRIGHT
+}
+
+class tomer.spivak.androidstudio2dgame.graphics.IntermediateActivity {
+- DrawerLayout drawerLayout
+- Context context
+- NavigationView navigationView
+- DatabaseRepository databaseRepository
+# void onCreate(Bundle)
+- void replaceFragment(Fragment,boolean)
+}
+
+
+class tomer.spivak.androidstudio2dgame.graphics.LeaderboardFragment {
++ void onResume()
+}
+
+
+class tomer.spivak.androidstudio2dgame.graphics.GameObject {
+- Point imagePoint
+- Context context
+- float scale
+- int[] scaledSize
+- int[] originalSize
+- Drawable drawable
+- String imageResourceString
+- Position pos
+- String type
+- float healthPercentage
+- void createView()
++ void drawView(Canvas)
++ void setScale(float)
++ Point getImagePoint()
++ Position getPos()
++ void setImagePoint(Point)
++ float getScale()
++ float getHealthPercentage()
++ int[] getScaledSize()
++ String getType()
++ void updateState(String,String,float)
+}
+
+
+enum tomer.spivak.androidstudio2dgame.logic.modelEnums.BuildingState {
++  IDLE
++  HURT
++  ATTACKING
+}
+
+class tomer.spivak.androidstudio2dgame.logic.Position {
+- int x
+- int y
++ List<Position> getNeighbors()
++ boolean equals(Object)
++ int hashCode()
++ Map<String,Object> toMap()
++ int getX()
++ int getY()
++ String toString()
+}
+
+
+class tomer.spivak.androidstudio2dgame.logic.ExplodingBuilding {
+- float damage
++ float getDamage()
+}
+
+
+class tomer.spivak.androidstudio2dgame.logic.ModelObjectFactory {
++ {static} ModelObject create(String,Position,DifficultyLevel)
++ {static} int getPrice(String)
+- {static} float getBuildingValueForDifficulty(int,DifficultyLevel)
+- {static} float getEnemyValueForDifficulty(int,DifficultyLevel)
+- {static} int getRewardByDifficulty(DifficultyLevel)
+}
+
+abstract class tomer.spivak.androidstudio2dgame.logic.ModelObject {
+# Position pos
+# float health
+- float maxHealth
+# int soundStreamId
+# SoundEffectManager soundEffects
+# String type
++ void takeDamage(float)
++ void stopSound()
++ Object toMap()
++ void setSoundStreamId(int)
++ Position getPosition()
++ void setPosition(Position)
++ void setHealth(float)
++ float getHealth()
++ float getMaxHealth()
++ void setSoundEffects(SoundEffectManager)
++ String getType()
++ String toString()
+}
+
+
+class tomer.spivak.androidstudio2dgame.logic.Cell {
+- Position position
+- ModelObject object
+- tomer.spivak.androidstudio2dgame.logic.modelEnums.CellState[][] cellState
+- tomer.spivak.androidstudio2dgame.logic.modelEnums.CellState[][] defaultState
+- long animationTime
++ void placeBuilding(Building)
++ void spawnEnemy(Enemy)
++ void updateAnimation(long)
++ Position getPosition()
++ ModelObject getObject()
++ boolean isOccupied()
++ tomer.spivak.androidstudio2dgame.logic.modelEnums.CellState[][] getCellState()
++ void setState(CellState)
++ void removeObject()
++ void executeBurntAnimation()
++ void executeEnemyDeathAnimation()
++ void executeExplosion()
++ void resetAnimation()
++ Map<String,Object> toMap()
++ String toString()
+}
+
+
+
+
+tomer.spivak.androidstudio2dgame.graphics.BuildingsRecyclerViewAdapter +.. tomer.spivak.androidstudio2dgame.graphics.BuildingsRecyclerViewAdapter$BuildingViewHolder
+tomer.spivak.androidstudio2dgame.graphics.OnClickListener <|.. tomer.spivak.androidstudio2dgame.graphics.BuildingsRecyclerViewAdapter$BuildingViewHolder
+tomer.spivak.androidstudio2dgame.graphics.BuildingsRecyclerViewAdapter +.. tomer.spivak.androidstudio2dgame.graphics.BuildingsRecyclerViewAdapter$OnBuildingClickListener
+tomer.spivak.androidstudio2dgame.projectManagement.GameEventListener <|.. tomer.spivak.androidstudio2dgame.graphics.GameActivity
+tomer.spivak.androidstudio2dgame.graphics.OnBuildingClickListener <|.. tomer.spivak.androidstudio2dgame.graphics.GameActivity
+tomer.spivak.androidstudio2dgame.logic.ModelObject <|-- tomer.spivak.androidstudio2dgame.logic.Building
+tomer.spivak.androidstudio2dgame.projectManagement.MusicService +.. tomer.spivak.androidstudio2dgame.projectManagement.MusicService$LocalBinder
+tomer.spivak.androidstudio2dgame.graphics.TouchManager +.. tomer.spivak.androidstudio2dgame.graphics.TouchManager$GestureListener
+tomer.spivak.androidstudio2dgame.graphics.TouchManager +.. tomer.spivak.androidstudio2dgame.graphics.TouchManager$ScaleListener
+tomer.spivak.androidstudio2dgame.graphics.TouchManager +.. tomer.spivak.androidstudio2dgame.graphics.TouchManager$TouchListener
+tomer.spivak.androidstudio2dgame.logic.ModelObject <|-- tomer.spivak.androidstudio2dgame.logic.Enemy
+tomer.spivak.androidstudio2dgame.logic.Building <|-- tomer.spivak.androidstudio2dgame.logic.Turret
+tomer.spivak.androidstudio2dgame.logic.Building <|-- tomer.spivak.androidstudio2dgame.logic.ExplodingBuilding
+tomer.spivak.androidstudio2dgame.graphics.BuildingsRecyclerViewAdapter o-- tomer.spivak.androidstudio2dgame.graphics.BuildingsRecyclerViewAdapter$OnBuildingClickListener
+tomer.spivak.androidstudio2dgame.graphics.GameView *-- tomer.spivak.androidstudio2dgame.projectManagement.GameLoop
+tomer.spivak.androidstudio2dgame.graphics.GameView *-- tomer.spivak.androidstudio2dgame.graphics.GraphicalBoard
+tomer.spivak.androidstudio2dgame.graphics.GameView *-- tomer.spivak.androidstudio2dgame.graphics.TouchManager
+tomer.spivak.androidstudio2dgame.graphics.LoginFragment o-- tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository
+tomer.spivak.androidstudio2dgame.graphics.GameActivity *-- tomer.spivak.androidstudio2dgame.graphics.GameView
+tomer.spivak.androidstudio2dgame.graphics.GameActivity *-- tomer.spivak.androidstudio2dgame.projectManagement.GameViewModel
+tomer.spivak.androidstudio2dgame.graphics.GameActivity *-- tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager
+tomer.spivak.androidstudio2dgame.graphics.GameActivity *-- tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository
+tomer.spivak.androidstudio2dgame.graphics.GameActivity *-- tomer.spivak.androidstudio2dgame.projectManagement.MusicService
+tomer.spivak.androidstudio2dgame.logic.Building *-- tomer.spivak.androidstudio2dgame.logic.modelEnums.BuildingState
+tomer.spivak.androidstudio2dgame.projectManagement.GameLoop *-- tomer.spivak.androidstudio2dgame.graphics.GameView
+tomer.spivak.androidstudio2dgame.projectManagement.GameLoop *-- tomer.spivak.androidstudio2dgame.projectManagement.GameEventListener
+tomer.spivak.androidstudio2dgame.graphics.SignUpFragment o-- tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository
+tomer.spivak.androidstudio2dgame.logic.EnemyManager o-- tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager
+tomer.spivak.androidstudio2dgame.graphics.TouchManager o-- tomer.spivak.androidstudio2dgame.graphics.TouchManager$TouchListener
+tomer.spivak.androidstudio2dgame.logic.ModelGameManager o-- tomer.spivak.androidstudio2dgame.logic.GameState
+tomer.spivak.androidstudio2dgame.logic.ModelGameManager o-- tomer.spivak.androidstudio2dgame.logic.EnemyManager
+tomer.spivak.androidstudio2dgame.logic.ModelGameManager o-- tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager
+tomer.spivak.androidstudio2dgame.logic.Cell *-- tomer.spivak.androidstudio2dgame.logic.Position
+tomer.spivak.androidstudio2dgame.logic.Cell *-- tomer.spivak.androidstudio2dgame.logic.ModelObject
+tomer.spivak.androidstudio2dgame.logic.Cell *-- tomer.spivak.androidstudio2dgame.logic.modelEnums.CellState
+tomer.spivak.androidstudio2dgame.logic.Turret o-- tomer.spivak.androidstudio2dgame.logic.Position
+tomer.spivak.androidstudio2dgame.logic.Turret o-- tomer.spivak.androidstudio2dgame.logic.Enemy
+tomer.spivak.androidstudio2dgame.logic.Enemy o-- tomer.spivak.androidstudio2dgame.logic.modelEnums.Direction
+tomer.spivak.androidstudio2dgame.logic.Enemy o-- tomer.spivak.androidstudio2dgame.logic.modelEnums.EnemyState
+tomer.spivak.androidstudio2dgame.logic.Enemy o-- tomer.spivak.androidstudio2dgame.logic.Position
+tomer.spivak.androidstudio2dgame.logic.Enemy o-- tomer.spivak.androidstudio2dgame.logic.Cell
+tomer.spivak.androidstudio2dgame.logic.GameState *-- tomer.spivak.androidstudio2dgame.logic.Cell
+tomer.spivak.androidstudio2dgame.logic.GameState o-- tomer.spivak.androidstudio2dgame.logic.modelEnums.DifficultyLevel
+tomer.spivak.androidstudio2dgame.graphics.IntermediateActivity o-- tomer.spivak.androidstudio2dgame.projectManagement.DatabaseRepository
+tomer.spivak.androidstudio2dgame.graphics.LeaderboardFragment *-- tomer.spivak.androidstudio2dgame.graphics.LeaderboardAdapter
+tomer.spivak.androidstudio2dgame.logic.ModelObject o-- tomer.spivak.androidstudio2dgame.logic.Position
+tomer.spivak.androidstudio2dgame.logic.ModelObject o-- tomer.spivak.androidstudio2dgame.projectManagement.SoundEffectManager
+@enduml

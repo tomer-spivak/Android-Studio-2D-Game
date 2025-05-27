@@ -60,7 +60,6 @@ public class GameActivity extends AppCompatActivity implements GameEventListener
 
     private GameView gameView;
 
-
     private GameViewModel viewModel;
 
     private SoundEffectManager soundEffectsManager;
